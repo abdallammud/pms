@@ -25,5 +25,5 @@ if (function_exists('authenticate')) {
 
     <!-- Modals -->
     <?php require_once 'views/properties/modals/add_property.php'; ?>
-    <?php //require_once 'views/properties/modals/add_tenant.php'; ?>
+    <?php require_once 'views/tenants/modals/add_tenant.php'; ?>
 <?php require_once 'views/partials/app_footer.php'; ?>

@@ -37,17 +37,20 @@ foreach ($menus as $sideMenu) {
 						// $icon = 'caret-down';
 					}
 					if(isset($sub['is_modal']) && $sub['is_modal']) {
-						$sidebar .= '
+						$sidebar .= '<li>
 						<a href="javascript:;" class="menu-link  '.$activeSub.'" data-bs-toggle="modal" data-bs-target="'.$sub['data-bs-target'].'">
 							<i class="bi bi-'.strtolower($icon).'"></i>
 							<span class="menu-text">'.$sub['name'].'</span>
-						</a>';
+						</a>
+						</li>';
 					} else {
 						$sidebar .= '
+						<li>
 						<a href="'.baseUri().'/'.strtolower($sub['route']).'" class="menu-link  '.$activeSub.'">
 							<i class="bi bi-'.strtolower($icon).'"></i>
 							<span class="menu-text">'.$sub['name'].'</span>
-						</a>';
+						</a>
+						</li>';
 					}
 				}
 			}

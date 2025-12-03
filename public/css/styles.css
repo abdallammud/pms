@@ -664,3 +664,7 @@ button.btn.dropdown-toggle:not(.actions) {
 		margin-top: 50px;
 	}
 }
+
+.sidebar-wrapper .sidebar-nav {
+	margin-top: 90px;
+}

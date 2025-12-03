@@ -78,4 +78,5 @@
 
 <?php require_once 'views/settings/modals/add_user.php'; ?>
 <?php require_once 'views/settings/modals/add_role.php'; ?>
+<?php require_once 'views/settings/modals/view_role_permissions.php'; ?>
 <script src="public/js/modules/users.js"></script>

@@ -4,6 +4,7 @@ require_once 'views/partials/app_header.php';
 if (function_exists('authenticate')) {
     authenticate();
 }
+
 ?>
     <!--start header-->
     <?php //require_once 'views/partials/topnav.php'; ?>
@@ -26,4 +27,7 @@ if (function_exists('authenticate')) {
     <!-- Modals -->
     <?php require_once 'views/properties/modals/add_property.php'; ?>
     <?php require_once 'views/tenants/modals/add_tenant.php'; ?>
+    <?php require_once 'views/accounting/modals/add_invoice.php'; ?>
+    <?php require_once 'views/maintenance/modals/create_request.php'; ?>
+    <?php require_once 'views/maintenance/modals/assign_request.php'; ?>
 <?php require_once 'views/partials/app_footer.php'; ?>

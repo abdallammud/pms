@@ -146,7 +146,7 @@ function get_menu_config() {
             'route' => 'accounting',
             'sub' => [
                 'invoices' => ['default' => 'invoices', 'route' => 'invoices', 'name' => 'Rent Invoices', 'auth' => 'invoice_manage'],
-                'create_invoice' => ['default' => 'create_invoice', 'route' => 'create_invoice', 'name' => 'Create Invoice', 'auth' => 'invoice_create'],
+                'create_invoice' => ['default' => 'create_invoice', 'is_modal' => true, 'data-bs-target' => '#addInvoiceModal', 'route' => 'create_invoice', 'name' => 'Create Invoice', 'auth' => 'invoice_create'],
                 'payments_received' => ['default' => 'payments_received', 'route' => 'payments_received', 'name' => 'Payments Received', 'auth' => 'payment_manage'],
                 'expenses' => ['default' => 'expenses', 'route' => 'expenses', 'name' => 'Expenses', 'auth' => 'expense_manage'],
                 'bills' => ['default' => 'bills', 'route' => 'bills', 'name' => 'Bills', 'auth' => 'bill_manage'],
@@ -162,9 +162,9 @@ function get_menu_config() {
             'menu' => 'maintenance',
             'route' => 'maintenance',
             'sub' => [
-                'requests' => ['default' => 'requests', 'route' => 'requests', 'name' => 'All Requests', 'auth' => 'maintenance_manage'],
-                'create_request' => ['default' => 'create_request', 'route' => 'create_request', 'name' => 'Create Request', 'auth' => 'maintenance_create'],
-                'assign_request' => ['default' => 'assign_request', 'route' => 'assign_request', 'name' => 'Assign Requests', 'auth' => 'maintenance_assign'],
+                'requests' => ['default' => 'requests', 'route' => 'maintenance_requests', 'name' => 'All Requests', 'auth' => 'maintenance_manage'],
+                'create_request' => ['default' => 'create_request', 'is_modal' => true, 'data-bs-target' => '#addRequestModal', 'route' => 'create_request', 'name' => 'Create Request', 'auth' => 'maintenance_create'],
+                'assign_request' => ['default' => 'assign_request', 'is_modal' => true, 'data-bs-target' => '#assignMaintenanceModal', 'route' => 'assign_request', 'name' => 'Assign Requests', 'auth' => 'maintenance_assign'],
                 'vendors' => ['default' => 'vendors', 'route' => 'vendors', 'name' => 'Vendors / Staff', 'auth' => 'vendor_manage'],
             ],
         ],

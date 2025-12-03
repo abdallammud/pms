@@ -49,7 +49,7 @@
 	</script>
 
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta2/dist/js/bootstrap-select.min.js"></script>
-	<?php load_js_module(); ?>
+	<?php //load_js_module(); ?>
 
 </body>
 

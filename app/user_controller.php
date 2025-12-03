@@ -199,8 +199,8 @@ function save_role() {
     header('Content-Type: application/json');
     global $conn;
 
-    $id = $_POST['role_id'] ?? '';
-    $role_name = $_POST['role_name'] ?? '';
+    $id = isset($_POST['role_id']) && is_numeric($_POST['role_id']) ? (int)$_POST['role_id'] : 0;
+    $role_name = trim($_POST['role_name'] ?? '');
     $description = $_POST['description'] ?? '';
     $permissions = $_POST['permissions'] ?? []; // Array of permission IDs
 
@@ -209,7 +209,7 @@ function save_role() {
         exit;
     }
 
-    if (empty($id)) {
+    if ($id === 0) {
         // Insert
         // Check if role name exists
         $check = $conn->prepare("SELECT id FROM roles WHERE role_name = ?");

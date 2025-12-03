@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Load permissions for the Add Role modal
     // Load permissions for the Add Role modal
-    // load_permissions(); // Moved to shown.bs.modal event
+    load_permissions(); // Moved to shown.bs.modal event
 });
 
 function load_roles() {
@@ -232,6 +232,14 @@ function editRole(id) {
             $('#role_name').val(data.role_name);
             $('#description').val(data.description);
 
+            console.log(data)
+
+            let modal = $('#addRoleModal');
+
+            modal.find('#role_id').val(data.id);
+            modal.find('#role_name').val(data.role_name);
+            modal.find('#description').val(data.description);
+
             // Reset permissions
             $('.permission-checkbox').prop('checked', false);
 
@@ -289,13 +297,33 @@ function viewPermissions(id) {
         dataType: 'json',
         success: function (data) {
             $('#viewRoleName').text('Permissions for: ' + data.role_name);
+
             var list = $('#viewPermissionsList');
             list.empty();
 
             if (data.permissions && data.permissions.length > 0) {
-                data.permissions.forEach(function (perm) {
-                    list.append('<li class="list-group-item">' + perm.description + '</li>');
+
+                let html = '<div class="row">';
+
+                data.permissions.forEach(function (perm, index) {
+                    // start new column
+                    if (index % 2 === 0) html += '<div class="col-md-4">';
+
+                    html += `
+                        <div class="list-group-item mb-2">
+                            <input type="checkbox" checked disabled>
+                            ${perm.description}
+                        </div>
+                    `;
+
+                    // close column after 2 items (or last item)
+                    if (index % 2 === 1 || index === data.permissions.length - 1)
+                        html += '</div>';
                 });
+
+                html += '</div>';
+                list.append(html);
+
             } else {
                 list.append('<li class="list-group-item text-muted">No permissions assigned.</li>');
             }
@@ -319,9 +347,12 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Load permissions when modal is shown if not already loaded
+    // Removed to prevent overwriting checked state during edit
+    /*
     $(document).on('shown.bs.modal', '#addRoleModal', function () {
         if ($('#permissionsContainer').children().length === 0) {
             load_permissions();
         }
     });
+    */
 });

@@ -5,9 +5,9 @@
     <div class="page-header fade-in">
         <h1 class="page-title">Dashboard</h1>
         <div>
-            <button class="btn btn-primary">
+            <!-- <button class="btn btn-primary">
                 <i class="bi bi-download me-2"></i> Export Report
-            </button>
+            </button> -->
         </div>
     </div>
 
@@ -460,4 +460,5 @@
         </div>
     </div>
 </main>
+<script src="./public/plugins/chartjs/js/chart.js"></script>
 <script src="./public/js/dashboard.js"></script>

@@ -33,7 +33,7 @@ require_once('autoload.php');
 
 
 // $GLOBALS['logoPath'] = baseUri() .'/assets/images/'.return_setting('system_logo');
-$GLOBALS['logoPath'] = 'public/images/logo.jpg'; // Placeholder
+$GLOBALS['logoPath'] = 'public/images/logo.png'; // Placeholder
 
 
 

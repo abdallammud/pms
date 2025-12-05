@@ -6,66 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const body = document.body;
     // Initialize Charts
     // Rent Collection Chart
-    const rentCollectionCtx = document.getElementById('rentCollectionChart').getContext('2d');
-    const rentCollectionChart = new Chart(rentCollectionCtx, {
-        type: 'line',
-        data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-            datasets: [{
-                label: 'Rent Collected',
-                data: [42000, 45000, 43500, 46000, 47500, 48500, 42150],
-                backgroundColor: 'rgba(15, 59, 108, 0.1)',
-                borderColor: 'rgba(15, 59, 108, 1)',
-                borderWidth: 3,
-                pointBackgroundColor: 'rgba(15, 59, 108, 1)',
-                pointBorderColor: '#fff',
-                pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: 'rgba(15, 59, 108, 1)',
-                pointRadius: 5,
-                pointHoverRadius: 7,
-                tension: 0.3
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function (value) {
-                            return '$' + value.toLocaleString();
-                        }
-                    },
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(15, 59, 108, 0.8)',
-                    titleColor: '#fff',
-                    bodyColor: '#fff',
-                    padding: 12,
-                    displayColors: false,
-                    callbacks: {
-                        label: function (context) {
-                            return 'Rent Collected: $' + context.parsed.y.toLocaleString();
-                        }
-                    }
-                }
-            }
-        }
-    });
+
 
     // Occupancy Chart
     const occupancyCtx = document.getElementById('occupancyChart').getContext('2d');

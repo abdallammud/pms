@@ -1,19 +1,16 @@
 <!-- Main Content -->
 <main class="content">
     <!-- Page Header -->
-    <div class="page-header fade-in">
-        <h1 class="page-title">Units Management</h1>
+    <div class="d-flex justify-content-between align-items-center mb-2 mt-3">
+        <h5 class="page-title">Units List</h5>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUnitModal">
+            <i class="bi bi-plus me-2"></i> Add Unit
+        </button>
     </div>
     <!-- Page Content -->
     <div class="page-content fade-in">
         <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between mb-3">
-                    <h5 class="card-title">Units List</h5>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUnitModal">
-                        <i class="bi bi-plus me-2"></i> Add Unit
-                    </button>
-                </div>
+            <div class="card-body table">
                 <div class="table-responsive">
                     <table class="table table-striped table-hover w-100" id="unitsTable">
                         <thead>

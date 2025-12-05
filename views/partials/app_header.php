@@ -15,6 +15,7 @@ if (!authenticate()) {
   <!--favicon-->
   <link rel="icon" href="<?=baseUri();?>/public/images/favicon-32x32.png" type="image/png">
   <!-- loader-->
+  <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
   <link href="<?=baseUri();?>/public/css/font-awesome/css/all.min.css" rel="stylesheet">
 	<link href="<?=baseUri();?>/public/css/pace.min.css" rel="stylesheet">
 	<script src="<?=baseUri();?>/public/js/pace.min.js"></script>

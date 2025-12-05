@@ -1,8 +1,8 @@
 <!-- Main Content -->
 <main class="content">
     <!-- Page Header -->
-    <div class="page-header fade-in">
-        <h1 class="page-title">User Management</h1>
+    <div class="d-flex justify-content-between mt-3 align-items-center  mb-3">
+        <h5 class="page-title">User Management</h5>
     </div>
     <!-- Page Content -->
     <div class="page-content fade-in">

@@ -28,7 +28,7 @@ foreach ($menus as $sideMenu) {
 			foreach ($sideMenu['sub'] as $sub) {
 				if(check_session($sub['auth'])) {
 					$activeSub = '';
-					$icon = 'caret-right';
+					$icon = '';
 					if(isset($sub['icon'])) {
 						$icon = $sub['icon'];
 					}
@@ -77,7 +77,7 @@ foreach ($menus as $sideMenu) {
 <aside class="sidebar-wrapper" data-simplebar="true">
 	<div class="sidebar-header">
 		<div class="logo-icon" style="width:100%;">
-			<img style="width:45%; height: 70px; margin-top: 11px;" src="<?=$GLOBALS['logoPath']?>" class="logo-img" alt="">
+			<img style="width:100%; height: 50px; margin-top: 11px;" src="<?=$GLOBALS['logoPath']?>" class="logo-img" alt="">
 		</div>
 		<div class="logo-name flex-grow-1">
 			<!-- <h5 class="mb-0">Asheeri</h5> -->

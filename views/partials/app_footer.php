@@ -37,7 +37,7 @@
 
 	// $(".data-attributes span").peity("donut")
 	</script>
-	
+	<script src="<?=baseUri();?>/public/plugins/tinymce/tinymce.min.js"></script>
 	<script src="<?=baseUri();?>/public/js/toaster.js"></script>
 	<script src="<?=baseUri();?>/public/js/main.js"></script>
 	<script src="<?=baseUri();?>/public/js/utilities.js"></script>

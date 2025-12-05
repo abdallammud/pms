@@ -15,6 +15,9 @@ if (isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'] === true) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Aayatiin Property Ltd</title>
     <link href="public/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap bundle -->
+    <link href="public/css/bootstrap.bundle.css" rel="stylesheet">
+    <link href="public/css/styles.css" rel="stylesheet">
     <style>
         body {
             background-color: #f8f9fa;
@@ -36,7 +39,7 @@ if (isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'] === true) {
             margin-bottom: 2rem;
         }
         .login-logo img {
-            max-width: 150px;
+            max-width: 200px;
         }
         .bg-image {
             background-image: url('public/images/cover.webp');
@@ -62,6 +65,11 @@ if (isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'] === true) {
             position: relative;
             z-index: 1; /* keeps content above the overlay */
         }
+        .btn {
+            color:#fff;
+            font-size: 14px;
+            padding: 10px;
+        }
     </style>
 </head>
 <body class="bg-image">
@@ -73,14 +81,14 @@ if (isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'] === true) {
         <div id="alert-msg"></div>
         <form id="loginForm">
             <div class="mb-3">
-                <label for="email" class="form-label">Email address</label>
+                <label for="email" class="form-label">Username</label>
                 <input type="text" class="form-control" id="email" name="email" required>
             </div>
             <div class="mb-3">
                 <label for="password" class="form-label">Password</label>
                 <input type="password" class="form-control" id="password" name="password" required>
             </div>
-            <button type="submit" class="btn btn-primary w-100" id="loginBtn">Login</button>
+            <button type="submit" class="btn btn-primary btn-lg w-100" id="loginBtn">Login</button>
         </form>
     </div>
 

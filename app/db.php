@@ -9,6 +9,8 @@ $username = 'u562838275_pms';
 $db_name = 'u562838275_pms';
 $password = 'kBH/6|c7N/';
 
+// Check this
+
 $mysqli = new mysqli($host, $username, $password, $db_name);
 
 if ($mysqli->connect_errno) {

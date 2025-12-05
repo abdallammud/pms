@@ -5,9 +5,9 @@ $charset = 'utf8mb4'; // Extract from DSN or define directly
 $username = 'root';
 $password = '';
 
-// $username = 'u562838275_pms';
-// $db_name = 'u562838275_pms';
-// $password = 'kBH/6|c7N/';
+$username = 'u562838275_pms';
+$db_name = 'u562838275_pms';
+$password = 'kBH/6|c7N/';
 
 $mysqli = new mysqli($host, $username, $password, $db_name);
 

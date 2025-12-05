@@ -16,24 +16,24 @@ RewriteRule ^units/?$ index.php?menu=properties&tab=units [NC,L]
 # Tenants
 RewriteRule ^tenants/?$ index.php?menu=tenants&tab=directory [NC,L]
 RewriteRule ^tenants/add/?$ index.php?menu=tenants&tab=add [NC,L]
-RewriteRule ^tenants/leases/?$ index.php?menu=tenants&tab=leases [NC,L]
-RewriteRule ^tenants/leases/add/?$ index.php?menu=tenants&tab=add_lease [NC,L]
-RewriteRule ^tenants/guarantees/?$ index.php?menu=tenants&tab=guarantees [NC,L]
+RewriteRule ^leases/?$ index.php?menu=tenants&tab=leases [NC,L]
+RewriteRule ^add_lease/?$ index.php?menu=tenants&tab=add_lease [NC,L]
+RewriteRule ^guarantees/?$ index.php?menu=tenants&tab=guarantees [NC,L]
 
 # Accounting
 RewriteRule ^accounting/?$ index.php?menu=accounting&tab=invoices [NC,L]
-RewriteRule ^accounting/invoices/?$ index.php?menu=accounting&tab=invoices [NC,L]
-RewriteRule ^accounting/create-invoice/?$ index.php?menu=accounting&tab=create_invoice [NC,L]
-RewriteRule ^accounting/payments-received/?$ index.php?menu=accounting&tab=payments_received [NC,L]
-RewriteRule ^accounting/expenses/?$ index.php?menu=accounting&tab=expenses [NC,L]
-RewriteRule ^accounting/bills/?$ index.php?menu=accounting&tab=bills [NC,L]
-RewriteRule ^accounting/payments-made/?$ index.php?menu=accounting&tab=payments_made [NC,L]
+RewriteRule ^invoices/?$ index.php?menu=accounting&tab=invoices [NC,L]
+RewriteRule ^create_invoice/?$ index.php?menu=accounting&tab=create_invoice [NC,L]
+RewriteRule ^payments_received/?$ index.php?menu=accounting&tab=payments_received [NC,L]
+RewriteRule ^expenses/?$ index.php?menu=accounting&tab=expenses [NC,L]
+RewriteRule ^bills/?$ index.php?menu=accounting&tab=bills [NC,L]
+RewriteRule ^payments_made/?$ index.php?menu=accounting&tab=payments_made [NC,L]
 
 # Maintenance
-RewriteRule ^maintenance/?$ index.php?menu=maintenance&tab=requests [NC,L]
-RewriteRule ^maintenance/create/?$ index.php?menu=maintenance&tab=create_request [NC,L]
+RewriteRule ^maintenance_requests/?$ index.php?menu=maintenance&tab=requests [NC,L]
+RewriteRule ^maintenance_requests/create/?$ index.php?menu=maintenance&tab=create_request [NC,L]
 RewriteRule ^maintenance/assign/?$ index.php?menu=maintenance&tab=assign_request [NC,L]
-RewriteRule ^maintenance/vendors/?$ index.php?menu=maintenance&tab=vendors [NC,L]
+RewriteRule ^vendors/?$ index.php?menu=maintenance&tab=vendors [NC,L]
 
 # Reports
 RewriteRule ^reports/?$ index.php?menu=reports&tab=rent_collection [NC,L]

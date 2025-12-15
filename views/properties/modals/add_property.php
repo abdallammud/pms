@@ -13,23 +13,20 @@
             <div class="modal-body">
 
                 <form id="addPropertyForm">
+                    <input type="hidden" name="property_id" id="property_id" value="">
 
                     <!-- Property Info -->
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Property Name</label>
-                            <input type="text" name="name" class="form-control" placeholder="e.g. Banadir Plaza" required>
+                            <label class="form-label">Property Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" id="property_name" class="form-control"  required>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Property Type</label>
-                            <select name="type" class="form-select" required>
+                        <div class="col-md-6 multiselect-parent">
+                            <label class="form-label multiselect-label">Property Type</label>
+                            <select name="type_id" id="property_type_select" class="form-select selectpicker" data-live-search="true" title="Select Type">
                                 <option value="">Select Type</option>
-                                <option value="Apartment">Apartment</option>
-                                <option value="Commercial">Commercial</option>
-                                <option value="Villa">Villa</option>
-                                <option value="Compound">Compound</option>
-                                <option value="Mixed-use">Mixed-use</option>
+                                <!-- Populated dynamically via AJAX -->
                             </select>
                         </div>
                     </div>
@@ -38,11 +35,11 @@
                     <div class="row mb-3">
                         <div class="col-md-8">
                             <label class="form-label">Address</label>
-                            <input type="text" name="address" class="form-control" placeholder="Street / Road Name">
+                            <input type="text" name="address" id="property_address" class="form-control" >
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">City</label>
-                            <input type="text" name="city" class="form-control" placeholder="e.g. Mogadishu" required>
+                            <label class="form-label">City <span class="text-danger">*</span></label>
+                            <input type="text" name="city" id="property_city" class="form-control"  required>
                         </div>
                     </div>
 
@@ -50,14 +47,14 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label">Owner Name</label>
-                            <input type="text" name="owner_name" class="form-control" placeholder="e.g. Mohamed Ali">
+                            <input type="text" name="owner_name" id="property_owner" class="form-control" >
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Manager</label>
-                            <select name="manager_id" class="form-select">
-                                <option value="1">Manager #1</option>
-                                <!-- You will populate this dynamically later -->
+                        <div class="col-md-6 multiselect-parent">
+                            <label class="form-label multiselect-label">Manager</label>
+                            <select name="manager_id" id="manager_select" class="form-select selectpicker" data-live-search="true" title="Select Manager">
+                                <option value="">Select Manager</option>
+                                <!-- Populated dynamically via AJAX -->
                             </select>
                         </div>
                     </div>
@@ -66,7 +63,7 @@
                     <div class="row mb-3">
                         <div class="col-12">
                             <label class="form-label">Description</label>
-                            <textarea name="description" class="form-control" rows="3" placeholder="Additional details about this property..."></textarea>
+                            <textarea name="description" class="form-control" rows="3" ></textarea>
                         </div>
                     </div>
 
@@ -84,3 +81,7 @@
         </div>
     </div>
 </div>
+
+<style>
+    
+</style>

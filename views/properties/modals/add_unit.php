@@ -12,29 +12,29 @@
 
             <div class="modal-body">
                 <form id="addUnitForm">
+                    <input type="hidden" name="unit_id" id="unit_id" value="">
 
                     <!-- Property Select + Unit Number -->
                     <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Property</label>
-                            <select name="property_id" class="form-select" required>
+                        <div class="col-md-6 multiselect-parent">
+                            <label class="form-label multiselect-label">Property <span class="text-danger">*</span></label>
+                            <select name="property_id" id="unit_property_select" class="form-select selectpicker" data-live-search="true" title="Select Property" required>
                                 <option value="">Select Property</option>
-                                <!-- Backend will populate this with actual properties -->
-                                <option value="1">Property #1</option>
+                                <!-- Populated dynamically via AJAX -->
                             </select>
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label">Unit Number</label>
-                            <input type="text" name="unit_number" class="form-control" placeholder="e.g. A1, B2, V3" required>
+                            <label class="form-label">Unit Number <span class="text-danger">*</span></label>
+                            <input type="text" name="unit_number" id="unit_number" class="form-control"  required>
                         </div>
                     </div>
 
                     <!-- Unit Type + Size -->
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Unit Type</label>
-                            <select name="unit_type" class="form-select" required>
+                            <label class="form-label">Unit Type <span class="text-danger">*</span></label>
+                            <select name="unit_type" id="unit_type" class="form-select" required>
                                 <option value="">Select Type</option>
                                 <option value="Studio">Studio</option>
                                 <option value="1-bedroom">1 Bedroom</option>
@@ -48,7 +48,7 @@
 
                         <div class="col-md-6">
                             <label class="form-label">Size (sq ft)</label>
-                            <input type="number" name="size_sqft" class="form-control" placeholder="e.g. 750">
+                            <input type="number" name="size_sqft" id="unit_size" class="form-control" >
                         </div>
                     </div>
 
@@ -56,12 +56,12 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label">Rent Amount</label>
-                            <input type="number" step="0.01" name="rent_amount" class="form-control" placeholder="e.g. 250.00">
+                            <input type="number" step="0.01" name="rent_amount" id="unit_rent" class="form-control" >
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label">Status</label>
-                            <select name="status" class="form-select">
+                            <select name="status" id="unit_status" class="form-select">
                                 <option value="vacant">Vacant</option>
                                 <option value="occupied">Occupied</option>
                                 <option value="maintenance">Maintenance</option>
@@ -69,16 +69,18 @@
                         </div>
                     </div>
 
+                    <input type="hidden" name="" name="tenant_id" id="unit_tenant_select" class="form-select">
+
                     <!-- Tenant (Optional) -->
-                    <div class="row mb-3">
+                    <!-- <div class="row mb-3">
                         <div class="col-md-12">
                             <label class="form-label">Tenant (optional)</label>
-                            <select name="tenant_id" class="form-select">
+                            <select >
                                 <option value="">No Tenant</option>
-                                <!-- Later populated dynamically -->
+                                 Populated dynamically via AJAX 
                             </select>
                         </div>
-                    </div>
+                    </div> -->
 
                 </form>
             </div>
@@ -86,7 +88,7 @@
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button class="btn btn-primary" id="saveUnitBtn">
-                    <i class="bi bi-save me-1"></i>Save Unit
+                    <i class="bi "></i>Save Unit
                 </button>
             </div>
 

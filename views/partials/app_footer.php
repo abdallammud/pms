@@ -14,7 +14,10 @@
 
 	
 	<!--start switcher-->
-
+	<!-- Global Base URL for JavaScript -->
+	<script>
+	</script>
+	<script src="<?=baseUri();?>/public/js/modules/properties.js"></script>
 	<?php require('to_json.php'); ?>
 	<!--bootstrap js-->
 	<script src="<?=baseUri();?>/public/js/bootstrap.bundle.min.js"></script>

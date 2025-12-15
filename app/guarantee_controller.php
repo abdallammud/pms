@@ -77,14 +77,91 @@ function get_guarantees() {
 }
 
 function save_guarantee() {
-    // Placeholder for save functionality
+    header('Content-Type: application/json');
+    global $conn;
+
+    $id = $_POST['guarantee_id'] ?? '';
+    $full_name = trim($_POST['full_name'] ?? '');
+    $phone = trim($_POST['phone'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $id_number = trim($_POST['id_number'] ?? '');
+    $work_info = trim($_POST['work_info'] ?? '');
+    $status = $_POST['status'] ?? 'active';
+
+    if (empty($full_name) || empty($phone)) {
+        echo json_encode(['error' => true, 'msg' => 'Full name and phone are required.']);
+        exit;
+    }
+
+    if (empty($id)) {
+        // Insert
+        $stmt = $conn->prepare("INSERT INTO guarantees (full_name, phone, email, id_number, work_info, status) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssss", $full_name, $phone, $email, $id_number, $work_info, $status);
+
+        if ($stmt->execute()) {
+            echo json_encode(['error' => false, 'msg' => 'Guarantor added successfully.']);
+        } else {
+            echo json_encode(['error' => true, 'msg' => 'Error adding guarantor: ' . $conn->error]);
+        }
+    } else {
+        // Update
+        $stmt = $conn->prepare("UPDATE guarantees SET full_name=?, phone=?, email=?, id_number=?, work_info=?, status=? WHERE id=?");
+        $stmt->bind_param("ssssssi", $full_name, $phone, $email, $id_number, $work_info, $status, $id);
+
+        if ($stmt->execute()) {
+            echo json_encode(['error' => false, 'msg' => 'Guarantor updated successfully.']);
+        } else {
+            echo json_encode(['error' => true, 'msg' => 'Error updating guarantor: ' . $conn->error]);
+        }
+    }
 }
 
 function delete_guarantee() {
-    // Placeholder for delete functionality
+    header('Content-Type: application/json');
+    global $conn;
+    
+    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+
+    if ($id <= 0) {
+        echo json_encode(['error' => true, 'msg' => 'Invalid ID.']);
+        exit;
+    }
+
+    // Check if guarantor is linked to an active lease
+    $check = $conn->prepare("SELECT id FROM leases WHERE guarantor_id = ? AND status = 'active' LIMIT 1");
+    $check->bind_param("i", $id);
+    $check->execute();
+    if ($check->get_result()->num_rows > 0) {
+        echo json_encode(['error' => true, 'msg' => 'Cannot delete. This guarantor is linked to an active lease.']);
+        exit;
+    }
+
+    $stmt = $conn->prepare("DELETE FROM guarantees WHERE id = ?");
+    $stmt->bind_param("i", $id);
+
+    if ($stmt->execute()) {
+        echo json_encode(['error' => false, 'msg' => 'Guarantor deleted successfully.']);
+    } else {
+        echo json_encode(['error' => true, 'msg' => 'Error deleting guarantor: ' . $conn->error]);
+    }
 }
 
 function get_guarantee() {
-    // Placeholder for get single guarantee functionality
+    header('Content-Type: application/json');
+    global $conn;
+    
+    $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+    
+    if ($id <= 0) {
+        echo json_encode(['error' => true, 'msg' => 'Invalid ID']);
+        exit;
+    }
+
+    $stmt = $conn->prepare("SELECT * FROM guarantees WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result()->fetch_assoc();
+
+    echo json_encode($result);
 }
 ?>

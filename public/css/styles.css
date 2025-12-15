@@ -798,6 +798,24 @@ table:not(.pika-table) td .btn.btn-primary:hover {
 	font-weight: bold;
 }
 
+table:not(.pika-table) td .badge.bg-success {
+	background-color: #0699320f !important;
+	color: var(--success-color);
+	border-color: #009a2d0f;
+}
+
+table:not(.pika-table) td .badge.bg-warning {
+	background-color: #d6a20526 !important;
+	color: var(--warning-color);
+	border-color: #ffc10726;
+}
+
+table:not(.pika-table) td .badge.bg-danger {
+	background-color: #e4030329 !important;
+	color: var(--danger-color);
+	border-color: #e4030329;
+}
+
 table:not(.pika-table) td .btn.btn-danger {
 	background-color: #ff000029;
 	color: var(--danger-color);
@@ -819,3 +837,25 @@ table:not(.pika-table) td .btn.btn-danger:hover {
 .btn-primary {
 	color: #fff;
 }
+
+.multiselect-parent {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.multiselect-parent .multiselect-label {
+	flex-basis: 100%;
+}
+
+.multiselect-parent .bootstrap-select {
+	flex-basis: 100%;
+	padding: 0px;
+	border: 0px;
+}
+
+.view_lease .card-header {
+	background: #0187251c !important;
+	color: #333 !important;
+}
+
+.view_lease .badge {}

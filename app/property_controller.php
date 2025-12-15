@@ -16,6 +16,14 @@ if (isset($_GET['action'])) {
         get_units();
     } elseif ($action == 'save_unit') {
         save_unit();
+    } elseif ($action == 'get_unit') {
+        get_unit();
+    } elseif ($action == 'delete_unit') {
+        delete_unit();
+    } elseif ($action == 'get_all_properties') {
+        get_all_properties();
+    } elseif ($action == 'get_units_by_property') {
+        get_units_by_property();
     }
 }
 
@@ -74,15 +82,17 @@ function get_properties() {
     $length = $_POST['length'] ?? 10;
     $search_value = $_POST['search']['value'] ?? '';
 
-    // Base query
-    $sql = "SELECT p.*, u.name as manager_name 
+    // Base query - join with property_types to get type name
+    $sql = "SELECT p.*, u.name as manager_name, pt.type_name 
             FROM properties p 
             LEFT JOIN users u ON p.manager_id = u.id 
+            LEFT JOIN property_types pt ON p.type_id = pt.id 
             WHERE 1=1";
 
     // Search
     if (!empty($search_value)) {
-        $sql .= " AND (p.name LIKE '%$search_value%' OR p.type LIKE '%$search_value%' OR p.city LIKE '%$search_value%' OR u.name LIKE '%$search_value%')";
+        $search_value = $conn->real_escape_string($search_value);
+        $sql .= " AND (p.name LIKE '%$search_value%' OR pt.type_name LIKE '%$search_value%' OR p.city LIKE '%$search_value%' OR u.name LIKE '%$search_value%')";
     }
 
     // Total records (before filtering)
@@ -90,7 +100,8 @@ function get_properties() {
     $total_records = $total_records_query->fetch_assoc()['count'];
 
     // Total filtered records
-    $filtered_records_query = $conn->query(str_replace("SELECT p.*, u.name as manager_name", "SELECT COUNT(*) as count", $sql));
+    $filtered_sql = str_replace("SELECT p.*, u.name as manager_name, pt.type_name", "SELECT COUNT(*) as count", $sql);
+    $filtered_records_query = $conn->query($filtered_sql);
     $filtered_records = $filtered_records_query->fetch_assoc()['count'];
 
     // Pagination
@@ -123,7 +134,7 @@ function get_properties() {
 
         $data[] = [
             'name' => $row['name'],
-            'type' => $row['type'],
+            'type' => $row['type_name'] ?? 'N/A',
             'address' => $row['address'] . ', ' . $row['city'],
             'units' => $units_count,
             'occupied_units' => $occupied_units,
@@ -147,22 +158,26 @@ function save_property() {
 
     $id = $_POST['property_id'] ?? '';
     $name = $_POST['name'] ?? '';
-    $type = $_POST['type'] ?? '';
+    $type_id = $_POST['type_id'] ?? '';
     $address = $_POST['address'] ?? '';
     $city = $_POST['city'] ?? '';
-    $manager_id = $_POST['manager_id'] ?? '';
+    $manager_id = !empty($_POST['manager_id']) ? intval($_POST['manager_id']) : null;
     $owner_name = $_POST['owner_name'] ?? '';
     $description = $_POST['description'] ?? '';
 
-    if (empty($name) || empty($type) || empty($city)) {
+    if (empty($name) || empty($city)) {
         echo json_encode(['error' => true, 'msg' => 'Please fill in all required fields.']);
         exit;
     }
 
+    // Handle empty type_id
+    $type_id = !empty($type_id) ? intval($type_id) : null;
+
     if (empty($id)) {
         // Insert
-        $stmt = $conn->prepare("INSERT INTO properties (name, type, address, city, manager_id, owner_name, description) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssiss", $name, $type, $address, $city, $manager_id, $owner_name, $description);
+        // Types: s=name, i=type_id, s=address, s=city, i=manager_id, s=owner_name, s=description
+        $stmt = $conn->prepare("INSERT INTO properties (name, type_id, address, city, manager_id, owner_name, description) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sississ", $name, $type_id, $address, $city, $manager_id, $owner_name, $description);
 
         if ($stmt->execute()) {
             echo json_encode(['error' => false, 'msg' => 'Property added successfully.']);
@@ -171,8 +186,8 @@ function save_property() {
         }
     } else {
         // Update
-        $stmt = $conn->prepare("UPDATE properties SET name=?, type=?, address=?, city=?, manager_id=?, owner_name=?, description=? WHERE id=?");
-        $stmt->bind_param("ssssissi", $name, $type, $address, $city, $manager_id, $owner_name, $description, $id);
+        $stmt = $conn->prepare("UPDATE properties SET name=?, type_id=?, address=?, city=?, manager_id=?, owner_name=?, description=? WHERE id=?");
+        $stmt->bind_param("sisssssi", $name, $type_id, $address, $city, $manager_id, $owner_name, $description, $id);
 
         if ($stmt->execute()) {
             echo json_encode(['error' => false, 'msg' => 'Property updated successfully.']);
@@ -273,5 +288,111 @@ function get_units() {
         "recordsFiltered" => intval($filtered_records),
         "data" => $data
     ]);
+}
+
+/**
+ * Get single unit for editing
+ */
+function get_unit() {
+    header('Content-Type: application/json');
+    global $conn;
+    
+    $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+    
+    if ($id <= 0) {
+        echo json_encode(['error' => true, 'msg' => 'Invalid ID']);
+        exit;
+    }
+
+    $stmt = $conn->prepare("SELECT * FROM units WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result()->fetch_assoc();
+
+    echo json_encode($result);
+}
+
+/**
+ * Delete unit
+ */
+function delete_unit() {
+    header('Content-Type: application/json');
+    global $conn;
+    
+    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+
+    if ($id <= 0) {
+        echo json_encode(['error' => true, 'msg' => 'Invalid ID.']);
+        exit;
+    }
+
+    // Check if unit has active lease
+    $check = $conn->prepare("SELECT id FROM leases WHERE unit_id = ? AND status = 'active' LIMIT 1");
+    $check->bind_param("i", $id);
+    $check->execute();
+    if ($check->get_result()->num_rows > 0) {
+        echo json_encode(['error' => true, 'msg' => 'Cannot delete. This unit has an active lease.']);
+        exit;
+    }
+
+    $stmt = $conn->prepare("DELETE FROM units WHERE id = ?");
+    $stmt->bind_param("i", $id);
+
+    if ($stmt->execute()) {
+        echo json_encode(['error' => false, 'msg' => 'Unit deleted successfully.']);
+    } else {
+        echo json_encode(['error' => true, 'msg' => 'Error deleting unit: ' . $conn->error]);
+    }
+}
+
+/**
+ * Get all properties for dropdown
+ */
+function get_all_properties() {
+    header('Content-Type: application/json');
+    global $conn;
+
+    $result = $conn->query("SELECT id, name FROM properties ORDER BY name");
+    $properties = [];
+    
+    while ($row = $result->fetch_assoc()) {
+        $properties[] = $row;
+    }
+
+    echo json_encode($properties);
+}
+
+/**
+ * Get units by property ID for dropdown
+ */
+function get_units_by_property() {
+    header('Content-Type: application/json');
+    global $conn;
+
+    $property_id = isset($_GET['property_id']) ? intval($_GET['property_id']) : 0;
+    $vacant_only = isset($_GET['vacant_only']) ? $_GET['vacant_only'] == '1' : false;
+    
+    if ($property_id <= 0) {
+        echo json_encode([]);
+        exit;
+    }
+
+    $sql = "SELECT id, unit_number, unit_type, status, rent_amount FROM units WHERE property_id = ?";
+    if ($vacant_only) {
+        $sql .= " AND status = 'vacant'";
+    }
+    $sql .= " ORDER BY unit_number";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $property_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $units = [];
+    while ($row = $result->fetch_assoc()) {
+        $units[] = $row;
+    }
+
+    echo json_encode($units);
 }
 ?>

@@ -1,4 +1,9 @@
 document.addEventListener('DOMContentLoaded', function () {
+    // Load property types and managers dropdowns
+    loadPropertyTypes();
+    loadManagers();
+    loadPropertiesForUnits();
+
     if (document.getElementById('propertiesTable')) {
         loadProperties();
     }
@@ -7,11 +12,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Handle Add Property Form Submission
-    $(document).on('click', '#savePropertyBtn', function () {
+    $(document).off('click', '#savePropertyBtn').on('click', '#savePropertyBtn', function (e) {
+        e.preventDefault();
+        var $btn = $(this);
+        if ($btn.prop('disabled')) return; // Prevent double submission
+
         var form = $('#addPropertyForm')[0];
         if (form.checkValidity()) {
             var formData = new FormData(form);
-            // Add ID if editing (you might need a hidden input for property_id in the form)
+            $btn.prop('disabled', true); // Disable button
 
             $.ajax({
                 url: 'app/property_controller.php?action=save_property',
@@ -19,18 +28,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 data: formData,
                 processData: false,
                 contentType: false,
+                dataType: 'json',
                 success: function (response) {
                     if (response.error) {
-                        Swal.fire('Error', response.msg, 'error');
+                        swal('Error', response.msg, 'error');
                     } else {
-                        Swal.fire('Success', response.msg, 'success');
+                        toaster.success(response.msg, 'Success', { top: '10%', right: '20px', hide: true, duration: 1500 });
                         $('#addPropertyModal').modal('hide');
                         $('#addPropertyForm')[0].reset();
                         $('#propertiesTable').DataTable().ajax.reload();
                     }
                 },
                 error: function () {
-                    Swal.fire('Error', 'An unexpected error occurred.', 'error');
+                    swal('Error', 'An unexpected error occurred.', 'error');
+                },
+                complete: function () {
+                    $btn.prop('disabled', false); // Re-enable button
                 }
             });
         } else {
@@ -39,30 +52,38 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Handle Add Unit Form Submission
-    $(document).on('click', '#saveUnitBtn', function () {
+    $(document).off('click', '#saveUnitBtn').on('click', '#saveUnitBtn', function (e) {
+        e.preventDefault();
+        var $btn = $(this);
+        if ($btn.prop('disabled')) return; // Prevent double submission
+
         var form = $('#addUnitForm')[0];
         if (form.checkValidity()) {
             var formData = new FormData(form);
-            // Add ID if editing
+            $btn.prop('disabled', true); // Disable button
 
             $.ajax({
-                url: 'app/property_controller.php?action=save_unit', // Need to implement this in controller
+                url: 'app/property_controller.php?action=save_unit',
                 type: 'POST',
                 data: formData,
                 processData: false,
                 contentType: false,
+                dataType: 'json',
                 success: function (response) {
                     if (response.error) {
-                        Swal.fire('Error', response.msg, 'error');
+                        swal('Error', response.msg, 'error');
                     } else {
-                        Swal.fire('Success', response.msg, 'success');
+                        toaster.success(response.msg, 'Success', { top: '10%', right: '20px', hide: true, duration: 1500 });
                         $('#addUnitModal').modal('hide');
                         $('#addUnitForm')[0].reset();
                         $('#unitsTable').DataTable().ajax.reload();
                     }
                 },
                 error: function () {
-                    Swal.fire('Error', 'An unexpected error occurred.', 'error');
+                    swal('Error', 'An unexpected error occurred.', 'error');
+                },
+                complete: function () {
+                    $btn.prop('disabled', false); // Re-enable button
                 }
             });
         } else {
@@ -73,7 +94,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // Reset Unit Modal on close
     $(document).on('hidden.bs.modal', '#addUnitModal', function () {
         $('#addUnitForm')[0].reset();
-        $('input[name="unit_id"]').remove();
+        $('#unit_id').val(''); // Clear the unit ID
+        $('#unit_property_select').val('').selectpicker('refresh'); // Reset Bootstrap Select
         $('#addUnitLabel').html('<i class="bi bi-door-open me-2"></i>Add Unit');
         $('#saveUnitBtn').html('<i class="bi bi-save me-1"></i>Save Unit');
     });
@@ -87,6 +109,7 @@ function loadProperties() {
     $('#propertiesTable').DataTable({
         "processing": true,
         "serverSide": true,
+        "pageLength": 25,
         "ajax": {
             "url": "app/property_controller.php?action=get_properties",
             "type": "POST"
@@ -105,60 +128,110 @@ function loadProperties() {
     });
 }
 
-function editProperty(id) {
-    // Implementation for editing property
-    // Fetch data and populate modal
+/**
+ * Load property types into dropdown
+ */
+function loadPropertyTypes() {
     $.ajax({
-        url: 'app/property_controller.php?action=get_property&id=' + id,
+        url: `${base_url}/app/property_type_controller.php?action=get_active_types`,
         type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            var select = $('#property_type_select');
+            select.find('option:not(:first)').remove(); // Keep "Select Type" option
+
+            if (data && data.length > 0) {
+                data.forEach(function (type) {
+                    select.append('<option value="' + type.id + '">' + type.type_name + '</option>');
+                });
+            }
+            // Refresh Bootstrap Select
+            select.selectpicker('refresh');
+        },
+        error: function () {
+            console.error('Failed to load property types');
+        }
+    });
+}
+
+/**
+ * Load managers (users) into dropdown
+ */
+function loadManagers() {
+    $.ajax({
+        url: `${base_url}/app/user_controller.php?action=get_managers`,
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            var select = $('#manager_select');
+            select.find('option:not(:first)').remove();
+
+            if (data && data.length > 0) {
+                data.forEach(function (user) {
+                    select.append('<option value="' + user.id + '">' + user.name + '</option>');
+                });
+            }
+            // Refresh Bootstrap Select
+            select.selectpicker('refresh');
+        },
+        error: function () {
+            console.error('Failed to load managers');
+        }
+    });
+}
+
+function editProperty(id) {
+    $.ajax({
+        url: `${base_url}/app/property_controller.php?action=get_property&id=${id}`,
+        type: 'GET',
+        dataType: 'json',
         success: function (data) {
             // Populate form fields
-            $('input[name="name"]').val(data.name);
-            $('select[name="type"]').val(data.type);
-            $('input[name="address"]').val(data.address);
-            $('input[name="city"]').val(data.city);
-            $('input[name="owner_name"]').val(data.owner_name);
-            $('select[name="manager_id"]').val(data.manager_id);
+            $('#property_id').val(data.id);
+            $('#property_name').val(data.name);
+            $('#property_type_select').val(data.type_id).selectpicker('refresh');
+            $('#property_address').val(data.address);
+            $('#property_city').val(data.city);
+            $('#property_owner').val(data.owner_name);
+            $('#manager_select').val(data.manager_id).selectpicker('refresh');
             $('textarea[name="description"]').val(data.description);
-
-            // Add hidden input for ID if not exists
-            if ($('input[name="property_id"]').length === 0) {
-                $('#addPropertyForm').append('<input type="hidden" name="property_id" value="' + data.id + '">');
-            } else {
-                $('input[name="property_id"]').val(data.id);
-            }
 
             // Change modal title and button text
             $('#addPropertyLabel').html('<i class="bi bi-pencil me-2"></i>Edit Property');
             $('#savePropertyBtn').text('Update Property');
 
             $('#addPropertyModal').modal('show');
+        },
+        error: function () {
+            swal('Error', 'Could not fetch property data.', 'error');
         }
     });
 }
 
 function deleteProperty(id) {
-    Swal.fire({
+    swal({
         title: 'Are you sure?',
         text: "You won't be able to revert this!",
         icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, delete it!'
-    }).then((result) => {
-        if (result.isConfirmed) {
+        buttons: true,
+        dangerMode: true,
+    }).then((willDelete) => {
+        if (willDelete) {
             $.ajax({
                 url: 'app/property_controller.php?action=delete_property',
                 type: 'POST',
                 data: { id: id },
+                dataType: 'json',
                 success: function (response) {
                     if (response.error) {
-                        Swal.fire('Error', response.msg, 'error');
+                        swal('Error', response.msg, 'error');
                     } else {
-                        Swal.fire('Deleted!', response.msg, 'success');
+                        toaster.success(response.msg, 'Success', { top: '10%', right: '20px', hide: true, duration: 1500 });
                         $('#propertiesTable').DataTable().ajax.reload();
                     }
+                },
+                error: function () {
+                    swal('Error', 'An unexpected error occurred.', 'error');
                 }
             });
         }
@@ -169,7 +242,9 @@ function deleteProperty(id) {
 document.addEventListener('DOMContentLoaded', function () {
     $(document).on('hidden.bs.modal', '#addPropertyModal', function () {
         $('#addPropertyForm')[0].reset();
-        $('input[name="property_id"]').remove();
+        $('#property_id').val(''); // Clear the property ID
+        $('#property_type_select').val('').selectpicker('refresh'); // Reset Bootstrap Select
+        $('#manager_select').val('').selectpicker('refresh'); // Reset Bootstrap Select
         $('#addPropertyLabel').html('<i class="bi bi-building-add me-2"></i>Add Property');
         $('#savePropertyBtn').text('Save Property');
     });
@@ -183,6 +258,7 @@ function loadUnits() {
     $('#unitsTable').DataTable({
         "processing": true,
         "serverSide": true,
+        "pageLength": 25,
         "ajax": {
             "url": "app/property_controller.php?action=get_units",
             "type": "POST"
@@ -195,5 +271,97 @@ function loadUnits() {
             { "data": "actions", "orderable": false }
         ],
         "order": [[0, "asc"]]
+    });
+}
+
+/**
+ * Load properties for unit dropdown
+ */
+function loadPropertiesForUnits() {
+    $.ajax({
+        url: `${base_url}/app/property_controller.php?action=get_all_properties`,
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            var select = $('#unit_property_select');
+            select.find('option:not(:first)').remove();
+
+            if (data && data.length > 0) {
+                data.forEach(function (property) {
+                    select.append('<option value="' + property.id + '">' + property.name + '</option>');
+                });
+            }
+            // Refresh Bootstrap Select
+            select.selectpicker('refresh');
+        },
+        error: function () {
+            console.error('Failed to load properties for units');
+        }
+    });
+}
+
+/**
+ * Edit unit - fetch and populate modal
+ */
+function editUnit(id) {
+    $.ajax({
+        url: 'app/property_controller.php?action=get_unit&id=' + id,
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            if (data) {
+                $('#unit_id').val(data.id);
+                $('#unit_property_select').val(data.property_id).selectpicker('refresh');
+                $('#unit_number').val(data.unit_number);
+                $('#unit_type').val(data.unit_type);
+                $('#unit_size').val(data.size_sqft);
+                $('#unit_rent').val(data.rent_amount);
+                $('#unit_status').val(data.status);
+                $('#unit_tenant_select').val(data.tenant_id);
+
+                $('#addUnitLabel').html('<i class="bi bi-pencil me-2"></i>Edit Unit');
+                $('#saveUnitBtn').html('<i class="bi bi-save me-1"></i>Update Unit');
+
+                $('#addUnitModal').modal('show');
+            } else {
+                swal('Error', 'Could not fetch unit data.', 'error');
+            }
+        },
+        error: function () {
+            swal('Error', 'Could not fetch unit data.', 'error');
+        }
+    });
+}
+
+/**
+ * Delete unit with confirmation
+ */
+function deleteUnit(id) {
+    swal({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        buttons: true,
+        dangerMode: true,
+    }).then((willDelete) => {
+        if (willDelete) {
+            $.ajax({
+                url: 'app/property_controller.php?action=delete_unit',
+                type: 'POST',
+                data: { id: id },
+                dataType: 'json',
+                success: function (response) {
+                    if (response.error) {
+                        swal('Error', response.msg, 'error');
+                    } else {
+                        toaster.success(response.msg, 'Success', { top: '10%', right: '20px', hide: true, duration: 1500 });
+                        $('#unitsTable').DataTable().ajax.reload();
+                    }
+                },
+                error: function () {
+                    swal('Error', 'An unexpected error occurred.', 'error');
+                }
+            });
+        }
     });
 }

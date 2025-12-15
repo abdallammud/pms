@@ -54,16 +54,49 @@ INSERT IGNORE INTO roles (role_name, description) VALUES
 ('staff', 'Handles maintenance requests');
 
 -- ---------------------------------------------------------
--- SYSTEM SETTINGS
+-- SYSTEM SETTINGS (Key-Value Store)
 -- ---------------------------------------------------------
+
+DROP TABLE IF EXISTS system_settings;
 
 CREATE TABLE IF NOT EXISTS system_settings (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    currency VARCHAR(10) DEFAULT 'USD',
-    invoice_prefix VARCHAR(20) DEFAULT 'INV',
-    theme VARCHAR(20) DEFAULT 'light',
-    logo_path VARCHAR(255)
+    setting_key VARCHAR(100) UNIQUE NOT NULL,
+    setting_value TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+-- Default Organization Settings
+INSERT INTO system_settings (setting_key, setting_value) VALUES
+('org_name', ''),
+('org_email', ''),
+('org_phone', ''),
+('org_street1', ''),
+('org_street2', ''),
+('org_city', ''),
+('logo_path', ''),
+('transaction_series', '{"invoice":{"prefix":"INV-","suffix":"","starting_number":"00001","current_number":0},"payment":{"prefix":"RCT-","suffix":"","starting_number":"00001","current_number":0},"expense":{"prefix":"EXP-","suffix":"","starting_number":"00001","current_number":0},"maintenance":{"prefix":"MR-","suffix":"","starting_number":"00001","current_number":0},"lease":{"prefix":"LS-","suffix":"","starting_number":"00001","current_number":0}}');
+
+-- ---------------------------------------------------------
+-- PROPERTY TYPES
+-- ---------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS property_types (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    type_name VARCHAR(100) NOT NULL,
+    description VARCHAR(255),
+    status ENUM('active','inactive') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Default Property Types
+INSERT IGNORE INTO property_types (type_name, description) VALUES
+('Apartment', 'Multi-unit residential building'),
+('House', 'Single-family residential property'),
+('Commercial', 'Business or retail property'),
+('Office', 'Office building or space'),
+('Warehouse', 'Storage or industrial property');
 
 -- ---------------------------------------------------------
 -- PROPERTIES & UNITS
@@ -72,14 +105,15 @@ CREATE TABLE IF NOT EXISTS system_settings (
 CREATE TABLE IF NOT EXISTS properties (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(150),
-    type VARCHAR(50),
+    type_id INT NULL,
     address VARCHAR(255),
     city VARCHAR(100),
     manager_id INT NULL,
     owner_name VARCHAR(150),
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (manager_id) REFERENCES users(id)
+    FOREIGN KEY (manager_id) REFERENCES users(id),
+    FOREIGN KEY (type_id) REFERENCES property_types(id)
 );
 
 CREATE TABLE IF NOT EXISTS units (
@@ -110,12 +144,24 @@ CREATE TABLE IF NOT EXISTS tenants (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS guarantees (
+    id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    full_name VARCHAR(150) DEFAULT NULL,
+    phone VARCHAR(20) DEFAULT NULL,
+    email VARCHAR(100) DEFAULT NULL,
+    id_number VARCHAR(50) DEFAULT NULL,
+    work_info VARCHAR(255) DEFAULT NULL,
+    status ENUM('active','inactive') DEFAULT 'active',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
 -- ---------------------------------------------------------
 -- LEASES
 -- ---------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS leases (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    reference_number VARCHAR(50) NULL,
     tenant_id INT,
     unit_id INT,
     start_date DATE,
@@ -135,6 +181,7 @@ CREATE TABLE IF NOT EXISTS leases (
 
 CREATE TABLE IF NOT EXISTS rent_invoices (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    reference_number VARCHAR(50) NULL,
     lease_id INT,
     invoice_date DATE,
     due_date DATE,
@@ -145,6 +192,7 @@ CREATE TABLE IF NOT EXISTS rent_invoices (
 
 CREATE TABLE IF NOT EXISTS payments_received (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    reference_number VARCHAR(50) NULL,
     invoice_id INT,
     amount_paid DECIMAL(10,2),
     payment_method ENUM('cash','mobile','bank'),
@@ -159,6 +207,7 @@ CREATE TABLE IF NOT EXISTS payments_received (
 
 CREATE TABLE IF NOT EXISTS expenses (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    reference_number VARCHAR(50) NULL,
     property_id INT,
     category VARCHAR(100),
     amount DECIMAL(10,2),
@@ -181,6 +230,7 @@ CREATE TABLE IF NOT EXISTS vendors (
 
 CREATE TABLE IF NOT EXISTS maintenance_requests (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    reference_number VARCHAR(50) NULL,
     property_id INT,
     unit_id INT,
     description TEXT,

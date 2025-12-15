@@ -131,8 +131,10 @@ function get_menu_config() {
             'sub' => [
                 'directory' => ['default' => 'tenants', 'route' => 'tenants', 'name' => 'Tenant Directory', 'auth' => 'tenant_manage'],
                 'add' => ['default' => 'add_tenant', 'is_modal' => true, 'data-bs-target' => '#addTenantModal', 'route' => 'add_tenant', 'name' => 'Add Tenant', 'auth' => 'tenant_create'],
-                'leases' => ['default' => 'leases', 'route' => 'leases', 'name' => 'Lease Agreements', 'auth' => 'lease_manage'],
+                'leases' => ['default' => 'leases', 'route' => 'leases', 'active' => ['leases', 'edit_lease', 'view_lease'], 'name' => 'Lease Agreements', 'auth' => 'lease_manage'],
                 'add_lease' => ['default' => 'add_lease', 'route' => 'add_lease', 'name' => 'Add Lease', 'auth' => 'lease_create'],
+                'edit_lease' => ['default' => 'edit_lease', 'is_menu' => false, 'route' => 'edit_lease', 'name' => 'Edit Lease', 'auth' => 'lease_update'],
+                'view_lease' => ['default' => 'view_lease', 'is_menu' => false, 'route' => 'view_lease', 'name' => 'View Lease', 'auth' => 'lease_manage'],
                 'guarantees' => ['default' => 'guarantees', 'route' => 'guarantees', 'name' => 'Guarantees', 'auth' => 'tenant_manage'],
             ],
         ],

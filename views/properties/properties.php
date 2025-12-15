@@ -35,4 +35,3 @@
         </div>
     </div>
 </main>
-<script src="public/js/modules/properties.js"></script>

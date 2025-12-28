@@ -65,7 +65,11 @@ document.addEventListener('DOMContentLoaded', function () {
             $btn.prop('disabled', true); // Disable button
 
             $.ajax({
+<<<<<<< HEAD
                 url: base_url + '/app/property_controller.php?action=save_unit',
+=======
+                url: 'app/property_controller.php?action=save_unit',
+>>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
                 type: 'POST',
                 data: formData,
                 processData: false,
@@ -193,11 +197,71 @@ function loadManagers() {
     });
 }
 
+<<<<<<< HEAD
 function editProperty(id) {
     $.ajax({
         url: `${base_url}/app/property_controller.php?action=get_property&id=${id}`,
         type: 'GET',
         dataType: 'json',
+=======
+/**
+ * Load property types into dropdown
+ */
+function loadPropertyTypes() {
+    $.ajax({
+        url: `${base_url}/app/property_type_controller.php?action=get_active_types`,
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            var select = $('#property_type_select');
+            select.find('option:not(:first)').remove(); // Keep "Select Type" option
+
+            if (data && data.length > 0) {
+                data.forEach(function (type) {
+                    select.append('<option value="' + type.id + '">' + type.type_name + '</option>');
+                });
+            }
+            // Refresh Bootstrap Select
+            select.selectpicker('refresh');
+        },
+        error: function () {
+            console.error('Failed to load property types');
+        }
+    });
+}
+
+/**
+ * Load managers (users) into dropdown
+ */
+function loadManagers() {
+    $.ajax({
+        url: `${base_url}/app/user_controller.php?action=get_managers`,
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            var select = $('#manager_select');
+            select.find('option:not(:first)').remove();
+
+            if (data && data.length > 0) {
+                data.forEach(function (user) {
+                    select.append('<option value="' + user.id + '">' + user.name + '</option>');
+                });
+            }
+            // Refresh Bootstrap Select
+            select.selectpicker('refresh');
+        },
+        error: function () {
+            console.error('Failed to load managers');
+        }
+    });
+}
+
+function editProperty(id) {
+    $.ajax({
+        url: `${base_url}/app/property_controller.php?action=get_property&id=${id}`,
+        type: 'GET',
+        dataType: 'json',
+>>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
         success: function (data) {
             // Populate form fields
             $('#property_id').val(data.id);
@@ -562,6 +626,98 @@ function performUnitBulkAction(action, ids) {
         },
         complete: function () {
             $btn.prop('disabled', false).text('Apply');
+        }
+    });
+}
+
+/**
+ * Load properties for unit dropdown
+ */
+function loadPropertiesForUnits() {
+    $.ajax({
+        url: `${base_url}/app/property_controller.php?action=get_all_properties`,
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            var select = $('#unit_property_select');
+            select.find('option:not(:first)').remove();
+
+            if (data && data.length > 0) {
+                data.forEach(function (property) {
+                    select.append('<option value="' + property.id + '">' + property.name + '</option>');
+                });
+            }
+            // Refresh Bootstrap Select
+            select.selectpicker('refresh');
+        },
+        error: function () {
+            console.error('Failed to load properties for units');
+        }
+    });
+}
+
+/**
+ * Edit unit - fetch and populate modal
+ */
+function editUnit(id) {
+    $.ajax({
+        url: 'app/property_controller.php?action=get_unit&id=' + id,
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            if (data) {
+                $('#unit_id').val(data.id);
+                $('#unit_property_select').val(data.property_id).selectpicker('refresh');
+                $('#unit_number').val(data.unit_number);
+                $('#unit_type').val(data.unit_type);
+                $('#unit_size').val(data.size_sqft);
+                $('#unit_rent').val(data.rent_amount);
+                $('#unit_status').val(data.status);
+                $('#unit_tenant_select').val(data.tenant_id);
+
+                $('#addUnitLabel').html('<i class="bi bi-pencil me-2"></i>Edit Unit');
+                $('#saveUnitBtn').html('<i class="bi bi-save me-1"></i>Update Unit');
+
+                $('#addUnitModal').modal('show');
+            } else {
+                swal('Error', 'Could not fetch unit data.', 'error');
+            }
+        },
+        error: function () {
+            swal('Error', 'Could not fetch unit data.', 'error');
+        }
+    });
+}
+
+/**
+ * Delete unit with confirmation
+ */
+function deleteUnit(id) {
+    swal({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        buttons: true,
+        dangerMode: true,
+    }).then((willDelete) => {
+        if (willDelete) {
+            $.ajax({
+                url: 'app/property_controller.php?action=delete_unit',
+                type: 'POST',
+                data: { id: id },
+                dataType: 'json',
+                success: function (response) {
+                    if (response.error) {
+                        swal('Error', response.msg, 'error');
+                    } else {
+                        toaster.success(response.msg, 'Success', { top: '10%', right: '20px', hide: true, duration: 1500 });
+                        $('#unitsTable').DataTable().ajax.reload();
+                    }
+                },
+                error: function () {
+                    swal('Error', 'An unexpected error occurred.', 'error');
+                }
+            });
         }
     });
 }

@@ -143,6 +143,7 @@ function deleteGuarantee(id) {
             });
         }
     });
+<<<<<<< HEAD
 }
 
 /**
@@ -231,4 +232,6 @@ function performGuaranteeBulkAction(action, ids) {
             $btn.prop('disabled', false).text('Apply');
         }
     });
+=======
+>>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
 }

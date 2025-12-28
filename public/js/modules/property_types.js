@@ -6,14 +6,22 @@ var propertyTypesTable;
 
 document.addEventListener('DOMContentLoaded', function () {
     if (document.getElementById('propertyTypesTable')) {
+<<<<<<< HEAD
         loadPropertyTypesDatatable();
+=======
+        loadPropertyTypes();
+>>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
     }
 });
 
 /**
  * Load Property Types DataTable
  */
+<<<<<<< HEAD
 function loadPropertyTypesDatatable() {
+=======
+function loadPropertyTypes() {
+>>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
     if ($.fn.DataTable.isDataTable('#propertyTypesTable')) {
         $('#propertyTypesTable').DataTable().destroy();
     }
@@ -22,11 +30,16 @@ function loadPropertyTypesDatatable() {
         "processing": true,
         "serverSide": true,
         "ajax": {
+<<<<<<< HEAD
             "url": base_url + "/app/property_type_controller.php?action=get_property_types",
             "type": "POST",
             // dataFilter: function (data) {
             //     console.log(data)
             // }
+=======
+            "url": "app/property_type_controller.php?action=get_property_types",
+            "type": "POST"
+>>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
         },
         "columns": [
             { "data": "type_name" },
@@ -46,7 +59,11 @@ function savePropertyType() {
     var formData = $('#propertyTypeForm').serialize();
 
     $.ajax({
+<<<<<<< HEAD
         url: base_url + '/app/property_type_controller.php?action=save',
+=======
+        url: 'app/property_type_controller.php?action=save',
+>>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
         type: 'POST',
         data: formData,
         dataType: 'json',
@@ -72,7 +89,11 @@ function savePropertyType() {
  */
 function editPropertyType(id) {
     $.ajax({
+<<<<<<< HEAD
         url: base_url + '/app/property_type_controller.php?action=get_property_type&id=' + id,
+=======
+        url: 'app/property_type_controller.php?action=get_property_type&id=' + id,
+>>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
         type: 'GET',
         dataType: 'json',
         success: function (data) {
@@ -108,7 +129,11 @@ function deletePropertyType(id) {
         .then((willDelete) => {
             if (willDelete) {
                 $.ajax({
+<<<<<<< HEAD
                     url: base_url + '/app/property_type_controller.php?action=delete',
+=======
+                    url: 'app/property_type_controller.php?action=delete',
+>>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
                     type: 'POST',
                     data: { id: id },
                     dataType: 'json',

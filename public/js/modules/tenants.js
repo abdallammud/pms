@@ -11,7 +11,11 @@ document.addEventListener('DOMContentLoaded', function () {
             var formData = new FormData(form);
 
             $.ajax({
+<<<<<<< HEAD
                 url: base_url + '/app/tenant_controller.php?action=save_tenant',
+=======
+                url: 'app/tenant_controller.php?action=save_tenant',
+>>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
                 type: 'POST',
                 data: formData,
                 processData: false,
@@ -85,7 +89,11 @@ function loadTenants() {
  */
 function editTenant(id) {
     $.ajax({
+<<<<<<< HEAD
         url: base_url + '/app/tenant_controller.php?action=get_tenant&id=' + id,
+=======
+        url: 'app/tenant_controller.php?action=get_tenant&id=' + id,
+>>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
         type: 'GET',
         dataType: 'json',
         success: function (data) {
@@ -125,7 +133,11 @@ function deleteTenant(id) {
     }).then((willDelete) => {
         if (willDelete) {
             $.ajax({
+<<<<<<< HEAD
                 url: base_url + '/app/tenant_controller.php?action=delete_tenant',
+=======
+                url: 'app/tenant_controller.php?action=delete_tenant',
+>>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
                 type: 'POST',
                 data: { id: id },
                 dataType: 'json',
@@ -143,6 +155,7 @@ function deleteTenant(id) {
             });
         }
     });
+<<<<<<< HEAD
 }
 
 /**
@@ -230,4 +243,6 @@ function performTenantBulkAction(action, ids) {
             $btn.prop('disabled', false).text('Apply');
         }
     });
+=======
+>>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
 }

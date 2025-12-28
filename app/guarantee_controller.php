@@ -166,6 +166,7 @@ function get_guarantee() {
     $result = $stmt->get_result()->fetch_assoc();
 
     echo json_encode($result);
+<<<<<<< HEAD
 }
 
 /**
@@ -210,5 +211,7 @@ function bulk_action() {
     } else {
         echo json_encode(['error' => true, 'msg' => 'Invalid action type.']);
     }
+=======
+>>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
 }
 ?>

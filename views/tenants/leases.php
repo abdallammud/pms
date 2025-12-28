@@ -30,7 +30,10 @@
                     <table class="table table-striped table-hover w-100" id="leasesTable">
                         <thead>
                             <tr>
+<<<<<<< HEAD
                                 <th width="40"><input type="checkbox" id="selectAllLeasesCheckBox"></th>
+=======
+>>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
                                 <th>Reference</th>
                                 <th>Tenant</th>
                                 <th>Property / Unit</th>
@@ -51,6 +54,7 @@
     </div>
 </main>
 
+<<<<<<< HEAD
 <!-- Auto-Rent Progress Modal -->
 <div class="modal fade" id="autoRentProgressModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
@@ -77,3 +81,6 @@
         </div>
     </div>
 </div>
+=======
+<script src="<?=baseUri();?>/public/js/modules/lease.js"></script>
+>>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6

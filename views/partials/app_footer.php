@@ -14,7 +14,10 @@
 
 	
 	<!--start switcher-->
-
+	<!-- Global Base URL for JavaScript -->
+	<script>
+	</script>
+	<script src="<?=baseUri();?>/public/js/modules/properties.js"></script>
 	<?php require('to_json.php'); ?>
 	<!--bootstrap js-->
 	<script src="<?=baseUri();?>/public/js/bootstrap.bundle.min.js"></script>
@@ -42,6 +45,9 @@
 	<script src="<?=baseUri();?>/public/js/main.js"></script>
 	<script src="<?=baseUri();?>/public/js/utilities.js"></script>
 	<script src="<?=baseUri();?>/public/js/script.js"></script>
+	<script src="<?=baseUri();?>/public/js/modules/tenants.js"></script>
+	<script src="<?=baseUri();?>/public/js/modules/invoice.js"></script>
+	<script src="<?=baseUri();?>/public/js/modules/lease.js"></script>
 	
 	<!-- <script src="<?=baseUri();?>/public/js/dashboard1.js"></script> -->
 	<script>

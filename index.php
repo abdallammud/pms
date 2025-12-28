@@ -30,4 +30,4 @@ if (function_exists('authenticate')) {
     <?php require_once 'views/accounting/modals/add_invoice.php'; ?>
     <?php require_once 'views/maintenance/modals/create_request.php'; ?>
     <?php require_once 'views/maintenance/modals/assign_request.php'; ?>
-<?php require_once 'views/partials/app_footer.php'; ?>
+    <?php require_once 'views/partials/app_footer.php'; ?>

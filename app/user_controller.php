@@ -26,6 +26,8 @@ if (isset($_GET['action'])) {
         get_all_permissions();
     } elseif ($action == 'get_role_permissions') {
         get_role_permissions();
+    } elseif ($action == 'get_managers') {
+        get_managers();
     }
 }
 
@@ -409,5 +411,22 @@ function get_role_permissions() {
     }
     
     echo json_encode(['role_name' => $role_name, 'permissions' => $permissions]);
+}
+
+/**
+ * Get all active users for manager dropdown
+ */
+function get_managers() {
+    header('Content-Type: application/json');
+    global $conn;
+    
+    $result = $conn->query("SELECT id, name FROM users WHERE status = 'active' ORDER BY name");
+    $managers = [];
+    
+    while ($row = $result->fetch_assoc()) {
+        $managers[] = $row;
+    }
+    
+    echo json_encode($managers);
 }
 ?>

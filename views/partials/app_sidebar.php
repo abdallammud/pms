@@ -27,12 +27,16 @@ foreach ($menus as $sideMenu) {
 					<ul class="'.$showSub.'">';
 			foreach ($sideMenu['sub'] as $sub) {
 				if(check_session($sub['auth'])) {
+					if(isset($sub['is_menu']) && !$sub['is_menu']) {
+						continue;
+					}
 					$activeSub = '';
 					$icon = '';
 					if(isset($sub['icon'])) {
 						$icon = $sub['icon'];
 					}
-					if($tab == $sub['route']) {
+					
+					if($tab == $sub['route'] || (isset($sub['active']) && in_array($tab, $sub['active']))) {
 						$activeSub = 'active mm-active';
 						// $icon = 'caret-down';
 					}

@@ -1,8 +1,10 @@
-<?php 
-function escapeStr($str) {
-	return $GLOBALS['conn']->real_escape_string($str);
+<?php
+function escapeStr($str)
+{
+    return $GLOBALS['conn']->real_escape_string($str);
 }
-function escapePostData($postData) {
+function escapePostData($postData)
+{
     // Create an array to hold the escaped data
     $escapedData = [];
 
@@ -22,7 +24,8 @@ function escapePostData($postData) {
     return $escapedData;
 }
 
-function get_data($table, array $fields) {
+function get_data($table, array $fields)
+{
     // Ensure the table name is safe
     // $allowedTables = ['company', 'branches', 'states']; // Define allowed tables
     // if (!in_array($table, $allowedTables)) {
@@ -48,13 +51,13 @@ function get_data($table, array $fields) {
         // Bind parameters dynamically
         $types = str_repeat('s', count($params)); // Assuming all values are strings; adjust if needed
         $stmt->bind_param($types, ...$params);
-        
+
         // Execute the query
         $stmt->execute();
-        
+
         // Get the result
         $result = $stmt->get_result();
-        
+
         // Fetch data
         if ($result->num_rows > 0) {
             return $result->fetch_all(MYSQLI_ASSOC);
@@ -65,18 +68,21 @@ function get_data($table, array $fields) {
 }
 
 // Function to check and create entities
-function checkAndCreateEntity($table, $name, $userId, $class) {
+function checkAndCreateEntity($table, $name, $userId, $class)
+{
     $entity = get_data($table, ['name' => $name]);
     if (!$entity) {
         $data = ['name' => $name, 'added_by' => $userId];
         $id = $class->create($data);
-        if (!$id) throw new Exception("Failed to create $table: $name");
+        if (!$id)
+            throw new Exception("Failed to create $table: $name");
         return $id;
     }
     return $entity[0]['id'];
 }
 
-function check_exists($table, $columns, $not = array()) {
+function check_exists($table, $columns, $not = array())
+{
     // Ensure the connection variable is set
     if (!isset($GLOBALS['conn'])) {
         echo json_encode(['error' => true, 'msg' => 'Database connection not established']);
@@ -93,7 +99,7 @@ function check_exists($table, $columns, $not = array()) {
     }
     $query .= implode(' AND ', $conditions);
 
-    if(count($not) > 0) {
+    if (count($not) > 0) {
         $query .= " AND ";
         $conditions = [];
         foreach ($not as $column => $value) {
@@ -116,23 +122,22 @@ function check_exists($table, $columns, $not = array()) {
         echo json_encode(['error' => true, 'msg' => 'Database query error: ' . mysqli_error($conn)]);
         exit();
     }
-
-    return true;
 }
 
-function checkForeignKey($primaryId, $primaryName, $tables) {
+function checkForeignKey($primaryId, $primaryName, $tables)
+{
     global $conn; // Ensure the global connection is accessible
-    
+
     // Loop through each table and check if the foreign key exists
     foreach ($tables as $table) {
         // Query to check if the primary ID exists as a foreign key in the table
         $query = "SELECT COUNT(*) AS count FROM `$table` WHERE `$primaryName` = ?";
-        
+
         // Prepare and execute the query
         $stmt = $conn->prepare($query);
         $stmt->bind_param("s", $primaryId); // Bind the ID parameter to the query
         $stmt->execute();
-        
+
         // Get the query result
         $result = $stmt->get_result()->fetch_assoc();
 
@@ -150,10 +155,11 @@ function checkForeignKey($primaryId, $primaryName, $tables) {
 
 
 // Settings
-function get_setting($type) {
+function get_setting($type)
+{
     $defaultValue = settingsArray();
     $setting = get_data('sys_settings', array('type' => $type));
-    if(!$setting) {
+    if (!$setting) {
         $setting = $defaultValue[$type];
     } else {
         $setting = $setting[0];
@@ -164,99 +170,100 @@ function get_setting($type) {
 
 
 $GLOBALS['MAIL'] = [
-    'host'     => 'smtp.gmail.com',
-    'port'     => 587,
+    'host' => 'smtp.gmail.com',
+    'port' => 587,
     'username' => 'random.my.gm@gmail.com',
     'password' => 'esez afrv dnpe nukx', // ⚠️ Use App Password, not Gmail password
-    'secure'   => 'tls',        // 'tls' or 'ssl'
-    'from'     => 'random.my.gm@gmail.com',
+    'secure' => 'tls',        // 'tls' or 'ssl'
+    'from' => 'random.my.gm@gmail.com',
     'fromName' => 'SUPPORT CENTER',
-    'replyTo'  => 'no-reply@yourdomain.com'
+    'replyTo' => 'no-reply@yourdomain.com'
 ];
-function settingsArray() {
+function settingsArray()
+{
     $defaultValue = array(
         'staff_prefix' => [
             'type' => 'staff_prefix',
-            'value' => 'SB', 
-            'section' => 'employees', 
-            'details' => 'Staff number prefix', 
+            'value' => 'SB',
+            'section' => 'employees',
+            'details' => 'Staff number prefix',
             'remarks' => ''
         ],
         'working_hours' => [
             'type' => 'working_hours',
-            'value' => '8', 
-            'section' => 'payroll', 
-            'details' => 'Working hours per day', 
+            'value' => '8',
+            'section' => 'payroll',
+            'details' => 'Working hours per day',
             'remarks' => 'required'
         ],
         'working_days' => [
             'type' => 'working_days',
-            'value' => '5', 
-            'section' => 'payroll', 
-            'details' => 'Working days per week', 
+            'value' => '5',
+            'section' => 'payroll',
+            'details' => 'Working days per week',
             'remarks' => 'required'
         ],
         'time_in' => [
             'type' => 'time_in',
-            'value' => '8:00 AM', 
-            'section' => 'payroll', 
-            'details' => 'Time in', 
+            'value' => '8:00 AM',
+            'section' => 'payroll',
+            'details' => 'Time in',
             'remarks' => 'required'
         ],
         'time_out' => [
             'type' => 'time_out',
-            'value' => '5:00 PM', 
-            'section' => 'payroll', 
-            'details' => 'Time out', 
+            'value' => '5:00 PM',
+            'section' => 'payroll',
+            'details' => 'Time out',
             'remarks' => 'required'
         ],
         'overtime' => [
             'type' => 'overtime',
-            'value' => 'Yes', 
-            'section' => 'payroll', 
-            'details' => 'Include Overtime in Payroll Calculations', 
+            'value' => 'Yes',
+            'section' => 'payroll',
+            'details' => 'Include Overtime in Payroll Calculations',
             'remarks' => 'required'
         ],
         'primary_color' => [
             'type' => 'primary_color',
-            'value' => '#0d6efd', 
-            'section' => 'system', 
-            'details' => 'System primary color', 
+            'value' => '#0d6efd',
+            'section' => 'system',
+            'details' => 'System primary color',
             'remarks' => 'required'
         ],
         'secondary_color' => [
             'type' => 'secondary_color',
-            'value' => '#50b848', 
-            'section' => 'system', 
-            'details' => 'System secondary color', 
+            'value' => '#50b848',
+            'section' => 'system',
+            'details' => 'System secondary color',
             'remarks' => 'required'
         ],
         'system_logo' => [
             'type' => 'system_logo',
-            'value' => 'logo.png', 
-            'section' => 'system', 
-            'details' => 'System Logo', 
+            'value' => 'logo.png',
+            'section' => 'system',
+            'details' => 'System Logo',
             'remarks' => 'required'
         ],
         'disabled_features' => [
             'type' => 'disabled_features',
-            'value' => '[]', 
-            'section' => 'admin', 
-            'details' => 'Disabled features', 
+            'value' => '[]',
+            'section' => 'admin',
+            'details' => 'Disabled features',
             'remarks' => 'required'
         ],
         'email_config' => [
             'type' => 'email_config',
-            'value' => json_encode($GLOBALS['MAIL']), 
-            'section' => 'email', 
-            'details' => 'Email configuration', 
+            'value' => json_encode($GLOBALS['MAIL']),
+            'section' => 'email',
+            'details' => 'Email configuration',
             'remarks' => 'required'
         ],
         'dashboard_charts' => [
             'type' => 'dashboard_charts',
-            'value' => '[]', 
-            'section' => 'admin', 
-            'details' => 'Dashboard charts', 
+            'value' => '[]',
+            'section' => 'admin',
+            'details' => 'Dashboard charts',
             'remarks' => 'required'
         ]
 
@@ -276,10 +283,11 @@ function settingsArray() {
     return $defaultValue;
 }
 
-function getSettingsFromDb() {
+function getSettingsFromDb()
+{
     $settings = [];
     $fromDb = $GLOBALS['settingsClass']->read_all();
-    
+
     foreach ($fromDb as $setting) {
         // Use the type as the key for merging with default settings
         $settings[$setting['type']] = array(
@@ -294,10 +302,11 @@ function getSettingsFromDb() {
     return $settings;
 }
 
-function getSettingsBySection($section) {
+function getSettingsBySection($section)
+{
     // Get the default settings and database settings merged together
     $settings = settingsArray();
-    
+
     // Filter settings based on the section
     $filteredSettings = [];
     foreach ($settings as $key => $setting) {
@@ -309,31 +318,34 @@ function getSettingsBySection($section) {
     return $filteredSettings;
 }
 
-function sys_setting($type) {
+function sys_setting($type)
+{
     // Get the default settings and database settings merged together
     $settings = settingsArray();
     if (isset($settings[$type])) {
         echo $settings[$type]['value'];
     } else {
-       return false;
+        return false;
     }
 }
 
-function return_setting($type) {
+function return_setting($type)
+{
     // Get the default settings and database settings merged together
     $settings = settingsArray();
     if (isset($settings[$type])) {
         return $settings[$type]['value'];
     } else {
-       return false;
+        return false;
     }
 }
 
-function select_active($table, $array = array('value' => 'id', 'text' => 'name'), $current = '') {
+function select_active($table, $array = array('value' => 'id', 'text' => 'name'), $current = '')
+{
     $options = '';
     $sql = "SELECT * FROM `$table` WHERE `status` = ?";
-    $params = ['Active'];  
-    $types = 's'; 
+    $params = ['Active'];
+    $types = 's';
 
     // Execute the query
     $activeRows = $GLOBALS['branchClass']->query($sql, $params, $types);
@@ -341,14 +353,17 @@ function select_active($table, $array = array('value' => 'id', 'text' => 'name')
     // Check if any rows are returned
     if (count($activeRows) > 0) {
         // Loop through active rows and build the options
-        if(!isset($array['text'])) $array['text'] = 'name';
-        if(!isset($array['value'])) $array['value'] = 'id';
+        if (!isset($array['text']))
+            $array['text'] = 'name';
+        if (!isset($array['value']))
+            $array['value'] = 'id';
         foreach ($activeRows as $row) {
-            $options .= '<option value="'.$row[$array['value']].'" ';
-            if($current) {
-                if($row[$array['value']] == $current) $options .=' selected="selected"';
+            $options .= '<option value="' . $row[$array['value']] . '" ';
+            if ($current) {
+                if ($row[$array['value']] == $current)
+                    $options .= ' selected="selected"';
             }
-            $options .= '>'.$row[$array['text']].'</option>';
+            $options .= '>' . $row[$array['text']] . '</option>';
         }
     } else {
         // If no active rows are found, display a "No records found" option
@@ -359,10 +374,11 @@ function select_active($table, $array = array('value' => 'id', 'text' => 'name')
     echo $options;
 }
 
-function select_all($table, $array = array('value' => 'id', 'text' => 'name'), $current = '') {
+function select_all($table, $array = array('value' => 'id', 'text' => 'name'), $current = '')
+{
     $options = '';
     $sql = "SELECT * FROM `$table`";
-    
+
 
     // Execute the query
     $rows = $GLOBALS['branchClass']->query($sql);
@@ -370,14 +386,17 @@ function select_all($table, $array = array('value' => 'id', 'text' => 'name'), $
     // Check if any rows are returned
     if (count($rows) > 0) {
         // Loop through active rows and build the options
-        if(!isset($array['text'])) $array['text'] = 'name';
-        if(!isset($array['value'])) $array['value'] = 'id';
+        if (!isset($array['text']))
+            $array['text'] = 'name';
+        if (!isset($array['value']))
+            $array['value'] = 'id';
         foreach ($rows as $row) {
-            $options .= '<option value="'.$row[$array['value']].'" ';
-            if($current) {
-                if($row[$array['value']] == $current) $options .=' selected="selected"';
+            $options .= '<option value="' . $row[$array['value']] . '" ';
+            if ($current) {
+                if ($row[$array['value']] == $current)
+                    $options .= ' selected="selected"';
             }
-            $options .= '>'.$row[$array['text']].'</option>';
+            $options .= '>' . $row[$array['text']] . '</option>';
         }
     } else {
         // If no active rows are found, display a "No records found" option
@@ -388,7 +407,8 @@ function select_all($table, $array = array('value' => 'id', 'text' => 'name'), $
     echo $options;
 }
 
-function calculateEmployeeEarnings($employeeId, $payrollMonth) {
+function calculateEmployeeEarnings($employeeId, $payrollMonth)
+{
     $conn = $GLOBALS['conn'];
 
     // Define earning types
@@ -413,14 +433,15 @@ function calculateEmployeeEarnings($employeeId, $payrollMonth) {
     if ($result) {
         while ($row = $result->fetch_assoc()) {
             $type = strtolower($row['transaction_type']);
-            $earnings[$type] = (float)$row['total'];
+            $earnings[$type] = (float) $row['total'];
         }
     }
 
     return $earnings;
 }
 
-function calculateEmployeeDeductions($employeeId, $payrollMonth) {
+function calculateEmployeeDeductions($employeeId, $payrollMonth)
+{
     $conn = $GLOBALS['conn'];
 
     // Define deduction types
@@ -443,15 +464,16 @@ function calculateEmployeeDeductions($employeeId, $payrollMonth) {
     if ($result) {
         while ($row = $result->fetch_assoc()) {
             $type = strtolower($row['transaction_type']);
-            $deductions[$type] = (float)$row['total'];
+            $deductions[$type] = (float) $row['total'];
         }
     }
 
     return $deductions;
 }
 
-function calculateAttendanceStats($employeeId, $payrollMonth) {
-   $conn = $GLOBALS['conn'];
+function calculateAttendanceStats($employeeId, $payrollMonth)
+{
+    $conn = $GLOBALS['conn'];
 
     // Initialize counters
     $stats = [
@@ -480,25 +502,25 @@ function calculateAttendanceStats($employeeId, $payrollMonth) {
         while ($row = $result->fetch_assoc()) {
             switch ($row['status']) {
                 case 'P':
-                    $stats['present_days'] += (int)$row['count'];
+                    $stats['present_days'] += (int) $row['count'];
                     break;
                 case 'PL':
-                    $stats['paid_leave_days'] += (int)$row['count'];
+                    $stats['paid_leave_days'] += (int) $row['count'];
                     break;
                 case 'S':
-                    $stats['sick_days'] += (int)$row['count'];
+                    $stats['sick_days'] += (int) $row['count'];
                     break;
                 case 'UL':
-                    $stats['unpaid_leave_days'] += (int)$row['count'];
+                    $stats['unpaid_leave_days'] += (int) $row['count'];
                     break;
                 case 'H':
-                    $stats['holidays'] += (int)$row['count'];
+                    $stats['holidays'] += (int) $row['count'];
                     break;
                 case 'NH':
-                    $stats['not_hired_days'] += (int)$row['count'];
+                    $stats['not_hired_days'] += (int) $row['count'];
                     break;
                 case 'N':
-                    $stats['no_show_days'] += (int)$row['count'];
+                    $stats['no_show_days'] += (int) $row['count'];
                     break;
             }
         }
@@ -563,8 +585,10 @@ function calculateAttendanceStats($employeeId, $payrollMonth) {
     return $result;
 }*/
 
-function calculateTimeSheetHours($employeeId, $payrollMonth, $workHoursPerDay = 0) {
-    if($workHoursPerDay == 0) $workHoursPerDay = return_setting('working_hours');
+function calculateTimeSheetHours($employeeId, $payrollMonth, $workHoursPerDay = 0)
+{
+    if ($workHoursPerDay == 0)
+        $workHoursPerDay = return_setting('working_hours');
     $conn = $GLOBALS['conn'];
 
     // Initialize counters
@@ -610,7 +634,8 @@ function calculateTimeSheetHours($employeeId, $payrollMonth, $workHoursPerDay = 
 }
 
 
-function getTaxRate(float $amount, int $stateId): float {
+function getTaxRate(float $amount, int $stateId): float
+{
     // Fetch state information
     $stateInfo = get_data('states', ['id' => $stateId]);
     if (!$stateInfo || empty($stateInfo[0]['tax_grid'])) {
@@ -619,7 +644,7 @@ function getTaxRate(float $amount, int $stateId): float {
 
     $stateInfo = $stateInfo[0];
     $taxGridJson = $stateInfo['tax_grid'];
-    $stampDutyRate = isset($stateInfo['stamp_duty']) ? (float)$stateInfo['stamp_duty'] : 0;
+    $stampDutyRate = isset($stateInfo['stamp_duty']) ? (float) $stateInfo['stamp_duty'] : 0;
 
     // Decode the tax grid JSON
     $taxGrid = json_decode($taxGridJson, true);
@@ -632,9 +657,9 @@ function getTaxRate(float $amount, int $stateId): float {
 
     // Iterate through the tax grid
     foreach ($taxGrid as $taxBracket) {
-        $min = isset($taxBracket['min']) ? (float)$taxBracket['min'] : 0;
-        $max = isset($taxBracket['max']) ? (float)$taxBracket['max'] : PHP_FLOAT_MAX;
-        $rate = isset($taxBracket['rate']) ? (float)$taxBracket['rate'] : 0;
+        $min = isset($taxBracket['min']) ? (float) $taxBracket['min'] : 0;
+        $max = isset($taxBracket['max']) ? (float) $taxBracket['max'] : PHP_FLOAT_MAX;
+        $rate = isset($taxBracket['rate']) ? (float) $taxBracket['rate'] : 0;
 
         // Adjust non-taxable amount
         if ($rate == 0) {
@@ -659,7 +684,8 @@ function getTaxRate(float $amount, int $stateId): float {
 }
 
 
-function getTaxPercentage(float $amount, int $stateId): float {
+function getTaxPercentage(float $amount, int $stateId): float
+{
     // Simulating a database fetch for the state record
     $stateInfo = get_data('states', ['id' => $stateId]);
     if ($stateInfo) {
@@ -679,9 +705,9 @@ function getTaxPercentage(float $amount, int $stateId): float {
 
         // Determine the applicable tax rate
         foreach ($taxGrid as $taxBracket) {
-            $min = isset($taxBracket['min']) ? (float)$taxBracket['min'] : 0;
-            $max = isset($taxBracket['max']) ? (float)$taxBracket['max'] : PHP_FLOAT_MAX;
-            $rate = isset($taxBracket['rate']) ? (float)$taxBracket['rate'] : 0;
+            $min = isset($taxBracket['min']) ? (float) $taxBracket['min'] : 0;
+            $max = isset($taxBracket['max']) ? (float) $taxBracket['max'] : PHP_FLOAT_MAX;
+            $rate = isset($taxBracket['rate']) ? (float) $taxBracket['rate'] : 0;
 
             if ($amount >= $min && $amount <= $max) {
                 // Return the applicable tax rate (percentage)
@@ -694,13 +720,16 @@ function getTaxPercentage(float $amount, int $stateId): float {
 
 
 // Table customize
-function get_columns($table, $reqColumns = 'show_columns') {
+function get_columns($table, $reqColumns = 'show_columns')
+{
     $defaultColumns = '';
-    if($table == 'showpayrollDT') $defaultColumns = "staff_no, full_name, base_salary, earnings, deductions, tax, net_salary, status, action";
+    if ($table == 'showpayrollDT')
+        $defaultColumns = "staff_no, full_name, base_salary, earnings, deductions, tax, net_salary, status, action";
     $query = $GLOBALS['conn']->query("SELECT * FROM `table_customize` WHERE `dt_table` = '$table'");
-    if($query->num_rows > 0) {
+    if ($query->num_rows > 0) {
         $columns = $query->fetch_assoc()[$reqColumns];
-        if(!$columns) $columns = $defaultColumns;
+        if (!$columns)
+            $columns = $defaultColumns;
         $columns = str_replace(" ", "", $columns);
         $columns = explode(",", $columns);
     }
@@ -710,22 +739,24 @@ function get_columns($table, $reqColumns = 'show_columns') {
 
 
 // Helper function for cached entity creation
-function getCachedOrCreateEntity($table, $name, $userId, $classInstance, &$cache) {
-    if (empty($name)) return null;
-    
+function getCachedOrCreateEntity($table, $name, $userId, $classInstance, &$cache)
+{
+    if (empty($name))
+        return null;
+
     $cacheKey = strtolower(trim($name));
-    
+
     // Check cache first
     if (isset($cache[$table][$cacheKey])) {
         return $cache[$table][$cacheKey];
     }
-    
+
     // Check database
     $stmt = $GLOBALS['conn']->prepare("SELECT id FROM `$table` WHERE name = ?");
     $stmt->bind_param('s', $name);
     $stmt->execute();
     $result = $stmt->get_result();
-    
+
     if ($result->num_rows > 0) {
         $row = $result->fetch_assoc();
         $id = $row['id'];
@@ -736,14 +767,15 @@ function getCachedOrCreateEntity($table, $name, $userId, $classInstance, &$cache
         $data = ['name' => $name, 'added_by' => $userId];
         $id = $classInstance->create($data);
     }
-    
+
     // Cache the result
     $cache[$table][$cacheKey] = $id;
     return $id;
 }
 
 // Helper function for batch processing employees
-function processBatchEmployees($batchData, $employeeClass, $userId) {
+function processBatchEmployees($batchData, $employeeClass, $userId)
+{
     $result = ['success' => 0, 'errors' => 0, 'error_messages' => ''];
 
     try {
@@ -755,7 +787,7 @@ function processBatchEmployees($batchData, $employeeClass, $userId) {
 
                 // Extract and remove arrays before inserting employee
                 $budget_codesArray = isset($employeeData['budget_codes_array']) ? $employeeData['budget_codes_array'] : [];
-                $projectsArray     = isset($employeeData['projects_array']) ? $employeeData['projects_array'] : [];
+                $projectsArray = isset($employeeData['projects_array']) ? $employeeData['projects_array'] : [];
 
                 unset($employeeData['budget_codes_array'], $employeeData['projects_array'], $employeeData['row_number']);
 
@@ -772,7 +804,8 @@ function processBatchEmployees($batchData, $employeeClass, $userId) {
                     // Insert budget codes
                     foreach ($budget_codesArray as $code) {
                         $code = trim($code);
-                        if ($code === '') continue;
+                        if ($code === '')
+                            continue;
                         $code_id = getCachedOrCreateEntity('budget_codes', $code, $userId, $GLOBALS['budgetCodesClass'], $GLOBALS['entityCache']);
                         $stmt = $GLOBALS['conn']->prepare("INSERT INTO employee_budget_codes (emp_id, code_id) VALUES (?, ?)");
                         $stmt->bind_param("ii", $empId, $code_id);
@@ -783,7 +816,8 @@ function processBatchEmployees($batchData, $employeeClass, $userId) {
                     // Insert projects
                     foreach ($projectsArray as $proj) {
                         $proj = trim($proj);
-                        if ($proj === '') continue;
+                        if ($proj === '')
+                            continue;
                         $proj_id = getCachedOrCreateEntity('projects', $proj, $userId, $GLOBALS['projectsClass'], $GLOBALS['entityCache']);
                         $stmt = $GLOBALS['conn']->prepare("INSERT INTO employee_projects (emp_id, project_id) VALUES (?, ?)");
                         $stmt->bind_param("ii", $empId, $proj_id);
@@ -812,8 +846,100 @@ function processBatchEmployees($batchData, $employeeClass, $userId) {
     return $result;
 }
 
+/**
+ * Generate reference number for a module
+ * Supports concurrency protection, year inclusion, and auto-reset
+ */
+function generate_reference_number($module)
+{
+    if (!isset($GLOBALS['conn'])) {
+        return strtoupper(substr($module, 0, 3)) . '-' . date('Ymd') . rand(100, 999);
+    }
 
+    $conn = $GLOBALS['conn'];
+    $conn->begin_transaction();
 
+    try {
+        // Lock the settings row for update to prevent race conditions
+        $result = $conn->query("
+            SELECT setting_value FROM system_settings
+            WHERE setting_key = 'transaction_series'
+            FOR UPDATE
+        ");
+        $row = $result->fetch_assoc();
 
+        $current_year = date('Y');
 
+        if ($row && !empty($row['setting_value'])) {
+            $series = json_decode($row['setting_value'], true);
+
+            // Check if the module exists in series, handle legacy 'invoice' key
+            if (!isset($series[$module])) {
+                if ($module == 'rent_invoice' && isset($series['invoice'])) {
+                    // Migrate from legacy 'invoice' key
+                    $series[$module] = $series['invoice'];
+                    $series[$module]['prefix'] = 'RNT-';
+                    $series[$module]['suffix'] = '';
+                } elseif ($module == 'other_invoice') {
+                    // Create new series for other invoices
+                    $series[$module] = [
+                        'prefix' => 'CHR-',
+                        'suffix' => '',
+                        'starting_number' => '00001',
+                        'current_number' => 0
+                    ];
+                } elseif ($module == 'payment') {
+                    $series[$module] = [
+                        'prefix' => 'RCT-',
+                        'suffix' => '',
+                        'starting_number' => '00001',
+                        'current_number' => 0
+                    ];
+                } elseif ($module == 'maintenance') {
+                    $series[$module] = [
+                        'prefix' => 'MNT-',
+                        'suffix' => '',
+                        'starting_number' => '00001',
+                        'current_number' => 0
+                    ];
+                } else {
+                    // Module not found, use fallback
+                    $conn->commit();
+                    return strtoupper(substr($module, 0, 3)) . '-' . date('Ymd') . rand(100, 999);
+                }
+            }
+
+            $config = $series[$module];
+            $prefix = $config['prefix'] ?? '';
+            $suffix = $config['suffix'] ?? '';
+            $starting = intval($config['starting_number'] ?? 1);
+            $current = intval($config['current_number'] ?? 0);
+
+            // Calculate next number
+            $next_number = ($current > 0) ? $current + 1 : $starting;
+
+            // Update current number
+            $series[$module]['current_number'] = $next_number;
+            $updated_series = $conn->real_escape_string(json_encode($series));
+            $conn->query("UPDATE system_settings SET setting_value = '$updated_series' WHERE setting_key = 'transaction_series'");
+
+            // Format number with leading zeros
+            $formatted_number = str_pad($next_number, 5, '0', STR_PAD_LEFT);
+
+            // Build simple reference
+            $reference = $prefix . $formatted_number . $suffix;
+
+            $conn->commit();
+            return $reference;
+        }
+
+        $conn->commit();
+
+    } catch (Exception $e) {
+        $conn->rollback();
+    }
+
+    // Fallback
+    return strtoupper(substr($module, 0, 3)) . '-' . date('Ymd') . rand(100, 999);
+}
 ?>

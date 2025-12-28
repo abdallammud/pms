@@ -1,4 +1,4 @@
-<?php 
+<?php
 // session_start(); // Session is started in init.php or index.php usually, but let's be safe
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -32,9 +32,10 @@ if (isset($_GET['action']) && $_GET['action'] == 'login') {
     exit;
 }
 
-function set_sessions($user_id) {
+function set_sessions($user_id)
+{
     $user = $GLOBALS['userClass']->get($user_id);
-    
+
     if (!$user) {
         return false;
     }
@@ -61,7 +62,8 @@ function set_sessions($user_id) {
     return true;
 }
 
-function authenticate() {
+function authenticate()
+{
     if (!isset($_SESSION['user_id'])) {
         // return false;
         header("Location: ./login");
@@ -82,7 +84,8 @@ function authenticate() {
     return true;
 }
 
-function check_session($permission = null) {
+function check_session($permission = null)
+{
     if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true) {
         return false;
     }
@@ -98,18 +101,21 @@ function check_session($permission = null) {
     return true;
 }
 
-function check_auth($permission = null) {
+function check_auth($permission = null)
+{
     if (!check_session($permission)) {
         header("Location: logout.php");
         exit;
     }
 }
 
-function current_user_id() {
+function current_user_id()
+{
     return $_SESSION['user_id'] ?? null;
 }
 
-function current_user_name() {
+function current_user_name()
+{
     return $_SESSION['user_name'] ?? 'Guest';
 }
 

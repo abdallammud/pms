@@ -17,7 +17,8 @@ if (isset($_GET['action'])) {
     }
 }
 
-function get_guarantees() {
+function get_guarantees()
+{
     header('Content-Type: application/json');
     global $conn;
 
@@ -50,8 +51,8 @@ function get_guarantees() {
     $data = [];
 
     while ($row = $result->fetch_assoc()) {
-        $actionBtn = '<button class="btn btn-sm btn-primary me-1" onclick="editGuarantee('.$row['id'].')"><i class="bi bi-pencil"></i></button>';
-        $actionBtn .= '<button class="btn btn-sm btn-danger" onclick="deleteGuarantee('.$row['id'].')"><i class="bi bi-trash"></i></button>';
+        $actionBtn = '<button class="btn btn-sm btn-primary me-1" onclick="editGuarantee(' . $row['id'] . ')"><i class="bi bi-pencil"></i></button>';
+        $actionBtn .= '<button class="btn btn-sm btn-danger" onclick="deleteGuarantee(' . $row['id'] . ')"><i class="bi bi-trash"></i></button>';
 
         $statusBadge = '';
         if ($row['status'] == 'active') {
@@ -79,7 +80,8 @@ function get_guarantees() {
     ]);
 }
 
-function save_guarantee() {
+function save_guarantee()
+{
     header('Content-Type: application/json');
     global $conn;
 
@@ -119,10 +121,11 @@ function save_guarantee() {
     }
 }
 
-function delete_guarantee() {
+function delete_guarantee()
+{
     header('Content-Type: application/json');
     global $conn;
-    
+
     $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
 
     if ($id <= 0) {
@@ -149,12 +152,13 @@ function delete_guarantee() {
     }
 }
 
-function get_guarantee() {
+function get_guarantee()
+{
     header('Content-Type: application/json');
     global $conn;
-    
+
     $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-    
+
     if ($id <= 0) {
         echo json_encode(['error' => true, 'msg' => 'Invalid ID']);
         exit;
@@ -166,13 +170,13 @@ function get_guarantee() {
     $result = $stmt->get_result()->fetch_assoc();
 
     echo json_encode($result);
-<<<<<<< HEAD
 }
 
 /**
  * Bulk actions for guarantees
  */
-function bulk_action() {
+function bulk_action()
+{
     header('Content-Type: application/json');
     global $conn;
 
@@ -189,14 +193,14 @@ function bulk_action() {
     $ids_str = implode(',', $ids);
 
     if (empty($ids_str)) {
-         echo json_encode(['error' => true, 'msg' => 'No IDs selected.']);
-         exit;
+        echo json_encode(['error' => true, 'msg' => 'No IDs selected.']);
+        exit;
     }
 
     if ($action_type == 'delete') {
         // Check if any guarantor has active lease
         $check_leases = $conn->query("SELECT id FROM leases WHERE guarantor_id IN ($ids_str) AND status = 'active' LIMIT 1");
-        
+
         if ($check_leases && $check_leases->num_rows > 0) {
             echo json_encode(['error' => true, 'msg' => 'Cannot delete selected guarantors because one or more have active leases.']);
             exit;
@@ -211,7 +215,5 @@ function bulk_action() {
     } else {
         echo json_encode(['error' => true, 'msg' => 'Invalid action type.']);
     }
-=======
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
 }
 ?>

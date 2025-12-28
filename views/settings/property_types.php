@@ -1,11 +1,7 @@
 <!-- Main Content -->
 <main class="content">
     <!-- Page Header -->
-<<<<<<< HEAD
     <div class="d-flex mt-3 align-items-center justify-content-between mb-3">
-=======
-     <div class="d-flex mt-3 align-items-center justify-content-between mb-3">
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
         <h5 class="page-title">Property Types </h5>
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#propertyTypeModal">
             <i class="bi bi-plus me-2"></i> Add Property Type
@@ -15,7 +11,6 @@
     <div class="page-content fade-in">
         <div class="card">
             <div class="card-body table">
-<<<<<<< HEAD
 
                 <div class="table-responsive">
                     <table id="propertyTypesTable" class="table table-striped table-hover" style="width:100%">
@@ -31,23 +26,6 @@
                         <tbody>
                         </tbody>
                     </table>
-=======
-               
-                <div class="table-responsive">
-                    <table id="propertyTypesTable" class="table table-striped table-hover" style="width:100%">
-                    <thead>
-                        <tr>
-                            <th>Type Name</th>
-                            <th>Description</th>
-                            <th>Status</th>
-                            <th>Created</th>
-                            <th style="width: 120px;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
                 </div>
             </div>
         </div>
@@ -55,12 +33,8 @@
 </main>
 
 <!-- Property Type Modal -->
-<<<<<<< HEAD
 <div class="modal fade" id="propertyTypeModal" tabindex="-1" aria-labelledby="propertyTypeModalLabel"
     aria-hidden="true">
-=======
-<div class="modal fade" id="propertyTypeModal" tabindex="-1" aria-labelledby="propertyTypeModalLabel" aria-hidden="true">
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -70,7 +44,6 @@
             <div class="modal-body">
                 <form id="propertyTypeForm">
                     <input type="hidden" id="property_type_id" name="property_type_id" value="">
-<<<<<<< HEAD
 
                     <div class="mb-3">
                         <label for="type_name" class="form-label">Type Name <span class="text-danger">*</span></label>
@@ -84,19 +57,6 @@
                             placeholder="Optional description for this property type"></textarea>
                     </div>
 
-=======
-                    
-                    <div class="mb-3">
-                        <label for="type_name" class="form-label">Type Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="type_name" name="type_name" placeholder="e.g. Apartment, House, Commercial" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea class="form-control" id="description" name="description" rows="3" placeholder="Optional description for this property type"></textarea>
-                    </div>
-                    
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
                     <div class="mb-3">
                         <label for="status" class="form-label">Status</label>
                         <select class="form-select" id="status" name="status">
@@ -118,8 +78,4 @@
     </div>
 </div>
 
-<<<<<<< HEAD
 <script src="<?= baseUri(); ?>/public/js/modules/property_types.js"></script>
-=======
-<script src="public/js/modules/property_types.js"></script>
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6

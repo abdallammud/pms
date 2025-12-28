@@ -124,13 +124,8 @@ function initAddLeaseForm() {
 
     // Load properties only if select is empty (for add form)
     var propertySelect = $('#lease_property_select');
-<<<<<<< HEAD
     if (propertySelect.find('option').length) {
         loadLeaseProperties4Lease();
-=======
-    if (propertySelect.find('option').length <= 1) {
-        loadLeaseProperties();
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
     }
 
     // Handle property change to load units
@@ -149,21 +144,14 @@ function initAddLeaseForm() {
 /**
  * Load all properties into the select dropdown
  */
-<<<<<<< HEAD
 
 function loadLeaseProperties4Lease() {
-=======
-function loadLeaseProperties() {
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
     $.ajax({
         url: base_url + '/app/property_controller.php?action=get_all_properties',
         type: 'GET',
         dataType: 'json',
         success: function (data) {
-<<<<<<< HEAD
             console.log(data);
-=======
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
             var select = $('#lease_property_select');
             select.find('option:not(:first)').remove();
 
@@ -282,7 +270,6 @@ function loadLeases() {
             "type": "POST"
         },
         "columns": [
-<<<<<<< HEAD
             {
                 "data": "id",
                 "orderable": false,
@@ -290,8 +277,6 @@ function loadLeases() {
                     return '<input type="checkbox" class="lease-checkbox" value="' + data + '">';
                 }
             },
-=======
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
             { "data": "reference_number" },
             { "data": "tenant_name" },
             { "data": "property_unit" },
@@ -301,15 +286,11 @@ function loadLeases() {
             { "data": "status" },
             { "data": "actions", "orderable": false }
         ],
-<<<<<<< HEAD
         "order": [[5, "desc"]], // Order by start_date desc (index shifted by 1)
         "drawCallback": function () {
             // Re-bind select all check
             $('#selectAllLeasesCheckBox').prop('checked', false);
         }
-=======
-        "order": [[4, "desc"]] // Order by start_date desc
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
     });
 }
 
@@ -358,7 +339,6 @@ function deleteLease(id) {
             });
         }
     });
-<<<<<<< HEAD
 }
 
 /**
@@ -488,6 +468,4 @@ function startAutoRentInvoicing(ids) {
             $modal.modal('hide');
         }
     });
-=======
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
 }

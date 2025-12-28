@@ -194,7 +194,6 @@
         </div>
         <div class="settings-nav-group">
             <div class="settings-nav-group-title">
-<<<<<<< HEAD
                 <i class="bi bi-cash-coin"></i> Accounting
             </div>
             <ul class="settings-nav">
@@ -223,16 +222,6 @@
             <ul class="settings-nav">
                 <li class="settings-nav-item">
                     <a href="#" class="settings-nav-link" data-section="section-lease-conditions">Lease Conditions</a>
-=======
-                <i class="bi bi-gear"></i> Customization
-            </div>
-            <ul class="settings-nav">
-                <li class="settings-nav-item">
-                    <a href="#" class="settings-nav-link" data-section="section-transaction">Transaction Number Series</a>
-                </li>
-                <li class="settings-nav-item">
-                    <a href="#" class="settings-nav-link" data-section="section-lease-conditions">Lease Conditions Template</a>
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
                 </li>
             </ul>
         </div>
@@ -249,66 +238,44 @@
                 <form id="profileForm">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-<<<<<<< HEAD
-                            <label for="org_name" class="form-label fw-bold">Organization Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="org_name" name="org_name" placeholder="Enter organization name">
+                            <label for="org_name" class="form-label fw-bold">Organization Name <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="org_name" name="org_name"
+                                placeholder="Enter organization name">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="org_email" class="form-label fw-bold">Email <span class="text-danger">*</span></label>
-=======
-                            <label for="org_name" class="form-label">Organization Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="org_name" name="org_name" placeholder="Enter organization name">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="org_email" class="form-label">Email <span class="text-danger">*</span></label>
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
-                            <input type="email" class="form-control" id="org_email" name="org_email" placeholder="contact@example.com">
+                            <label for="org_email" class="form-label fw-bold">Email <span
+                                    class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="org_email" name="org_email"
+                                placeholder="contact@example.com">
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-<<<<<<< HEAD
                             <label for="org_phone" class="form-label fw-bold">Phone</label>
-                            <input type="text" class="form-control" id="org_phone" name="org_phone" placeholder="+1 234 567 8900">
+                            <input type="text" class="form-control" id="org_phone" name="org_phone"
+                                placeholder="+1 234 567 8900">
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="org_city" class="form-label fw-bold">City</label>
-=======
-                            <label for="org_phone" class="form-label">Phone</label>
-                            <input type="text" class="form-control" id="org_phone" name="org_phone" placeholder="+1 234 567 8900">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="org_city" class="form-label">City</label>
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
                             <input type="text" class="form-control" id="org_city" name="org_city" placeholder="City">
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-<<<<<<< HEAD
                             <label for="org_street1" class="form-label fw-bold">Street Address 1</label>
-                            <input type="text" class="form-control" id="org_street1" name="org_street1" placeholder="Street 1">
+                            <input type="text" class="form-control" id="org_street1" name="org_street1"
+                                placeholder="Street 1">
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="org_street2" class="form-label fw-bold">Street Address 2</label>
-=======
-                            <label for="org_street1" class="form-label">Street Address 1</label>
-                            <input type="text" class="form-control" id="org_street1" name="org_street1" placeholder="Street 1">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="org_street2" class="form-label">Street Address 2</label>
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
-                            <input type="text" class="form-control" id="org_street2" name="org_street2" placeholder="Street 2 (optional)">
+                            <input type="text" class="form-control" id="org_street2" name="org_street2"
+                                placeholder="Street 2 (optional)">
                         </div>
                     </div>
                     <div class="mt-3">
-<<<<<<< HEAD
                         <button type="button" class="btn btn-primary px-4" onclick="saveProfile()">
                             <i class="bi bi-save me-2"></i> Save Profile
-=======
-                        <button type="button" class="btn btn-primary" onclick="saveProfile()">
-                            <i class="bi bi-check-lg me-1"></i> Save Profile
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
                         </button>
                     </div>
                 </form>
@@ -318,29 +285,20 @@
         <!-- Branding Section -->
         <div id="section-branding" class="settings-section d-none">
             <h2 class="settings-section-title">Branding</h2>
-<<<<<<< HEAD
             <p class="settings-section-desc">Upload your organization logo for invoices and reports.</p>
 
             <div class="settings-card">
                 <div class="row align-items-center">
                     <div class="col-md-5">
-=======
-            <p class="settings-section-desc">Upload your organization logo. This will be displayed on invoices and reports.</p>
-
-            <div class="settings-card">
-                <h5 class="settings-card-title">Organization Logo</h5>
-                <div class="row">
-                    <div class="col-md-6">
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
                         <div class="logo-upload-area" onclick="document.getElementById('logoFile').click()">
                             <img id="logoPreview" src="" alt="Logo Preview" class="logo-preview d-none">
                             <div id="logoPlaceholder" class="logo-placeholder">
                                 <i class="bi bi-cloud-upload"></i>
-<<<<<<< HEAD
                                 <p class="mb-1">Click to upload logo</p>
                                 <small class="text-muted">Recommended: 240×240px</small>
                             </div>
-                            <input type="file" id="logoFile" accept=".jpg,.jpeg,.png,.gif,.bmp" class="d-none" onchange="previewLogo(this)">
+                            <input type="file" id="logoFile" accept=".jpg,.jpeg,.png,.gif,.bmp" class="d-none"
+                                onchange="previewLogo(this)">
                         </div>
                     </div>
                     <div class="col-md-7 ps-md-4">
@@ -354,25 +312,6 @@
                             <i class="bi bi-upload me-2"></i> Upload Logo
                         </button>
                     </div>
-=======
-                                <p class="mb-1">Click to upload your organization logo</p>
-                                <small class="text-muted">Recommended: 240×240 pixels @ 72 DPI</small>
-                            </div>
-                            <input type="file" id="logoFile" accept=".jpg,.jpeg,.png,.gif,.bmp" class="d-none" onchange="previewLogo(this)">
-                        </div>
-                        <div class="mt-2">
-                            <small class="text-muted">
-                                <i class="bi bi-info-circle me-1"></i>
-                                Supported: JPG, PNG, GIF, BMP. Max size: 1MB
-                            </small>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-3">
-                    <button type="button" class="btn btn-primary" onclick="uploadLogo()">
-                        <i class="bi bi-upload me-1"></i> Upload Logo
-                    </button>
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
                 </div>
             </div>
         </div>
@@ -380,8 +319,8 @@
         <!-- Transaction Number Series Section -->
         <div id="section-transaction" class="settings-section d-none">
             <h2 class="settings-section-title">Transaction Number Series</h2>
-<<<<<<< HEAD
-            <p class="settings-section-desc">Configure identifiers for various modules. Includes support for yearly resets.</p>
+            <p class="settings-section-desc">Configure identifiers for various modules. Includes support for yearly
+                resets.</p>
 
             <div class="settings-card shadow-sm border-0">
                 <div class="table-responsive">
@@ -393,121 +332,88 @@
                                 <th style="width: 15%">Start #</th>
                                 <th style="width: 15%">Suffix</th>
                                 <th style="width: 35%">Preview</th>
-=======
-            <p class="settings-section-desc">Configure prefix, suffix, and starting numbers for different transaction types.</p>
-
-            <div class="settings-card">
-                <div class="table-responsive">
-                    <table class="transaction-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 20%">Module</th>
-                                <th style="width: 18%">Prefix</th>
-                                <th style="width: 18%">Starting Number</th>
-                                <th style="width: 18%">Suffix</th>
-                                <th style="width: 26%">Preview</th>
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-<<<<<<< HEAD
                                 <td><strong>Rent Invoice</strong></td>
-                                <td><input type="text" id="rent_invoice_prefix" class="form-control form-control-sm" placeholder="RNT-"></td>
-                                <td><input type="text" id="rent_invoice_starting" class="form-control form-control-sm" placeholder="00001"></td>
-                                <td><input type="text" id="rent_invoice_suffix" class="form-control form-control-sm" placeholder=""></td>
-                                <td><span id="rent_invoice_preview" class="transaction-preview text-primary fw-bold small"></span></td>
+                                <td><input type="text" id="rent_invoice_prefix" class="form-control form-control-sm"
+                                        placeholder="RNT-"></td>
+                                <td><input type="text" id="rent_invoice_starting" class="form-control form-control-sm"
+                                        placeholder="00001"></td>
+                                <td><input type="text" id="rent_invoice_suffix" class="form-control form-control-sm"
+                                        placeholder=""></td>
+                                <td><span id="rent_invoice_preview"
+                                        class="transaction-preview text-primary fw-bold small"></span></td>
                             </tr>
                             <tr>
                                 <td><strong>Other Invoice</strong></td>
-                                <td><input type="text" id="other_invoice_prefix" class="form-control form-control-sm" placeholder="CHR-"></td>
-                                <td><input type="text" id="other_invoice_starting" class="form-control form-control-sm" placeholder="00001"></td>
-                                <td><input type="text" id="other_invoice_suffix" class="form-control form-control-sm" placeholder=""></td>
-                                <td><span id="other_invoice_preview" class="transaction-preview text-primary fw-bold small"></span></td>
+                                <td><input type="text" id="other_invoice_prefix" class="form-control form-control-sm"
+                                        placeholder="CHR-"></td>
+                                <td><input type="text" id="other_invoice_starting" class="form-control form-control-sm"
+                                        placeholder="00001"></td>
+                                <td><input type="text" id="other_invoice_suffix" class="form-control form-control-sm"
+                                        placeholder=""></td>
+                                <td><span id="other_invoice_preview"
+                                        class="transaction-preview text-primary fw-bold small"></span></td>
                             </tr>
                             <tr>
                                 <td><strong>Payment Receipt</strong></td>
-                                <td><input type="text" id="payment_prefix" class="form-control form-control-sm" placeholder="RCT-"></td>
-                                <td><input type="text" id="payment_starting" class="form-control form-control-sm" placeholder="00001"></td>
-                                <td><input type="text" id="payment_suffix" class="form-control form-control-sm" placeholder=""></td>
-                                <td><span id="payment_preview" class="transaction-preview text-primary fw-bold small"></span></td>
+                                <td><input type="text" id="payment_prefix" class="form-control form-control-sm"
+                                        placeholder="RCT-"></td>
+                                <td><input type="text" id="payment_starting" class="form-control form-control-sm"
+                                        placeholder="00001"></td>
+                                <td><input type="text" id="payment_suffix" class="form-control form-control-sm"
+                                        placeholder=""></td>
+                                <td><span id="payment_preview"
+                                        class="transaction-preview text-primary fw-bold small"></span></td>
                             </tr>
                             <tr>
                                 <td><strong>Expense</strong></td>
-                                <td><input type="text" id="expense_prefix" class="form-control form-control-sm" placeholder="EXP-"></td>
-                                <td><input type="text" id="expense_starting" class="form-control form-control-sm" placeholder="00001"></td>
-                                <td><input type="text" id="expense_suffix" class="form-control form-control-sm" placeholder=""></td>
-                                <td><span id="expense_preview" class="transaction-preview text-primary fw-bold small"></span></td>
+                                <td><input type="text" id="expense_prefix" class="form-control form-control-sm"
+                                        placeholder="EXP-"></td>
+                                <td><input type="text" id="expense_starting" class="form-control form-control-sm"
+                                        placeholder="00001"></td>
+                                <td><input type="text" id="expense_suffix" class="form-control form-control-sm"
+                                        placeholder=""></td>
+                                <td><span id="expense_preview"
+                                        class="transaction-preview text-primary fw-bold small"></span></td>
                             </tr>
                             <tr>
                                 <td><strong>Maintenance</strong></td>
-                                <td><input type="text" id="maintenance_prefix" class="form-control form-control-sm" placeholder="MR-"></td>
-                                <td><input type="text" id="maintenance_starting" class="form-control form-control-sm" placeholder="00001"></td>
-                                <td><input type="text" id="maintenance_suffix" class="form-control form-control-sm" placeholder=""></td>
-                                <td><span id="maintenance_preview" class="transaction-preview text-primary fw-bold small"></span></td>
+                                <td><input type="text" id="maintenance_prefix" class="form-control form-control-sm"
+                                        placeholder="MR-"></td>
+                                <td><input type="text" id="maintenance_starting" class="form-control form-control-sm"
+                                        placeholder="00001"></td>
+                                <td><input type="text" id="maintenance_suffix" class="form-control form-control-sm"
+                                        placeholder=""></td>
+                                <td><span id="maintenance_preview"
+                                        class="transaction-preview text-primary fw-bold small"></span></td>
                             </tr>
                             <tr>
                                 <td><strong>Lease</strong></td>
-                                <td><input type="text" id="lease_prefix" class="form-control form-control-sm" placeholder="LS-"></td>
-                                <td><input type="text" id="lease_starting" class="form-control form-control-sm" placeholder="00001"></td>
-                                <td><input type="text" id="lease_suffix" class="form-control form-control-sm" placeholder=""></td>
-                                <td><span id="lease_preview" class="transaction-preview text-primary fw-bold small"></span></td>
-=======
-                                <td><strong>Invoice</strong></td>
-                                <td><input type="text" id="invoice_prefix" placeholder="INV-"></td>
-                                <td><input type="text" id="invoice_starting" placeholder="00001"></td>
-                                <td><input type="text" id="invoice_suffix" placeholder="Optional"></td>
-                                <td><span id="invoice_preview" class="transaction-preview">INV-00001</span></td>
-                            </tr>
-                            <tr>
-                                <td><strong>Payment Receipt</strong></td>
-                                <td><input type="text" id="payment_prefix" placeholder="RCT-"></td>
-                                <td><input type="text" id="payment_starting" placeholder="00001"></td>
-                                <td><input type="text" id="payment_suffix" placeholder="Optional"></td>
-                                <td><span id="payment_preview" class="transaction-preview">RCT-00001</span></td>
-                            </tr>
-                            <tr>
-                                <td><strong>Expense</strong></td>
-                                <td><input type="text" id="expense_prefix" placeholder="EXP-"></td>
-                                <td><input type="text" id="expense_starting" placeholder="00001"></td>
-                                <td><input type="text" id="expense_suffix" placeholder="Optional"></td>
-                                <td><span id="expense_preview" class="transaction-preview">EXP-00001</span></td>
-                            </tr>
-                            <tr>
-                                <td><strong>Maintenance Request</strong></td>
-                                <td><input type="text" id="maintenance_prefix" placeholder="MR-"></td>
-                                <td><input type="text" id="maintenance_starting" placeholder="00001"></td>
-                                <td><input type="text" id="maintenance_suffix" placeholder="Optional"></td>
-                                <td><span id="maintenance_preview" class="transaction-preview">MR-00001</span></td>
-                            </tr>
-                            <tr>
-                                <td><strong>Lease</strong></td>
-                                <td><input type="text" id="lease_prefix" placeholder="LS-"></td>
-                                <td><input type="text" id="lease_starting" placeholder="00001"></td>
-                                <td><input type="text" id="lease_suffix" placeholder="Optional"></td>
-                                <td><span id="lease_preview" class="transaction-preview">LS-00001</span></td>
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
+                                <td><input type="text" id="lease_prefix" class="form-control form-control-sm"
+                                        placeholder="LS-"></td>
+                                <td><input type="text" id="lease_starting" class="form-control form-control-sm"
+                                        placeholder="00001"></td>
+                                <td><input type="text" id="lease_suffix" class="form-control form-control-sm"
+                                        placeholder=""></td>
+                                <td><span id="lease_preview"
+                                        class="transaction-preview text-primary fw-bold small"></span></td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-<<<<<<< HEAD
                 <div class="mt-4">
                     <button type="button" class="btn btn-primary px-4" onclick="saveTransactionSeries()">
                         <i class="bi bi-check-lg me-2"></i> Save Configuration
                     </button>
-                    <p class="small text-muted mt-2 mb-0"><i class="bi bi-info-circle me-1"></i> Changes will apply to all future transactions.</p>
-=======
-                <div class="mt-3">
-                    <button type="button" class="btn btn-primary" onclick="saveTransactionSeries()">
-                        <i class="bi bi-check-lg me-1"></i> Save Transaction Series
-                    </button>
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
+                    <p class="small text-muted mt-2 mb-0"><i class="bi bi-info-circle me-1"></i> Changes will apply to
+                        all future transactions.</p>
                 </div>
             </div>
         </div>
 
-<<<<<<< HEAD
         <!-- Charge Types Section -->
         <div id="section-charge-types" class="settings-section d-none">
             <div class="d-flex justify-content-between align-items-center mb-1">
@@ -549,28 +455,36 @@
                 <form id="autoInvoiceForm">
                     <div class="mb-4">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="auto_invoice_enabled" name="auto_invoice_enabled">
-                            <label class="form-check-label fw-bold" for="auto_invoice_enabled">Enable Automated Monthly Rent Invoicing</label>
+                            <input class="form-check-input" type="checkbox" id="auto_invoice_enabled"
+                                name="auto_invoice_enabled">
+                            <label class="form-check-label fw-bold" for="auto_invoice_enabled">Enable Automated Monthly
+                                Rent Invoicing</label>
                         </div>
-                        <div class="small text-muted ps-4">When enabled, the system will automatically generate rent invoices for all active leases with "Auto-Invoice" enabled in their settings.</div>
+                        <div class="small text-muted ps-4">When enabled, the system will automatically generate rent
+                            invoices for all active leases with "Auto-Invoice" enabled in their settings.</div>
                     </div>
 
                     <div class="row mb-4">
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Generation Day of Month <span class="text-danger">*</span></label>
+                            <label class="form-label fw-bold">Generation Day of Month <span
+                                    class="text-danger">*</span></label>
                             <select name="auto_invoice_day" id="auto_invoice_day" class="form-select">
-                                <?php for($i=1; $i<=28; $i++): ?>
-                                    <option value="<?= $i; ?>"><?= $i . (in_array($i, [1, 21]) ? 'st' : (in_array($i, [2, 22]) ? 'nd' : (in_array($i, [3, 23]) ? 'rd' : 'th'))); ?></option>
+                                <?php for ($i = 1; $i <= 28; $i++): ?>
+                                    <option value="<?= $i; ?>">
+                                        <?= $i . (in_array($i, [1, 21]) ? 'st' : (in_array($i, [2, 22]) ? 'nd' : (in_array($i, [3, 23]) ? 'rd' : 'th'))); ?>
+                                    </option>
                                 <?php endfor; ?>
                             </select>
-                            <div class="form-text small">Invoices will be generated on this day every month. Recommended: 1st or 25th.</div>
+                            <div class="form-text small">Invoices will be generated on this day every month.
+                                Recommended: 1st or 25th.</div>
                         </div>
                     </div>
 
                     <div class="alert alert-info border-0 shadow-sm d-flex align-items-center mb-4">
                         <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
                         <div class="small">
-                            <strong>Note:</strong> Auto-invoicing requires a cron job to be configured on your server pointing to <code>cron/auto_invoice.php</code>. 
+                            <strong>Note:</strong> Auto-invoicing requires a cron job to be configured on your server
+                            pointing to <code>cron/auto_invoice.php</code>.
                             Contact support if you need help setting this up.
                         </div>
                     </div>
@@ -589,28 +503,13 @@
 
             <div class="settings-card">
                 <h5 class="settings-card-title">Default Terms & Conditions</h5>
-=======
-        <!-- Lease Conditions Template Section -->
-        <div id="section-lease-conditions" class="settings-section d-none">
-            <h2 class="settings-section-title">Lease Conditions Template</h2>
-            <p class="settings-section-desc">Define the default terms and conditions that will appear on lease agreements.</p>
-
-            <div class="settings-card">
-                <h5 class="settings-card-title">Lease Terms & Conditions</h5>
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
                 <form id="leaseConditionsForm">
                     <div class="mb-3">
                         <textarea name="lease_conditions" id="lease_conditions" class="tinymce" rows="10"></textarea>
                     </div>
-<<<<<<< HEAD
                     <div class="mt-3 text-end">
                         <button type="button" class="btn btn-primary px-4" onclick="saveLeaseConditions()">
                             <i class="bi bi-check-lg me-2"></i> Save Template
-=======
-                    <div class="mt-3">
-                        <button type="button" class="btn btn-primary" onclick="saveLeaseConditions()">
-                            <i class="bi bi-check-lg me-1"></i> Save Lease Conditions
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
                         </button>
                     </div>
                 </form>
@@ -619,7 +518,6 @@
     </div>
 </div>
 
-<<<<<<< HEAD
 <!-- Modal for Add/Edit Charge Type -->
 <div class="modal fade" id="chargeTypeModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
@@ -633,17 +531,20 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label fw-bold">Name <span class="text-danger">*</span></label>
-                        <input type="text" name="name" id="charge_type_name" class="form-control" required placeholder="e.g., Late Fee, Water Bill">
+                        <input type="text" name="name" id="charge_type_name" class="form-control" required
+                            placeholder="e.g., Late Fee, Water Bill">
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Description</label>
-                        <textarea name="description" id="charge_type_description" class="form-control" rows="3"></textarea>
+                        <textarea name="description" id="charge_type_description" class="form-control"
+                            rows="3"></textarea>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Default Amount</label>
                         <div class="input-group">
                             <span class="input-group-text">$</span>
-                            <input type="number" step="0.01" name="default_amount" id="charge_type_amount" class="form-control">
+                            <input type="number" step="0.01" name="default_amount" id="charge_type_amount"
+                                class="form-control">
                         </div>
                         <div class="form-text small">Optional. Will be pre-filled when this charge is selected.</div>
                     </div>
@@ -664,6 +565,4 @@
     </div>
 </div>
 
-=======
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
 <script src="public/js/modules/settings.js"></script>

@@ -7,26 +7,20 @@ document.addEventListener('DOMContentLoaded', function () {
     loadSettings();
     loadTransactionSeries();
     loadLeaseConditions();
-<<<<<<< HEAD
     loadChargeTypes();
     loadAutoInvoiceSettings();
-=======
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
 
     // Setup navigation
     setupSettingsNav();
 
     // Setup live preview for transaction series
     setupTransactionPreview();
-<<<<<<< HEAD
 
     // Charge Type Form Submission
     $('#chargeTypeForm').on('submit', function (e) {
         e.preventDefault();
         saveChargeType();
     });
-=======
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
 });
 
 /**
@@ -64,13 +58,10 @@ function setupSettingsNav() {
                     });
                 }
             }
-<<<<<<< HEAD
 
             if (target === 'section-charge-types') {
                 loadChargeTypes();
             }
-=======
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
         });
     });
 }
@@ -108,7 +99,6 @@ function loadSettings() {
     });
 }
 
-<<<<<<< HEAD
 function saveProfile() {
     const formData = $('#profileForm').serialize();
     $.post('app/settings_controller.php?action=save_profile', formData, function (res) {
@@ -122,51 +112,12 @@ function saveProfile() {
 
 function uploadLogo() {
     const fileInput = document.getElementById('logoFile');
-=======
-/**
- * Save organization profile
- */
-function saveProfile() {
-    const formData = $('#profileForm').serialize();
-
-    $.ajax({
-        url: 'app/settings_controller.php?action=save_profile',
-        type: 'POST',
-        data: formData,
-        dataType: 'json',
-        success: function (response) {
-            if (response.error) {
-                swal("Error", response.msg, "error");
-            } else {
-                toaster.success(response.msg, 'Success', { top: '10%', right: '20px', hide: true, duration: 1500 });
-            }
-        },
-        error: function () {
-            swal("Error", "An unexpected error occurred.", "error");
-        }
-    });
-}
-
-/**
- * Handle logo upload
- */
-function uploadLogo() {
-    const fileInput = document.getElementById('logoFile');
-
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
     if (!fileInput.files || !fileInput.files[0]) {
         swal("Error", "Please select an image file.", "error");
         return;
     }
-<<<<<<< HEAD
     const formData = new FormData();
     formData.append('logo', fileInput.files[0]);
-=======
-
-    const formData = new FormData();
-    formData.append('logo', fileInput.files[0]);
-
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
     $.ajax({
         url: 'app/settings_controller.php?action=save_branding',
         type: 'POST',
@@ -174,7 +125,6 @@ function uploadLogo() {
         processData: false,
         contentType: false,
         dataType: 'json',
-<<<<<<< HEAD
         success: function (res) {
             if (!res.error) {
                 toaster.success(res.msg);
@@ -186,51 +136,17 @@ function uploadLogo() {
             } else {
                 swal("Error", res.msg, "error");
             }
-=======
-        success: function (response) {
-            if (response.error) {
-                swal("Error", response.msg, "error");
-            } else {
-                toaster.success(response.msg, 'Success', { top: '10%', right: '20px', hide: true, duration: 1500 });
-
-                // Update logo preview
-                if (response.path) {
-                    $('#logoPreview').attr('src', response.path).removeClass('d-none');
-                    $('#logoPlaceholder').addClass('d-none');
-                }
-
-                // Clear file input
-                fileInput.value = '';
-            }
-        },
-        error: function () {
-            swal("Error", "An unexpected error occurred.", "error");
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
         }
     });
 }
 
-<<<<<<< HEAD
 function previewLogo(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
-=======
-/**
- * Preview logo before upload
- */
-function previewLogo(input) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
         reader.onload = function (e) {
             $('#logoPreview').attr('src', e.target.result).removeClass('d-none');
             $('#logoPlaceholder').addClass('d-none');
         };
-<<<<<<< HEAD
-=======
-
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
         reader.readAsDataURL(input.files[0]);
     }
 }
@@ -246,7 +162,6 @@ function loadTransactionSeries() {
         success: function (response) {
             if (!response.error && response.data) {
                 const series = response.data;
-<<<<<<< HEAD
                 const modules = ['rent_invoice', 'other_invoice', 'payment', 'expense', 'maintenance', 'lease'];
 
                 modules.forEach(module => {
@@ -259,81 +174,35 @@ function loadTransactionSeries() {
                     }
                 });
             }
-=======
-
-                Object.keys(series).forEach(module => {
-                    const data = series[module];
-                    $(`#${module}_prefix`).val(data.prefix || '');
-                    $(`#${module}_suffix`).val(data.suffix || '');
-                    $(`#${module}_starting`).val(data.starting_number || '00001');
-
-                    // Update preview
-                    updatePreview(module);
-                });
-            }
-        },
-        error: function () {
-            console.error('Failed to load transaction series');
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
         }
     });
 }
 
-<<<<<<< HEAD
 function setupTransactionPreview() {
     const modules = ['rent_invoice', 'other_invoice', 'payment', 'expense', 'maintenance', 'lease'];
     modules.forEach(module => {
         $(`#${module}_prefix, #${module}_starting, #${module}_suffix`).on('input change', function () {
-=======
-/**
- * Setup live preview for transaction inputs
- */
-function setupTransactionPreview() {
-    const modules = ['invoice', 'payment', 'expense', 'maintenance', 'lease'];
-
-    modules.forEach(module => {
-        $(`#${module}_prefix, #${module}_suffix, #${module}_starting`).on('input', function () {
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
             updatePreview(module);
         });
     });
 }
 
-<<<<<<< HEAD
 function updatePreview(module) {
     const prefix = $(`#${module}_prefix`).val() || '';
     const starting = $(`#${module}_starting`).val() || '00001';
     const suffix = $(`#${module}_suffix`).val() || '';
-=======
-/**
- * Update preview for a specific module
- */
-function updatePreview(module) {
-    const prefix = $(`#${module}_prefix`).val() || '';
-    const suffix = $(`#${module}_suffix`).val() || '';
-    const starting = $(`#${module}_starting`).val() || '00001';
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
 
     const preview = prefix + starting + suffix;
     $(`#${module}_preview`).text(preview);
 }
 
-<<<<<<< HEAD
 function saveTransactionSeries() {
     const modules = ['rent_invoice', 'other_invoice', 'payment', 'expense', 'maintenance', 'lease'];
-=======
-/**
- * Save transaction number series
- */
-function saveTransactionSeries() {
-    const modules = ['invoice', 'payment', 'expense', 'maintenance', 'lease'];
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
     const series = {};
 
     modules.forEach(module => {
         series[module] = {
             prefix: $(`#${module}_prefix`).val() || '',
-<<<<<<< HEAD
             starting_number: $(`#${module}_starting`).val() || '00001',
             suffix: $(`#${module}_suffix`).val() || '',
             current_number: 0 // Will be preserved by controller if already exists
@@ -433,34 +302,11 @@ function deleteChargeType(id) {
                     swal("Error", res.msg, "error");
                 }
             }, 'json');
-=======
-            suffix: $(`#${module}_suffix`).val() || '',
-            starting_number: $(`#${module}_starting`).val() || '00001',
-            current_number: 0 // This will be managed by the system
-        };
-    });
-
-    $.ajax({
-        url: 'app/settings_controller.php?action=save_transaction_series',
-        type: 'POST',
-        data: { series: JSON.stringify(series) },
-        dataType: 'json',
-        success: function (response) {
-            if (response.error) {
-                swal("Error", response.msg, "error");
-            } else {
-                toaster.success(response.msg, 'Success', { top: '10%', right: '20px', hide: true, duration: 1500 });
-            }
-        },
-        error: function () {
-            swal("Error", "An unexpected error occurred.", "error");
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
         }
     });
 }
 
 /**
-<<<<<<< HEAD
  * Auto-Invoice Logic
  */
 function loadAutoInvoiceSettings() {
@@ -511,58 +357,4 @@ function saveLeaseConditions() {
             swal("Error", res.msg, "error");
         }
     }, 'json');
-=======
- * Load lease conditions template
- */
-function loadLeaseConditions() {
-    $.ajax({
-        url: 'app/settings_controller.php?action=get_lease_conditions',
-        type: 'GET',
-        dataType: 'json',
-        success: function (response) {
-            if (!response.error && response.data) {
-                // Set the value to textarea (TinyMCE will pick it up when initialized)
-                $('#lease_conditions').val(response.data);
-
-                // If TinyMCE is already initialized, update it
-                if (tinymce.get('lease_conditions')) {
-                    tinymce.get('lease_conditions').setContent(response.data);
-                }
-            }
-        },
-        error: function () {
-            console.error('Failed to load lease conditions');
-        }
-    });
-}
-
-/**
- * Save lease conditions template
- */
-function saveLeaseConditions() {
-    // Get content from TinyMCE
-    let content = '';
-    if (tinymce.get('lease_conditions')) {
-        content = tinymce.get('lease_conditions').getContent();
-    } else {
-        content = $('#lease_conditions').val();
-    }
-
-    $.ajax({
-        url: 'app/settings_controller.php?action=save_lease_conditions',
-        type: 'POST',
-        data: { lease_conditions: content },
-        dataType: 'json',
-        success: function (response) {
-            if (response.error) {
-                swal("Error", response.msg, "error");
-            } else {
-                toaster.success(response.msg, 'Success', { top: '10%', right: '20px', hide: true, duration: 1500 });
-            }
-        },
-        error: function () {
-            swal("Error", "An unexpected error occurred.", "error");
-        }
-    });
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
 }

@@ -19,7 +19,8 @@
                                 <option value="">Bulk Actions</option>
                                 <option value="delete">Delete Selected</option>
                             </select>
-                            <button class="btn btn-secondary" id="applyBulkActionBtnInvoices" type="button">Apply</button>
+                            <button class="btn btn-secondary" id="applyBulkActionBtnInvoices"
+                                type="button">Apply</button>
                         </div>
                     </div>
                     <!-- <div class="col-md-3">
@@ -54,4 +55,3 @@
         </div>
     </div>
 </main>
-

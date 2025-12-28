@@ -26,17 +26,11 @@ if (isset($_GET['action'])) {
 /**
  * Get property types for DataTable (server-side)
  */
-<<<<<<< HEAD
 function get_property_types()
 {
     ob_clean();
     header('Content-Type: application/json');
     $conn = $GLOBALS['conn'];
-=======
-function get_property_types() {
-    header('Content-Type: application/json');
-    global $conn;
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
 
     $draw = $_POST['draw'] ?? 1;
     $start = $_POST['start'] ?? 0;
@@ -53,7 +47,6 @@ function get_property_types() {
     }
 
     // Total records
-<<<<<<< HEAD
     $total_records_res = $conn->query("SELECT COUNT(*) as count FROM property_types");
     $total_records = ($total_records_res) ? $total_records_res->fetch_assoc()['count'] : 0;
 
@@ -65,15 +58,6 @@ function get_property_types() {
         $row = $filtered_records_res->fetch_assoc();
         $filtered_records = $row['count'] ?? 0;
     }
-=======
-    $total_records_query = $conn->query("SELECT COUNT(*) as count FROM property_types");
-    $total_records = $total_records_query->fetch_assoc()['count'];
-
-    // Filtered records
-    $filtered_sql = str_replace("SELECT *", "SELECT COUNT(*) as count", $sql);
-    $filtered_records_query = $conn->query($filtered_sql);
-    $filtered_records = $filtered_records_query->fetch_assoc()['count'];
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
 
     // Ordering
     $order_column = $_POST['order'][0]['column'] ?? 0;
@@ -89,21 +73,12 @@ function get_property_types() {
     $data = [];
 
     while ($row = $result->fetch_assoc()) {
-<<<<<<< HEAD
         $statusBadge = $row['status'] == 'active'
             ? '<span class="badge bg-success">Active</span>'
             : '<span class="badge bg-secondary">Inactive</span>';
 
         $actionBtn = '<button class="btn btn-sm btn-primary me-1" onclick="editPropertyType(' . $row['id'] . ')" title="Edit"><i class="bi bi-pencil"></i></button>';
         $actionBtn .= '<button class="btn btn-sm btn-danger" onclick="deletePropertyType(' . $row['id'] . ')" title="Delete"><i class="bi bi-trash"></i></button>';
-=======
-        $statusBadge = $row['status'] == 'active' 
-            ? '<span class="badge bg-success">Active</span>' 
-            : '<span class="badge bg-secondary">Inactive</span>';
-        
-        $actionBtn = '<button class="btn btn-sm btn-primary me-1" onclick="editPropertyType('.$row['id'].')" title="Edit"><i class="bi bi-pencil"></i></button>';
-        $actionBtn .= '<button class="btn btn-sm btn-danger" onclick="deletePropertyType('.$row['id'].')" title="Delete"><i class="bi bi-trash"></i></button>';
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
 
         $data[] = [
             'type_name' => htmlspecialchars($row['type_name']),
@@ -114,11 +89,8 @@ function get_property_types() {
         ];
     }
 
-<<<<<<< HEAD
     ob_clean();
     header('Content-Type: application/json');
-=======
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
     echo json_encode([
         "draw" => intval($draw),
         "recordsTotal" => intval($total_records),
@@ -130,7 +102,6 @@ function get_property_types() {
 /**
  * Get single property type for editing
  */
-<<<<<<< HEAD
 function get_property_type()
 {
     ob_clean();
@@ -139,14 +110,6 @@ function get_property_type()
 
     $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
-=======
-function get_property_type() {
-    header('Content-Type: application/json');
-    global $conn;
-    
-    $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-    
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
     if ($id <= 0) {
         echo json_encode(['error' => true, 'msg' => 'Invalid ID']);
         exit;
@@ -163,17 +126,11 @@ function get_property_type() {
 /**
  * Save (create/update) property type
  */
-<<<<<<< HEAD
 function save_property_type()
 {
     ob_clean();
     header('Content-Type: application/json');
     $conn = $GLOBALS['conn'];
-=======
-function save_property_type() {
-    header('Content-Type: application/json');
-    global $conn;
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
 
     $id = isset($_POST['property_type_id']) && is_numeric($_POST['property_type_id']) ? intval($_POST['property_type_id']) : 0;
     $type_name = trim($_POST['type_name'] ?? '');
@@ -230,17 +187,11 @@ function save_property_type() {
 /**
  * Delete property type
  */
-<<<<<<< HEAD
 function delete_property_type()
 {
     ob_clean();
     header('Content-Type: application/json');
     $conn = $GLOBALS['conn'];
-=======
-function delete_property_type() {
-    header('Content-Type: application/json');
-    global $conn;
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
 
     $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
 
@@ -271,7 +222,6 @@ function delete_property_type() {
 /**
  * Get active property types for dropdowns
  */
-<<<<<<< HEAD
 function get_active_types()
 {
     ob_clean();
@@ -281,22 +231,9 @@ function get_active_types()
     $result = $conn->query("SELECT id, type_name FROM property_types WHERE status = 'active' ORDER BY type_name");
     $types = [];
 
-=======
-function get_active_types() {
-    header('Content-Type: application/json');
-    global $conn;
-
-    $result = $conn->query("SELECT id, type_name FROM property_types WHERE status = 'active' ORDER BY type_name");
-    $types = [];
-    
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
     while ($row = $result->fetch_assoc()) {
         $types[] = $row;
     }
 
     echo json_encode($types);
 }
-<<<<<<< HEAD
-=======
-?>
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6

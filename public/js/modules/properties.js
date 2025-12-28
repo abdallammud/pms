@@ -65,11 +65,7 @@ document.addEventListener('DOMContentLoaded', function () {
             $btn.prop('disabled', true); // Disable button
 
             $.ajax({
-<<<<<<< HEAD
                 url: base_url + '/app/property_controller.php?action=save_unit',
-=======
-                url: 'app/property_controller.php?action=save_unit',
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
                 type: 'POST',
                 data: formData,
                 processData: false,
@@ -197,71 +193,11 @@ function loadManagers() {
     });
 }
 
-<<<<<<< HEAD
 function editProperty(id) {
     $.ajax({
         url: `${base_url}/app/property_controller.php?action=get_property&id=${id}`,
         type: 'GET',
         dataType: 'json',
-=======
-/**
- * Load property types into dropdown
- */
-function loadPropertyTypes() {
-    $.ajax({
-        url: `${base_url}/app/property_type_controller.php?action=get_active_types`,
-        type: 'GET',
-        dataType: 'json',
-        success: function (data) {
-            var select = $('#property_type_select');
-            select.find('option:not(:first)').remove(); // Keep "Select Type" option
-
-            if (data && data.length > 0) {
-                data.forEach(function (type) {
-                    select.append('<option value="' + type.id + '">' + type.type_name + '</option>');
-                });
-            }
-            // Refresh Bootstrap Select
-            select.selectpicker('refresh');
-        },
-        error: function () {
-            console.error('Failed to load property types');
-        }
-    });
-}
-
-/**
- * Load managers (users) into dropdown
- */
-function loadManagers() {
-    $.ajax({
-        url: `${base_url}/app/user_controller.php?action=get_managers`,
-        type: 'GET',
-        dataType: 'json',
-        success: function (data) {
-            var select = $('#manager_select');
-            select.find('option:not(:first)').remove();
-
-            if (data && data.length > 0) {
-                data.forEach(function (user) {
-                    select.append('<option value="' + user.id + '">' + user.name + '</option>');
-                });
-            }
-            // Refresh Bootstrap Select
-            select.selectpicker('refresh');
-        },
-        error: function () {
-            console.error('Failed to load managers');
-        }
-    });
-}
-
-function editProperty(id) {
-    $.ajax({
-        url: `${base_url}/app/property_controller.php?action=get_property&id=${id}`,
-        type: 'GET',
-        dataType: 'json',
->>>>>>> 2d4dd43dfe288e642e8e324d993a9813a8d533d6
         success: function (data) {
             // Populate form fields
             $('#property_id').val(data.id);

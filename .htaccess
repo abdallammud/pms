@@ -18,6 +18,9 @@ RewriteRule ^tenants/?$ index.php?menu=tenants&tab=directory [NC,L]
 RewriteRule ^tenants/add/?$ index.php?menu=tenants&tab=add [NC,L]
 RewriteRule ^leases/?$ index.php?menu=tenants&tab=leases [NC,L]
 RewriteRule ^add_lease/?$ index.php?menu=tenants&tab=add_lease [NC,L]
+RewriteRule ^edit_lease/([0-9]+)/?$ index.php?menu=tenants&tab=edit_lease&id=$1 [NC,L]
+RewriteRule ^view_lease/([0-9]+)/?$ index.php?menu=tenants&tab=view_lease&id=$1 [NC,L]
+
 RewriteRule ^guarantees/?$ index.php?menu=tenants&tab=guarantees [NC,L]
 
 # Accounting
@@ -47,5 +50,5 @@ RewriteRule ^reports/maintenance-cost/?$ index.php?menu=reports&tab=maintenance_
 # Settings
 RewriteRule ^settings/?$ index.php?menu=settings&tab=system [NC,L]
 RewriteRule ^users/?$ index.php?menu=settings&tab=users [NC,L]
-RewriteRule ^settings/system/?$ index.php?menu=settings&tab=system [NC,L]
-RewriteRule ^settings/property-types/?$ index.php?menu=settings&tab=property_types [NC,L]
+RewriteRule ^system_settings/?$ index.php?menu=settings&tab=system [NC,L]
+RewriteRule ^property_types/?$ index.php?menu=settings&tab=property_types [NC,L]

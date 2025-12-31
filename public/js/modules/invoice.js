@@ -1,56 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
     if (document.getElementById('invoicesTable')) {
         loadInvoices();
-        initBulkActions();
-
-        // Select All Checkbox
-        $(document).off('click', '#selectAllInvoices').on('click', '#selectAllInvoices', function () {
-            var isChecked = this.checked;
-            var table = $('#invoicesTable').DataTable();
-            $(table.rows().nodes()).find('.invoice-checkbox').prop('checked', isChecked).trigger('change');
-        });
-
-        // Individual checkbox click
-        $(document).off('click', '.invoice-checkbox').on('click', '.invoice-checkbox', function () {
-            var table = $('#invoicesTable').DataTable();
-            var total = table.rows().nodes().length;
-            var checked = $(table.rows().nodes()).find('.invoice-checkbox:checked').length;
-            $('#selectAllInvoices').prop('checked', total > 0 && total === checked);
-        });
-
-        // Apply Bulk Action
-        $('#applyBulkActionBtnInvoices').on('click', function () {
-            var action = $('#bulkActionSelectInvoices').val();
-            var selectedIds = [];
-
-            $('.invoice-checkbox:checked').each(function () {
-                selectedIds.push($(this).val());
-            });
-
-            if (!action) {
-                swal('Warning', 'Please select an action.', 'warning');
-                return;
-            }
-
-            if (selectedIds.length === 0) {
-                swal('Warning', 'Please select at least one invoice.', 'warning');
-                return;
-            }
-
-            if (action === 'delete') {
-                swal({
-                    title: 'Are you sure?',
-                    text: "You are about to delete " + selectedIds.length + " invoice(s). You won't be able to revert this!",
-                    icon: 'warning',
-                    buttons: true,
-                    dangerMode: true,
-                }).then((willDelete) => {
-                    if (willDelete) {
-                        performBulkInvoiceAction(action, selectedIds);
-                    }
-                });
-            }
-        });
     }
 
     // Modal Global Initialization (Works even if dynamically loaded)
@@ -262,13 +212,6 @@ function loadInvoices() {
             "type": "POST"
         },
         "columns": [
-            {
-                "data": "id",
-                "orderable": false,
-                "render": function (data, type, row) {
-                    return '<input type="checkbox" class="invoice-checkbox" value="' + data + '">';
-                }
-            },
             { "data": "reference_number" },
             { "data": "invoice_type" },
             { "data": "charge_type" },
@@ -278,42 +221,11 @@ function loadInvoices() {
             { "data": "status" },
             { "data": "actions", "orderable": false }
         ],
-        "order": [[1, "desc"]],
-        "drawCallback": function () {
-            $('#selectAllInvoices').prop('checked', false);
-        }
+        "order": [[0, "desc"]],
+        "drawCallback": function () { }
     });
 }
 
-function initBulkActions() { }
-
-function performBulkInvoiceAction(action, ids) {
-    var $btn = $('#applyBulkActionBtnInvoices');
-    $btn.prop('disabled', true).text('Processing...');
-
-    $.ajax({
-        url: base_url + '/app/invoice_controller.php?action=bulk_action',
-        type: 'POST',
-        data: { action_type: action, ids: ids },
-        dataType: 'json',
-        success: function (response) {
-            if (response.error) {
-                swal('Error', response.msg, 'error');
-            } else {
-                toaster.success(response.msg, 'Success', { top: '10%', right: '20px', hide: true, duration: 1500 });
-                $('#invoicesTable').DataTable().ajax.reload();
-                $('#selectAllInvoices').prop('checked', false);
-                $('#bulkActionSelectInvoices').val('');
-            }
-        },
-        error: function () {
-            swal('Error', 'An unexpected error occurred.', 'error');
-        },
-        complete: function () {
-            $btn.prop('disabled', false).text('Apply');
-        }
-    });
-}
 
 function editInvoice(id) {
     $.ajax({

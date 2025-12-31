@@ -8,95 +8,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize leases table if on leases page
     if (document.getElementById('leasesTable')) {
         loadLeases();
-        initBulkActions();
-
-        $(document).off('click', '#selectAllLeasesCheckBox').on('click', '#selectAllLeasesCheckBox', function () {
-            var isChecked = this.checked;
-            var table = $('#leasesTable').DataTable();
-
-
-            // Use DataTables API to find all row nodes and update checkboxes
-            $(table.rows().nodes()).find('.lease-checkbox').prop('checked', isChecked).trigger('change');
-        });
-
-        // Individual checkbox click to update Select All
-        $(document).off('click', '.lease-checkbox').on('click', '.lease-checkbox', function () {
-            var table = $('#leasesTable').DataTable();
-            var total = table.rows().nodes().length;
-            var checked = $(table.rows().nodes()).find('.lease-checkbox:checked').length;
-
-            $('#selectAllLeasesCheckBox').prop('checked', total > 0 && total === checked);
-        });
-
-        // Apply Bulk Action
-        $('#applyBulkActionBtn').on('click', function () {
-            var action = $('#bulkActionSelect').val();
-            var selectedIds = [];
-
-            $('.lease-checkbox:checked').each(function () {
-                selectedIds.push($(this).val());
-            });
-
-            if (!action) {
-                swal('Warning', 'Please select an action.', 'warning');
-                return;
-            }
-
-            if (selectedIds.length === 0) {
-                swal('Warning', 'Please select at least one lease.', 'warning');
-                return;
-            }
-
-            if (action === 'invoice') {
-                if (typeof openBatchInvoiceModal === 'function') {
-                    // For multi-select, we force "Other Charges" type
-                    if (selectedIds.length > 1) {
-                        openBatchInvoiceModal(selectedIds, 'other_charge');
-                    } else {
-                        openBatchInvoiceModal(selectedIds, 'rent');
-                    }
-                } else {
-                    swal('Error', 'Invoice module not loaded correctly.', 'error');
-                }
-                return;
-            }
-
-            if (action === 'auto_rent_invoice') {
-                startAutoRentInvoicing(selectedIds);
-                return;
-            }
-
-            var actionText = action === 'delete' ? 'delete' : 'terminate';
-            var confirmText = "You won't be able to revert this!";
-
-            swal({
-                title: 'Are you sure?',
-                text: "You are about to " + actionText + " " + selectedIds.length + " lease(s). " + confirmText,
-                icon: 'warning',
-                buttons: true,
-                dangerMode: true,
-            }).then((willDelete) => {
-                if (willDelete) {
-                    performBulkLeaseAction(action, selectedIds);
-                }
-            });
-        });
-
-        // Add invoice bulk action handler explicitly if needed, 
-        // but it's handled above if we add it to the 'actionText' logic.
-        // Actually, let's inject it into the click handler logic.
-
-
     }
 
-
-
-    // Initialize add lease form if on add lease page
-    if (document.getElementById('addLeaseForm')) {
-        initAddLeaseForm();
-    }
-
-    // Initialize add lease form if on add lease page
+    // Initialize add/edit lease form if present
     if (document.getElementById('addLeaseForm')) {
         initAddLeaseForm();
     }
@@ -106,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
  * Initialize the Add Lease Form
  */
 function initAddLeaseForm() {
+    initPikaday();
     // Initialize Bootstrap Select for all selectpickers
     if (typeof $.fn.selectpicker !== 'undefined') {
         $('#lease_tenant_select, #lease_guarantee_select, #lease_property_select, #lease_unit_select').selectpicker();
@@ -188,10 +103,10 @@ function loadUnitsByProperty(propertyId) {
             if (data && data.length > 0) {
                 data.forEach(function (unit) {
                     var statusBadge = unit.status === 'vacant' ? ' (Vacant)' : ' (' + unit.status + ')';
-                    select.append('<option value="' + unit.id + '" data-rent="' + unit.rent_amount + '">' + unit.unit_number + statusBadge + '</option>');
+                    select.html('<option value="' + unit.id + '" data-rent="' + unit.rent_amount + '">' + unit.unit_number + statusBadge + '</option>');
                 });
             } else {
-                select.append('<option value="" disabled>No units available</option>');
+                select.html('<option value="" disabled>No units available</option>');
             }
             select.selectpicker('refresh');
         },
@@ -199,6 +114,40 @@ function loadUnitsByProperty(propertyId) {
             console.error('Failed to load units');
             select.selectpicker('refresh');
         }
+    });
+}
+
+/**
+ * Initialize Pikaday for date fields
+ */
+function initPikaday() {
+    let startPicker = null;
+    let endPicker = null;
+
+    $(document).on('focus', '.lease-start', function () {
+        if (this.classList.contains('initialized')) return;
+        startPicker = new Pikaday({
+            field: this,
+            format: 'YYYY-MM-DD',
+            onSelect(date) {
+                if (endPicker) {
+                    endPicker.hide();
+                    endPicker.setMinDate(date);
+                }
+            }
+        });
+        this.classList.add('initialized');
+    });
+
+    $(document).on('focus', '.lease-end', function () {
+        if (this.classList.contains('initialized')) return;
+        const minDate = startPicker ? startPicker.getDate() : null;
+        endPicker = new Pikaday({
+            field: this,
+            format: 'YYYY-MM-DD',
+            minDate: minDate
+        });
+        this.classList.add('initialized');
     });
 }
 
@@ -270,13 +219,6 @@ function loadLeases() {
             "type": "POST"
         },
         "columns": [
-            {
-                "data": "id",
-                "orderable": false,
-                "render": function (data, type, row) {
-                    return '<input type="checkbox" class="lease-checkbox" value="' + data + '">';
-                }
-            },
             { "data": "reference_number" },
             { "data": "tenant_name" },
             { "data": "property_unit" },
@@ -286,11 +228,8 @@ function loadLeases() {
             { "data": "status" },
             { "data": "actions", "orderable": false }
         ],
-        "order": [[5, "desc"]], // Order by start_date desc (index shifted by 1)
-        "drawCallback": function () {
-            // Re-bind select all check
-            $('#selectAllLeasesCheckBox').prop('checked', false);
-        }
+        "order": [[4, "desc"]], // Order by start_date desc
+        "drawCallback": function () { }
     });
 }
 
@@ -341,131 +280,3 @@ function deleteLease(id) {
     });
 }
 
-/**
- * Initialize Bulk Actions
- */
-function initBulkActions() {
-
-}
-
-/**
- * Perform Bulk Action
- */
-function performBulkLeaseAction(action, ids) {
-    var $btn = $('#applyBulkActionBtn');
-    $btn.prop('disabled', true).text('Processing...');
-
-    console.log(ids);
-
-    $.ajax({
-        url: base_url + '/app/lease_controller.php?action=bulk_action',
-        type: 'POST',
-        data: {
-            action_type: action,
-            ids: ids
-        },
-        dataType: 'json',
-        success: function (response) {
-            if (response.error) {
-                swal('Error', response.msg, 'error');
-            } else {
-                toaster.success(response.msg, 'Success', { top: '10%', right: '20px', hide: true, duration: 1500 });
-                $('#leasesTable').DataTable().ajax.reload();
-                $('#selectAllLeasesCheckBox').prop('checked', false);
-                $('#bulkActionSelect').val('');
-            }
-        },
-        error: function () {
-            swal('Error', 'An unexpected error occurred.', 'error');
-        },
-        complete: function () {
-            $btn.prop('disabled', false).text('Apply');
-        }
-    });
-}
-
-/**
- * Start Auto Rent Invoicing with Progress UI
- */
-function startAutoRentInvoicing(ids) {
-    const $modal = $('#autoRentProgressModal');
-    const $progressBar = $('#progressBar');
-    const $progressText = $('#progressText');
-    const $progressList = $('#progressList');
-    const $footer = $('#progressFooter');
-
-    // Reset UI
-    $progressList.empty();
-    $progressBar.css('width', '0%').text('0%');
-    $progressText.text('Generating invoices for ' + ids.length + ' leases...');
-    $footer.addClass('d-none');
-    $modal.modal('show');
-
-    // Make AJAX call for batch generation
-    $.ajax({
-        url: base_url + '/app/invoice_controller.php?action=generate_rent_invoices_bulk',
-        type: 'POST',
-        data: {
-            lease_ids: ids,
-            billing_month: new Date().getMonth() + 1,
-            billing_year: new Date().getFullYear()
-        },
-        dataType: 'json',
-        success: function (response) {
-            if (response.error) {
-                swal('Error', response.msg, 'error');
-                $modal.modal('hide');
-                return;
-            }
-
-            // Process results
-            let current = 0;
-            const total = response.results.length;
-
-            response.results.forEach((res, index) => {
-                setTimeout(() => {
-                    let icon = '';
-                    let badgeClass = '';
-                    if (res.status === 'success') {
-                        icon = '<i class="bi bi-check-circle-fill text-success"></i>';
-                        badgeClass = 'bg-success';
-                    } else if (res.status === 'skipped') {
-                        icon = '<i class="bi bi-exclamation-circle-fill text-warning"></i>';
-                        badgeClass = 'bg-warning';
-                    } else {
-                        icon = '<i class="bi bi-x-circle-fill text-danger"></i>';
-                        badgeClass = 'bg-danger';
-                    }
-
-                    const item = `
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                ${icon} <span class="ms-2 fw-bold">${res.tenant_name || 'Lease #' + res.lease_id}</span>
-                                <div class="small text-muted ms-4">${res.message}</div>
-                            </div>
-                            <span class="badge ${badgeClass} rounded-pill">${res.status}</span>
-                        </li>
-                    `;
-                    $progressList.prepend(item);
-
-                    // Update progress bar
-                    current++;
-                    let percent = Math.round((current / total) * 100);
-                    $progressBar.css('width', percent + '%').text(percent + '%');
-
-                    if (current === total) {
-                        $progressText.html(`<strong>Generation Complete!</strong> <br> ${response.msg}`);
-                        $footer.removeClass('d-none');
-                        $('#leasesTable').DataTable().ajax.reload();
-                        $('#selectAllLeasesCheckBox').prop('checked', false);
-                        $('#bulkActionSelect').val('');
-                    }
-                }, index * 100); // Small delay for visual effect
-            });
-        },
-        error: function () {
-            swal('Error', 'An error occurred during generation.', 'error');
-            $modal.modal('hide');
-        }
-    });
-}

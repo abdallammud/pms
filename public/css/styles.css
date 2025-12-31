@@ -1,6 +1,6 @@
 :root {
 	--page-bg: #fff;
-	--primary-color: #009a2d;
+	--primary-color: #257f58;
 	--secondary-color: #b0b0b0;
 	--accent-color: #b0b0b0;
 	--text-color: #fff;
@@ -719,11 +719,16 @@ button.btn.dropdown-toggle:not(.actions) {
 .sidebar-wrapper .sidebar-nav,
 .sidebar-wrapper .sidebar-nav .metismenu ul {
 	background-color: var(--primary-color);
+	border-right: none;
 }
 
 .sidebar-wrapper .sidebar-header {
-	background: #006a1f;
-	;
+	background: #1c5f42;
+	border-right: none;
+}
+
+.sidebar-wrapper .sidebar-header .logo-img {
+	width: 200px;
 }
 
 .top-header .navbar {
@@ -763,8 +768,8 @@ button.btn.dropdown-toggle:not(.actions) {
 
 .sidebar-wrapper .sidebar-nav .metismenu a:hover,
 .sidebar-wrapper .sidebar-nav .metismenu .mm-active>a {
-	background-color: #4a955d63;
-	color: var(--menu-active-color);
+	background-color: #2e9f6e;
+	color: #ffffff;
 }
 
 @media (max-width: 1128px) {
@@ -835,8 +840,15 @@ table:not(.pika-table) td .btn.btn-danger:hover {
 }
 
 .btn-primary {
-	color: #fff;
+	--bs-btn-color: #000;
+	--bs-btn-bg: #2e9f6e;
+	--bs-btn-border-color: #2e9f6e;
+	--bs-btn-hover-color: #000;
+	--bs-btn-hover-bg: #257f58;
+	--bs-btn-hover-border-color: #257f58;
 }
+
+/* element { width: 100%; height: 50px; margin-top: 11px; } */
 
 .multiselect-parent {
 	display: flex;

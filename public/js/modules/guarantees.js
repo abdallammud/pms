@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
     if (document.getElementById('guaranteesTable')) {
         loadGuarantees();
-        initGuaranteeBulkActions();
     }
 
     // Handle Save Guarantee Form Submission
@@ -58,13 +57,6 @@ function loadGuarantees() {
             "type": "POST"
         },
         "columns": [
-            {
-                "data": "id",
-                "orderable": false,
-                "render": function (data, type, row) {
-                    return '<input type="checkbox" class="guarantee-checkbox" value="' + data + '">';
-                }
-            },
             { "data": "full_name" },
             { "data": "phone" },
             { "data": "email" },
@@ -72,11 +64,8 @@ function loadGuarantees() {
             { "data": "status" },
             { "data": "actions", "orderable": false }
         ],
-        "order": [[1, "asc"]],
-        "drawCallback": function () {
-            // Re-bind select all check
-            $('#selectAllGuarantees').prop('checked', false);
-        }
+        "order": [[0, "asc"]],
+        "drawCallback": function () { }
     });
 }
 
@@ -145,90 +134,3 @@ function deleteGuarantee(id) {
     });
 }
 
-/**
- * Initialize Guarantee Bulk Actions
- */
-function initGuaranteeBulkActions() {
-    // Select All Checkbox - Use delegated click for reliability
-    $(document).off('click', '#selectAllGuarantees').on('click', '#selectAllGuarantees', function () {
-        var isChecked = this.checked;
-        var table = $('#guaranteesTable').DataTable();
-        $(table.rows().nodes()).find('.guarantee-checkbox').prop('checked', isChecked).trigger('change');
-    });
-
-    // Individual checkbox click to update Select All
-    $(document).off('click', '.guarantee-checkbox').on('click', '.guarantee-checkbox', function () {
-        var table = $('#guaranteesTable').DataTable();
-        var total = table.rows().nodes().length;
-        var checked = $(table.rows().nodes()).find('.guarantee-checkbox:checked').length;
-        $('#selectAllGuarantees').prop('checked', total > 0 && total === checked);
-    });
-
-    // Apply Bulk Action
-    $('#applyBulkActionBtnGuarantees').on('click', function () {
-        var action = $('#bulkActionSelectGuarantees').val();
-        var selectedIds = [];
-
-        $('.guarantee-checkbox:checked').each(function () {
-            selectedIds.push($(this).val());
-        });
-
-        if (!action) {
-            swal('Warning', 'Please select an action.', 'warning');
-            return;
-        }
-
-        if (selectedIds.length === 0) {
-            swal('Warning', 'Please select at least one guarantor.', 'warning');
-            return;
-        }
-
-        var confirmText = "You won't be able to revert this!";
-
-        swal({
-            title: 'Are you sure?',
-            text: "You are about to delete " + selectedIds.length + " guarantor(s). " + confirmText,
-            icon: 'warning',
-            buttons: true,
-            dangerMode: true,
-        }).then((willDelete) => {
-            if (willDelete) {
-                performGuaranteeBulkAction(action, selectedIds);
-            }
-        });
-    });
-}
-
-/**
- * Perform Guarantee Bulk Action
- */
-function performGuaranteeBulkAction(action, ids) {
-    var $btn = $('#applyBulkActionBtnGuarantees');
-    $btn.prop('disabled', true).text('Processing...');
-
-    $.ajax({
-        url: 'app/guarantee_controller.php?action=bulk_action',
-        type: 'POST',
-        data: {
-            action_type: action,
-            ids: ids
-        },
-        dataType: 'json',
-        success: function (response) {
-            if (response.error) {
-                swal('Error', response.msg, 'error');
-            } else {
-                toaster.success(response.msg, 'Success', { top: '10%', right: '20px', hide: true, duration: 1500 });
-                $('#guaranteesTable').DataTable().ajax.reload();
-                $('#selectAllGuarantees').prop('checked', false);
-                $('#bulkActionSelectGuarantees').val('');
-            }
-        },
-        error: function () {
-            swal('Error', 'An unexpected error occurred.', 'error');
-        },
-        complete: function () {
-            $btn.prop('disabled', false).text('Apply');
-        }
-    });
-}

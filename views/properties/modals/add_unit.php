@@ -17,8 +17,10 @@
                     <!-- Property Select + Unit Number -->
                     <div class="row mb-3">
                         <div class="col-md-6 multiselect-parent">
-                            <label class="form-label multiselect-label">Property <span class="text-danger">*</span></label>
-                            <select name="property_id" id="unit_property_select" class="form-select selectpicker" data-live-search="true" title="Select Property" required>
+                            <label class="form-label multiselect-label">Property <span
+                                    class="text-danger">*</span></label>
+                            <select name="property_id" id="unit_property_select" class="form-select selectpicker"
+                                data-live-search="true" title="Select Property" required>
                                 <option value="">Select Property</option>
                                 <!-- Populated dynamically via AJAX -->
                             </select>
@@ -26,7 +28,7 @@
 
                         <div class="col-md-6">
                             <label class="form-label">Unit Number <span class="text-danger">*</span></label>
-                            <input type="text" name="unit_number" id="unit_number" class="form-control"  required>
+                            <input type="text" name="unit_number" id="unit_number" class="form-control" required>
                         </div>
                     </div>
 
@@ -48,7 +50,7 @@
 
                         <div class="col-md-6">
                             <label class="form-label">Size (sq ft)</label>
-                            <input type="number" name="size_sqft" id="unit_size" class="form-control" >
+                            <input type="number" name="size_sqft" id="unit_size" class="form-control">
                         </div>
                     </div>
 
@@ -56,7 +58,7 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label">Rent Amount</label>
-                            <input type="number" step="0.01" name="rent_amount" id="unit_rent" class="form-control" >
+                            <input type="number" step="0.01" name="rent_amount" id="unit_rent" class="form-control">
                         </div>
 
                         <div class="col-md-6">

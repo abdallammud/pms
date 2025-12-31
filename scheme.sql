@@ -88,6 +88,7 @@ CREATE TABLE properties (
     manager_id INT NULL,
     owner_name VARCHAR(150),
     description TEXT,
+    logo VARCHAR(255) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (manager_id) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (type_id) REFERENCES property_types(id) ON DELETE SET NULL

@@ -15,12 +15,12 @@
                     <table class="table table-striped table-hover w-100" id="expensesTable">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>Ref #</th>
+                                <th>Type</th>
                                 <th>Property</th>
                                 <th>Category</th>
                                 <th>Amount</th>
                                 <th>Date</th>
-                                <th>Description</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -33,5 +33,4 @@
         </div>
     </div>
 </main>
-<?php require 'views/accounting/modals/add_expense.php'; ?>
 <script src="public/js/modules/expenses.js"></script>

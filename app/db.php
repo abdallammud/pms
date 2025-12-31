@@ -1,13 +1,19 @@
 <?php
 $host = 'localhost'; // Extract from DSN or define directly
-$db_name = 'test_edurdur_'; // Extract from DSN or define directly
+$db_name = 'test_edurdur_1'; // Extract from DSN or define directly
 $charset = 'utf8mb4'; // Extract from DSN or define directly
 $username = 'root';
 $password = '';
 
-$username = 'u562838275_pms';
-$db_name = 'u562838275_pms';
-$password = 'i=fVRY0:cP';
+
+// $db_name = 'aayacsqa_pms'; // Extract from DSN or define directly
+// $charset = 'utf8mb4'; // Extract from DSN or define directly
+// $username = 'aayacsqa_pms';
+// $password = 'Z(wfv2srWUaG';
+
+// $username = 'u562838275_pms';
+// $db_name = 'u562838275_pms';
+// $password = 'i=fVRY0:cP';
 
 // Check this
 

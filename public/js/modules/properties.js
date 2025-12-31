@@ -6,11 +6,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (document.getElementById('propertiesTable')) {
         loadProperties();
-        initBulkActions();
     }
     if (document.getElementById('unitsTable')) {
         loadUnits();
-        initUnitBulkActions();
     }
 
     // Handle Add Property Form Submission
@@ -117,13 +115,6 @@ function loadProperties() {
             "type": "POST"
         },
         "columns": [
-            {
-                "data": "id",
-                "orderable": false,
-                "render": function (data, type, row) {
-                    return '<input type="checkbox" class="property-checkbox" value="' + data + '">';
-                }
-            },
             { "data": "name" },
             { "data": "type" },
             { "data": "address" },
@@ -134,10 +125,7 @@ function loadProperties() {
             { "data": "actions", "orderable": false }
         ],
         "order": [[1, "asc"]],
-        "drawCallback": function () {
-            // Re-bind select all check
-            $('#selectAllProperties').prop('checked', false);
-        }
+        "drawCallback": function () { }
     });
 }
 
@@ -258,6 +246,7 @@ document.addEventListener('DOMContentLoaded', function () {
         $('#property_id').val(''); // Clear the property ID
         $('#property_type_select').val('').selectpicker('refresh'); // Reset Bootstrap Select
         $('#manager_select').val('').selectpicker('refresh'); // Reset Bootstrap Select
+        $('#property_logo').val(''); // Clear file input
         $('#addPropertyLabel').html('<i class="bi bi-building-add me-2"></i>Add Property');
         $('#savePropertyBtn').text('Save Property');
     });
@@ -277,13 +266,6 @@ function loadUnits() {
             "type": "POST"
         },
         "columns": [
-            {
-                "data": "id",
-                "orderable": false,
-                "render": function (data, type, row) {
-                    return '<input type="checkbox" class="unit-checkbox" value="' + data + '">';
-                }
-            },
             { "data": "unit_number" },
             { "data": "unit_type" },
             { "data": "property_name" },
@@ -291,10 +273,7 @@ function loadUnits() {
             { "data": "actions", "orderable": false }
         ],
         "order": [[1, "asc"]],
-        "drawCallback": function () {
-            // Re-bind select all check
-            $('#selectAllUnits').prop('checked', false);
-        }
+        "drawCallback": function () { }
     });
 }
 
@@ -386,182 +365,6 @@ function deleteUnit(id) {
                     swal('Error', 'An unexpected error occurred.', 'error');
                 }
             });
-        }
-    });
-}
-
-/**
- * Initialize Bulk Actions
- */
-function initBulkActions() {
-    // Select All Checkbox - Use delegated click for reliability
-    $(document).off('click', '#selectAllProperties').on('click', '#selectAllProperties', function () {
-        var isChecked = this.checked;
-        var table = $('#propertiesTable').DataTable();
-        $(table.rows().nodes()).find('.property-checkbox').prop('checked', isChecked).trigger('change');
-    });
-
-    // Individual checkbox click to update Select All
-    $(document).off('click', '.property-checkbox').on('click', '.property-checkbox', function () {
-        var table = $('#propertiesTable').DataTable();
-        var total = table.rows().nodes().length;
-        var checked = $(table.rows().nodes()).find('.property-checkbox:checked').length;
-        $('#selectAllProperties').prop('checked', total > 0 && total === checked);
-    });
-
-    // Apply Bulk Action
-    $('#applyBulkActionBtn').on('click', function () {
-        var action = $('#bulkActionSelect').val();
-        var selectedIds = [];
-
-        $('.property-checkbox:checked').each(function () {
-            selectedIds.push($(this).val());
-        });
-
-        if (!action) {
-            swal('Warning', 'Please select an action.', 'warning');
-            return;
-        }
-
-        if (selectedIds.length === 0) {
-            swal('Warning', 'Please select at least one property.', 'warning');
-            return;
-        }
-
-        var confirmText = "You won't be able to revert this!";
-
-        swal({
-            title: 'Are you sure?',
-            text: "You are about to delete " + selectedIds.length + " property(s). " + confirmText,
-            icon: 'warning',
-            buttons: true,
-            dangerMode: true,
-        }).then((willDelete) => {
-            if (willDelete) {
-                performBulkAction(action, selectedIds);
-            }
-        });
-    });
-}
-
-/**
- * Perform Bulk Action
- */
-function performBulkAction(action, ids) {
-    var $btn = $('#applyBulkActionBtn');
-    $btn.prop('disabled', true).text('Processing...');
-
-    $.ajax({
-        url: base_url + '/app/property_controller.php?action=bulk_action',
-        type: 'POST',
-        data: {
-            action_type: action,
-            ids: ids
-        },
-        dataType: 'json',
-        success: function (response) {
-            if (response.error) {
-                swal('Error', response.msg, 'error');
-            } else {
-                toaster.success(response.msg, 'Success', { top: '10%', right: '20px', hide: true, duration: 1500 });
-                $('#propertiesTable').DataTable().ajax.reload();
-                $('#selectAllProperties').prop('checked', false);
-                $('#bulkActionSelect').val('');
-            }
-        },
-        error: function () {
-            swal('Error', 'An unexpected error occurred.', 'error');
-        },
-        complete: function () {
-            $btn.prop('disabled', false).text('Apply');
-        }
-    });
-}
-
-/**
- * Initialize Unit Bulk Actions
- */
-function initUnitBulkActions() {
-    // Select All Checkbox - Use delegated click for reliability
-    $(document).off('click', '#selectAllUnits').on('click', '#selectAllUnits', function () {
-        var isChecked = this.checked;
-        var table = $('#unitsTable').DataTable();
-        $(table.rows().nodes()).find('.unit-checkbox').prop('checked', isChecked).trigger('change');
-    });
-
-    // Individual checkbox click to update Select All
-    $(document).off('click', '.unit-checkbox').on('click', '.unit-checkbox', function () {
-        var table = $('#unitsTable').DataTable();
-        var total = table.rows().nodes().length;
-        var checked = $(table.rows().nodes()).find('.unit-checkbox:checked').length;
-        $('#selectAllUnits').prop('checked', total > 0 && total === checked);
-    });
-
-    // Apply Bulk Action
-    $('#applyBulkActionBtnUnits').on('click', function () {
-        var action = $('#bulkActionSelectUnits').val();
-        var selectedIds = [];
-
-        $('.unit-checkbox:checked').each(function () {
-            selectedIds.push($(this).val());
-        });
-
-        if (!action) {
-            swal('Warning', 'Please select an action.', 'warning');
-            return;
-        }
-
-        if (selectedIds.length === 0) {
-            swal('Warning', 'Please select at least one unit.', 'warning');
-            return;
-        }
-
-        var confirmText = "You won't be able to revert this!";
-
-        swal({
-            title: 'Are you sure?',
-            text: "You are about to delete " + selectedIds.length + " unit(s). " + confirmText,
-            icon: 'warning',
-            buttons: true,
-            dangerMode: true,
-        }).then((willDelete) => {
-            if (willDelete) {
-                performUnitBulkAction(action, selectedIds);
-            }
-        });
-    });
-}
-
-/**
- * Perform Unit Bulk Action
- */
-function performUnitBulkAction(action, ids) {
-    var $btn = $('#applyBulkActionBtnUnits');
-    $btn.prop('disabled', true).text('Processing...');
-
-    $.ajax({
-        url: base_url + '/app/property_controller.php?action=bulk_action_unit',
-        type: 'POST',
-        data: {
-            action_type: action,
-            ids: ids
-        },
-        dataType: 'json',
-        success: function (response) {
-            if (response.error) {
-                swal('Error', response.msg, 'error');
-            } else {
-                toaster.success(response.msg, 'Success', { top: '10%', right: '20px', hide: true, duration: 1500 });
-                $('#unitsTable').DataTable().ajax.reload();
-                $('#selectAllUnits').prop('checked', false);
-                $('#bulkActionSelectUnits').val('');
-            }
-        },
-        error: function () {
-            swal('Error', 'An unexpected error occurred.', 'error');
-        },
-        complete: function () {
-            $btn.prop('disabled', false).text('Apply');
         }
     });
 }

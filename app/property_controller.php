@@ -204,12 +204,30 @@ function save_property()
         // Handle empty type_id
         $type_id = !empty($type_id) ? intval($type_id) : null;
 
+        // Handle Logo Upload
+        $logo = null;
+        if (isset($_FILES['logo']) && $_FILES['logo']['error'] == 0) {
+                $target_dir = "../public/uploads/property/";
+                if (!is_dir($target_dir)) {
+                        mkdir($target_dir, 0777, true);
+                }
+                $file_ext = strtolower(pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION));
+                $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+                if (in_array($file_ext, $allowed_extensions)) {
+                        $file_name = uniqid() . '.' . $file_ext;
+                        $target_file = $target_dir . $file_name;
+
+                        if (move_uploaded_file($_FILES['logo']['tmp_name'], $target_file)) {
+                                $logo = $file_name;
+                        }
+                }
+        }
+
         if (empty($id)) {
                 // Insert
-// Types: s=name, i=type_id, s=address, s=city, i=manager_id, s=owner_name, s=description
-                $stmt = $conn->prepare("INSERT INTO properties (name, type_id, address, city, manager_id, owner_name, description)
-VALUES (?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("sississ", $name, $type_id, $address, $city, $manager_id, $owner_name, $description);
+                $stmt = $conn->prepare("INSERT INTO properties (name, type_id, address, city, manager_id, owner_name, description, logo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("sississs", $name, $type_id, $address, $city, $manager_id, $owner_name, $description, $logo);
 
                 if ($stmt->execute()) {
                         echo json_encode(['error' => false, 'msg' => 'Property added successfully.']);
@@ -218,9 +236,13 @@ VALUES (?, ?, ?, ?, ?, ?, ?)");
                 }
         } else {
                 // Update
-                $stmt = $conn->prepare("UPDATE properties SET name=?, type_id=?, address=?, city=?, manager_id=?, owner_name=?,
-description=? WHERE id=?");
-                $stmt->bind_param("sisssssi", $name, $type_id, $address, $city, $manager_id, $owner_name, $description, $id);
+                if ($logo) {
+                        $stmt = $conn->prepare("UPDATE properties SET name=?, type_id=?, address=?, city=?, manager_id=?, owner_name=?, description=?, logo=? WHERE id=?");
+                        $stmt->bind_param("sissssssi", $name, $type_id, $address, $city, $manager_id, $owner_name, $description, $logo, $id);
+                } else {
+                        $stmt = $conn->prepare("UPDATE properties SET name=?, type_id=?, address=?, city=?, manager_id=?, owner_name=?, description=? WHERE id=?");
+                        $stmt->bind_param("sisssssi", $name, $type_id, $address, $city, $manager_id, $owner_name, $description, $id);
+                }
 
                 if ($stmt->execute()) {
                         echo json_encode(['error' => false, 'msg' => 'Property updated successfully.']);

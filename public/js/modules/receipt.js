@@ -2,54 +2,6 @@ document.addEventListener('DOMContentLoaded', function () {
     if (document.getElementById('receiptsTable')) {
         loadReceipts();
         initReceiptForm();
-        initBulkActions();
-
-        // Select All Checkbox
-        $(document).off('click', '#selectAllReceipts').on('click', '#selectAllReceipts', function () {
-            var isChecked = this.checked;
-            var table = $('#receiptsTable').DataTable();
-            $(table.rows().nodes()).find('.receipt-checkbox').prop('checked', isChecked).trigger('change');
-        });
-
-        // Individual checkbox click to update Select All
-        $(document).off('click', '.receipt-checkbox').on('click', '.receipt-checkbox', function () {
-            var table = $('#receiptsTable').DataTable();
-            var total = table.rows().nodes().length;
-            var checked = $(table.rows().nodes()).find('.receipt-checkbox:checked').length;
-            $('#selectAllReceipts').prop('checked', total > 0 && total === checked);
-        });
-
-        // Apply Bulk Action
-        $('#applyBulkActionBtnReceipts').on('click', function () {
-            var action = $('#bulkActionSelectReceipts').val();
-            var selectedIds = [];
-
-            $('.receipt-checkbox:checked').each(function () {
-                selectedIds.push($(this).val());
-            });
-
-            if (!action) {
-                swal('Warning', 'Please select an action.', 'warning');
-                return;
-            }
-
-            if (selectedIds.length === 0) {
-                swal('Warning', 'Please select at least one receipt.', 'warning');
-                return;
-            }
-
-            swal({
-                title: 'Are you sure?',
-                text: "You are about to delete " + selectedIds.length + " receipt(s).",
-                icon: 'warning',
-                buttons: true,
-                dangerMode: true,
-            }).then((willDelete) => {
-                if (willDelete) {
-                    performBulkReceiptAction(action, selectedIds);
-                }
-            });
-        });
     }
 
     // Handle Save Receipt Form Submission
@@ -160,7 +112,6 @@ function loadReceipts() {
             "type": "POST"
         },
         "columns": [
-            { "data": "id_check", "orderable": false },
             { "data": "receipt_number" },
             { "data": "invoice_number" },
             { "data": "tenant_name" },
@@ -169,54 +120,11 @@ function loadReceipts() {
             { "data": "received_date" },
             { "data": "actions", "orderable": false }
         ],
-        "order": [[6, "desc"]], // Order by received_date desc (shifted)
-        "drawCallback": function () {
-            $('#selectAllReceipts').prop('checked', false);
-        }
+        "order": [[5, "desc"]], // Order by received_date desc
+        "drawCallback": function () { }
     });
 }
 
-/**
- * Initialize Bulk Actions
- */
-function initBulkActions() {
-
-}
-
-/**
- * Perform Bulk Action for Receipts
- */
-function performBulkReceiptAction(action, ids) {
-    var $btn = $('#applyBulkActionBtnReceipts');
-    $btn.prop('disabled', true).text('Processing...');
-
-    $.ajax({
-        url: base_url + '/app/receipt_controller.php?action=bulk_action',
-        type: 'POST',
-        data: {
-            action_type: action,
-            ids: ids
-        },
-        dataType: 'json',
-        success: function (response) {
-            if (response.error) {
-                swal('Error', response.msg, 'error');
-            } else {
-                toaster.success(response.msg, 'Success', { top: '10%', right: '20px', hide: true, duration: 1500 });
-                $('#receiptsTable').DataTable().ajax.reload();
-                $('#selectAllReceipts').prop('checked', false);
-                $('#bulkActionSelectReceipts').val('');
-                location.reload();
-            }
-        },
-        error: function () {
-            swal('Error', 'An unexpected error occurred.', 'error');
-        },
-        complete: function () {
-            $btn.prop('disabled', false).text('Apply');
-        }
-    });
-}
 
 function editReceipt(id) {
     $.ajax({

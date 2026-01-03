@@ -1,4 +1,4 @@
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/ayaacsqa/public_html/
+    - export DEPLOYPATH=/home/aayaacsqa/public_html/
     - /bin/cp -R * $DEPLOYPATH

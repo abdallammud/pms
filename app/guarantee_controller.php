@@ -19,6 +19,7 @@ if (isset($_GET['action'])) {
 
 function get_guarantees()
 {
+    ob_clean();
     header('Content-Type: application/json');
     global $conn;
 
@@ -80,8 +81,56 @@ function get_guarantees()
     ]);
 }
 
+/**
+ * Handle file upload for ID photos
+ * @param array $file - $_FILES array element
+ * @param string $type - 'guarantee' or 'guarantee_work'
+ * @param string $id_number - ID number for naming
+ * @return string|false - Relative file path or false on failure
+ */
+function handleIdPhotoUpload($file, $type, $id_number)
+{
+    if (!isset($file) || $file['error'] !== UPLOAD_ERR_OK || $file['size'] == 0) {
+        return false;
+    }
+
+    // Validate file type
+    $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mime_type = finfo_file($finfo, $file['tmp_name']);
+    finfo_close($finfo);
+
+    if (!in_array($mime_type, $allowed_types)) {
+        return false;
+    }
+
+    // Max 5MB
+    if ($file['size'] > 5 * 1024 * 1024) {
+        return false;
+    }
+
+    // Create upload directory if not exists
+    $upload_dir = dirname(__DIR__) . '/public/uploads/id/';
+    if (!is_dir($upload_dir)) {
+        mkdir($upload_dir, 0755, true);
+    }
+
+    // Generate filename: type_idnumber_timestamp.ext
+    $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+    $clean_id = preg_replace('/[^a-zA-Z0-9_-]/', '_', $id_number);
+    $filename = $type . '_' . $clean_id . '_' . time() . '.' . strtolower($ext);
+    $target_path = $upload_dir . $filename;
+
+    if (move_uploaded_file($file['tmp_name'], $target_path)) {
+        return 'uploads/id/' . $filename;
+    }
+
+    return false;
+}
+
 function save_guarantee()
 {
+    ob_clean();
     header('Content-Type: application/json');
     global $conn;
 
@@ -93,15 +142,49 @@ function save_guarantee()
     $work_info = trim($_POST['work_info'] ?? '');
     $status = $_POST['status'] ?? 'active';
 
+    // Existing photo paths (for edit mode)
+    $existing_id_photo = trim($_POST['existing_id_photo'] ?? '');
+    $existing_work_id_photo = trim($_POST['existing_work_id_photo'] ?? '');
+
+    // Validation
     if (empty($full_name) || empty($phone)) {
         echo json_encode(['error' => true, 'msg' => 'Full name and phone are required.']);
         exit;
     }
 
+    if (empty($id_number)) {
+        echo json_encode(['error' => true, 'msg' => 'ID number is required.']);
+        exit;
+    }
+
+    // Handle ID photo upload
+    $id_photo = $existing_id_photo;
+    if (isset($_FILES['id_photo']) && $_FILES['id_photo']['error'] === UPLOAD_ERR_OK) {
+        $uploaded_path = handleIdPhotoUpload($_FILES['id_photo'], 'guarantee', $id_number);
+        if ($uploaded_path) {
+            $id_photo = $uploaded_path;
+        }
+    }
+
+    // Handle Work ID photo upload
+    $work_id_photo = $existing_work_id_photo;
+    if (isset($_FILES['work_id_photo']) && $_FILES['work_id_photo']['error'] === UPLOAD_ERR_OK) {
+        $uploaded_path = handleIdPhotoUpload($_FILES['work_id_photo'], 'guarantee_work', $id_number);
+        if ($uploaded_path) {
+            $work_id_photo = $uploaded_path;
+        }
+    }
+
+    // For new guarantee, ID photo is required
+    if (empty($id) && empty($id_photo)) {
+        echo json_encode(['error' => true, 'msg' => 'ID photo is required.']);
+        exit;
+    }
+
     if (empty($id)) {
         // Insert
-        $stmt = $conn->prepare("INSERT INTO guarantees (full_name, phone, email, id_number, work_info, status) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssss", $full_name, $phone, $email, $id_number, $work_info, $status);
+        $stmt = $conn->prepare("INSERT INTO guarantees (full_name, phone, email, id_number, id_photo, work_id_photo, work_info, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssssss", $full_name, $phone, $email, $id_number, $id_photo, $work_id_photo, $work_info, $status);
 
         if ($stmt->execute()) {
             echo json_encode(['error' => false, 'msg' => 'Guarantor added successfully.']);
@@ -110,8 +193,8 @@ function save_guarantee()
         }
     } else {
         // Update
-        $stmt = $conn->prepare("UPDATE guarantees SET full_name=?, phone=?, email=?, id_number=?, work_info=?, status=? WHERE id=?");
-        $stmt->bind_param("ssssssi", $full_name, $phone, $email, $id_number, $work_info, $status, $id);
+        $stmt = $conn->prepare("UPDATE guarantees SET full_name=?, phone=?, email=?, id_number=?, id_photo=?, work_id_photo=?, work_info=?, status=? WHERE id=?");
+        $stmt->bind_param("ssssssssi", $full_name, $phone, $email, $id_number, $id_photo, $work_id_photo, $work_info, $status, $id);
 
         if ($stmt->execute()) {
             echo json_encode(['error' => false, 'msg' => 'Guarantor updated successfully.']);
@@ -123,6 +206,7 @@ function save_guarantee()
 
 function delete_guarantee()
 {
+    ob_clean();
     header('Content-Type: application/json');
     global $conn;
 
@@ -154,6 +238,7 @@ function delete_guarantee()
 
 function get_guarantee()
 {
+    ob_clean();
     header('Content-Type: application/json');
     global $conn;
 

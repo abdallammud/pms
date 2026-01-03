@@ -47,7 +47,7 @@ if (isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'] === true) {
         }
 
         .bg-image {
-            background-image: url('public/images/cover.webp');
+            background-image: url('public/images/cover.jpg');
             background-size: cover;
             background-position: center;
             position: relative;

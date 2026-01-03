@@ -34,8 +34,7 @@ function get_tenants()
 
         // Search
         if (!empty($search_value)) {
-                $sql .= " AND (full_name LIKE '%$search_value%' OR email LIKE '%$search_value%' OR phone LIKE '%$search_value%' OR
-id_number LIKE '%$search_value%')";
+                $sql .= " AND (full_name LIKE '%$search_value%' OR email LIKE '%$search_value%' OR phone LIKE '%$search_value%' OR id_number LIKE '%$search_value%')";
         }
 
         // Total records (before filtering)
@@ -58,10 +57,8 @@ id_number LIKE '%$search_value%')";
         $data = [];
 
         while ($row = $result->fetch_assoc()) {
-                $actionBtn = '<button class="btn btn-sm btn-primary me-1" onclick="editTenant(' . $row['id'] . ')"><i
-                class="bi bi-pencil"></i></button>';
-                $actionBtn .= '<button class="btn btn-sm btn-danger" onclick="deleteTenant(' . $row['id'] . ')"><i
-                class="bi bi-trash"></i></button>';
+                $actionBtn = '<button class="btn btn-sm btn-primary me-1" onclick="editTenant(' . $row['id'] . ')"><i class="bi bi-pencil"></i></button>';
+                $actionBtn .= '<button class="btn btn-sm btn-danger" onclick="deleteTenant(' . $row['id'] . ')"><i class="bi bi-trash"></i></button>';
 
                 $statusBadge = '';
                 if ($row['status'] == 'active') {
@@ -91,6 +88,53 @@ id_number LIKE '%$search_value%')";
         ]);
 }
 
+/**
+ * Handle file upload for ID photos
+ * @param array $file - $_FILES array element
+ * @param string $type - 'tenant' or 'guarantee'
+ * @param string $id_number - ID number for naming
+ * @return string|false - Relative file path or false on failure
+ */
+function handleIdPhotoUpload($file, $type, $id_number)
+{
+        if (!isset($file) || $file['error'] !== UPLOAD_ERR_OK || $file['size'] == 0) {
+                return false;
+        }
+
+        // Validate file type
+        $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime_type = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+
+        if (!in_array($mime_type, $allowed_types)) {
+                return false;
+        }
+
+        // Max 5MB
+        if ($file['size'] > 5 * 1024 * 1024) {
+                return false;
+        }
+
+        // Create upload directory if not exists
+        $upload_dir = dirname(__DIR__) . '/public/uploads/id/';
+        if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0755, true);
+        }
+
+        // Generate filename: type_idnumber_timestamp.ext
+        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $clean_id = preg_replace('/[^a-zA-Z0-9_-]/', '_', $id_number);
+        $filename = $type . '_' . $clean_id . '_' . time() . '.' . strtolower($ext);
+        $target_path = $upload_dir . $filename;
+
+        if (move_uploaded_file($file['tmp_name'], $target_path)) {
+                return 'uploads/id/' . $filename;
+        }
+
+        return false;
+}
+
 function save_tenant()
 {
         ob_clean();
@@ -105,16 +149,49 @@ function save_tenant()
         $work_info = trim($_POST['work_info'] ?? '');
         $status = $_POST['status'] ?? 'active';
 
+        // Existing photo paths (for edit mode)
+        $existing_id_photo = trim($_POST['existing_id_photo'] ?? '');
+        $existing_work_id_photo = trim($_POST['existing_work_id_photo'] ?? '');
+
+        // Validation
         if (empty($full_name) || empty($phone)) {
                 echo json_encode(['error' => true, 'msg' => 'Full name and phone are required.']);
                 exit;
         }
 
+        if (empty($id_number)) {
+                echo json_encode(['error' => true, 'msg' => 'ID number is required.']);
+                exit;
+        }
+
+        // Handle ID photo upload
+        $id_photo = $existing_id_photo;
+        if (isset($_FILES['id_photo']) && $_FILES['id_photo']['error'] === UPLOAD_ERR_OK) {
+                $uploaded_path = handleIdPhotoUpload($_FILES['id_photo'], 'tenant', $id_number);
+                if ($uploaded_path) {
+                        $id_photo = $uploaded_path;
+                }
+        }
+
+        // Handle Work ID photo upload
+        $work_id_photo = $existing_work_id_photo;
+        if (isset($_FILES['work_id_photo']) && $_FILES['work_id_photo']['error'] === UPLOAD_ERR_OK) {
+                $uploaded_path = handleIdPhotoUpload($_FILES['work_id_photo'], 'tenant_work', $id_number);
+                if ($uploaded_path) {
+                        $work_id_photo = $uploaded_path;
+                }
+        }
+
+        // For new tenant, ID photo is required
+        if (empty($id) && empty($id_photo)) {
+                echo json_encode(['error' => true, 'msg' => 'ID photo is required.']);
+                exit;
+        }
+
         if (empty($id)) {
                 // Insert
-                $stmt = $conn->prepare("INSERT INTO tenants (full_name, phone, email, id_number, work_info, status) VALUES (?, ?, ?, ?,
-?, ?)");
-                $stmt->bind_param("ssssss", $full_name, $phone, $email, $id_number, $work_info, $status);
+                $stmt = $conn->prepare("INSERT INTO tenants (full_name, phone, email, id_number, id_photo, work_id_photo, work_info, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("ssssssss", $full_name, $phone, $email, $id_number, $id_photo, $work_id_photo, $work_info, $status);
 
                 if ($stmt->execute()) {
                         echo json_encode(['error' => false, 'msg' => 'Tenant added successfully.']);
@@ -123,9 +200,8 @@ function save_tenant()
                 }
         } else {
                 // Update
-                $stmt = $conn->prepare("UPDATE tenants SET full_name=?, phone=?, email=?, id_number=?, work_info=?, status=? WHERE
-id=?");
-                $stmt->bind_param("ssssssi", $full_name, $phone, $email, $id_number, $work_info, $status, $id);
+                $stmt = $conn->prepare("UPDATE tenants SET full_name=?, phone=?, email=?, id_number=?, id_photo=?, work_id_photo=?, work_info=?, status=? WHERE id=?");
+                $stmt->bind_param("ssssssssi", $full_name, $phone, $email, $id_number, $id_photo, $work_id_photo, $work_info, $status, $id);
 
                 if ($stmt->execute()) {
                         echo json_encode(['error' => false, 'msg' => 'Tenant updated successfully.']);
@@ -169,6 +245,7 @@ function delete_tenant()
 
 function get_tenant()
 {
+        ob_clean();
         header('Content-Type: application/json');
         global $conn;
 
@@ -214,16 +291,12 @@ function bulk_action()
 
         if ($action_type == 'delete') {
                 // Check if any tenant has active lease
-                $check_leases = $conn->query("SELECT id FROM leases WHERE tenant_id IN ($ids_str) AND status = 'active'
-                LIMIT
-                1");
+                $check_leases = $conn->query("SELECT id FROM leases WHERE tenant_id IN ($ids_str) AND status = 'active' LIMIT 1");
 
                 if ($check_leases && $check_leases->num_rows > 0) {
                         echo json_encode([
                                 'error' => true,
-                                'msg' => 'Cannot delete selected tenants because one or more have
-                active
-                leases.'
+                                'msg' => 'Cannot delete selected tenants because one or more have active leases.'
                         ]);
                         exit;
                 }

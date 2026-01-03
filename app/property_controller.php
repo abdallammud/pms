@@ -238,10 +238,10 @@ function save_property()
                 // Update
                 if ($logo) {
                         $stmt = $conn->prepare("UPDATE properties SET name=?, type_id=?, address=?, city=?, manager_id=?, owner_name=?, description=?, logo=? WHERE id=?");
-                        $stmt->bind_param("sissssssi", $name, $type_id, $address, $city, $manager_id, $owner_name, $description, $logo, $id);
+                        $stmt->bind_param("sisissssi", $name, $type_id, $address, $city, $manager_id, $owner_name, $description, $logo, $id);
                 } else {
                         $stmt = $conn->prepare("UPDATE properties SET name=?, type_id=?, address=?, city=?, manager_id=?, owner_name=?, description=? WHERE id=?");
-                        $stmt->bind_param("sisssssi", $name, $type_id, $address, $city, $manager_id, $owner_name, $description, $id);
+                        $stmt->bind_param("sisisssi", $name, $type_id, $address, $city, $manager_id, $owner_name, $description, $id);
                 }
 
                 if ($stmt->execute()) {

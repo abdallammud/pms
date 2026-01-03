@@ -85,28 +85,33 @@ function loadLeaseProperties4Lease() {
 
 /**
  * Load units based on selected property
+ * Only shows vacant (available) units
  */
 function loadUnitsByProperty(propertyId) {
     var select = $('#lease_unit_select');
+
+    // Clear all options except the first placeholder and refresh immediately
     select.find('option:not(:first)').remove();
+    select.selectpicker('refresh');
 
     if (!propertyId) {
-        select.selectpicker('refresh');
         return;
     }
 
     $.ajax({
-        url: base_url + '/app/property_controller.php?action=get_units_by_property&property_id=' + propertyId,
+        url: base_url + '/app/property_controller.php?action=get_units_by_property&property_id=' + propertyId + '&vacant_only=1',
         type: 'GET',
         dataType: 'json',
         success: function (data) {
+            // Clear again before appending to prevent duplicates
+            select.find('option:not(:first)').remove();
+
             if (data && data.length > 0) {
                 data.forEach(function (unit) {
-                    var statusBadge = unit.status === 'vacant' ? ' (Vacant)' : ' (' + unit.status + ')';
-                    select.html('<option value="' + unit.id + '" data-rent="' + unit.rent_amount + '">' + unit.unit_number + statusBadge + '</option>');
+                    select.append('<option value="' + unit.id + '" data-rent="' + unit.rent_amount + '">' + unit.unit_number + ' (Available)</option>');
                 });
             } else {
-                select.html('<option value="" disabled>No units available</option>');
+                select.append('<option value="" disabled>No available units</option>');
             }
             select.selectpicker('refresh');
         },

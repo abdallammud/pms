@@ -31,7 +31,8 @@ if (isset($_GET['action'])) {
     }
 }
 
-function save_user() {
+function save_user()
+{
     header('Content-Type: application/json');
     global $conn;
 
@@ -55,11 +56,21 @@ function save_user() {
             echo json_encode(['error' => true, 'msg' => 'Password is required for new users.']);
             exit;
         }
+
+        // Check if username already exists
+        $check = $conn->prepare("SELECT id FROM users WHERE username = ?");
+        $check->bind_param("s", $username);
+        $check->execute();
+        if ($check->get_result()->num_rows > 0) {
+            echo json_encode(['error' => true, 'msg' => 'Username already exists.']);
+            exit;
+        }
+
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        
+
         $stmt = $conn->prepare("INSERT INTO users (name, username, email, password, status, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param("sssssii", $name, $username, $email, $hashed_password, $status, $current_user_id, $current_user_id);
-        
+
         if ($stmt->execute()) {
             $new_user_id = $stmt->insert_id;
             // Assign Role
@@ -73,6 +84,15 @@ function save_user() {
         }
     } else {
         // Update
+        // Check if username already exists for other users
+        $check = $conn->prepare("SELECT id FROM users WHERE username = ? AND id != ?");
+        $check->bind_param("si", $username, $id);
+        $check->execute();
+        if ($check->get_result()->num_rows > 0) {
+            echo json_encode(['error' => true, 'msg' => 'Username already exists.']);
+            exit;
+        }
+
         $sql = "UPDATE users SET name=?, username=?, email=?, status=?, updated_by=?, updated_date=NOW()";
         $params = [$name, $username, $email, $status, $current_user_id];
         $types = "ssssi";
@@ -104,7 +124,8 @@ function save_user() {
     }
 }
 
-function get_users() {
+function get_users()
+{
     header('Content-Type: application/json');
     global $conn;
 
@@ -141,15 +162,15 @@ function get_users() {
     $data = [];
 
     while ($row = $result->fetch_assoc()) {
-        $actionBtn = '<button class="btn btn-sm btn-primary me-1" onclick="editUserModal('.$row['id'].')"><i class="bi bi-pencil"></i></button>';
-        $actionBtn .= '<button class="btn btn-sm btn-danger" onclick="deleteUser('.$row['id'].')"><i class="bi bi-trash"></i></button>';
+        $actionBtn = '<button class="btn btn-sm btn-primary me-1" onclick="editUserModal(' . $row['id'] . ')"><i class="bi bi-pencil"></i></button>';
+        $actionBtn .= '<button class="btn btn-sm btn-danger" onclick="deleteUser(' . $row['id'] . ')"><i class="bi bi-trash"></i></button>';
 
         $data[] = [
             'name' => $row['name'],
             'username' => $row['username'],
             'email' => $row['email'],
             'role_name' => $row['role_name'],
-            'status' => '<span class="badge bg-'.($row['status'] == 'active' ? 'success' : 'danger').'">'.ucfirst($row['status']).'</span>',
+            'status' => '<span class="badge bg-' . ($row['status'] == 'active' ? 'success' : 'danger') . '">' . ucfirst($row['status']) . '</span>',
             'actions' => $actionBtn
         ];
     }
@@ -162,20 +183,22 @@ function get_users() {
     ]);
 }
 
-function get_user() {
+function get_user()
+{
     header('Content-Type: application/json');
     global $conn;
     $id = $_GET['id'];
-    
+
     $stmt = $conn->prepare("SELECT u.*, ur.role_id FROM users u LEFT JOIN user_roles ur ON u.id = ur.user_id WHERE u.id = ?");
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $result = $stmt->get_result()->fetch_assoc();
-    
+
     echo json_encode($result);
 }
 
-function delete_user() {
+function delete_user()
+{
     header('Content-Type: application/json');
     global $conn;
     $id = $_POST['id'];
@@ -188,7 +211,7 @@ function delete_user() {
 
     $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
     $stmt->bind_param("i", $id);
-    
+
     if ($stmt->execute()) {
         echo json_encode(['error' => false, 'msg' => 'User deleted successfully.']);
     } else {
@@ -197,11 +220,12 @@ function delete_user() {
 }
 
 // Roles
-function save_role() {
+function save_role()
+{
     header('Content-Type: application/json');
     global $conn;
 
-    $id = isset($_POST['role_id']) && is_numeric($_POST['role_id']) ? (int)$_POST['role_id'] : 0;
+    $id = isset($_POST['role_id']) && is_numeric($_POST['role_id']) ? (int) $_POST['role_id'] : 0;
     $role_name = trim($_POST['role_name'] ?? '');
     $description = $_POST['description'] ?? '';
     $permissions = $_POST['permissions'] ?? []; // Array of permission IDs
@@ -227,7 +251,7 @@ function save_role() {
 
         if ($stmt->execute()) {
             $new_role_id = $stmt->insert_id;
-            
+
             // Insert Permissions
             if (!empty($permissions)) {
                 $stmt_perm = $conn->prepare("INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)");
@@ -274,7 +298,8 @@ function save_role() {
     }
 }
 
-function get_roles() {
+function get_roles()
+{
     header('Content-Type: application/json');
     global $conn;
 
@@ -307,9 +332,9 @@ function get_roles() {
     $data = [];
 
     while ($row = $result->fetch_assoc()) {
-        $actionBtn = '<button class="btn btn-sm btn-info me-1" onclick="viewPermissions('.$row['id'].')" title="View Permissions"><i class="bi bi-eye"></i></button>';
-        $actionBtn .= '<button class="btn btn-sm btn-primary me-1" onclick="editRole('.$row['id'].')"><i class="bi bi-pencil"></i></button>';
-        $actionBtn .= '<button class="btn btn-sm btn-danger" onclick="deleteRole('.$row['id'].')"><i class="bi bi-trash"></i></button>';
+        $actionBtn = '<button class="btn btn-sm btn-info me-1" onclick="viewPermissions(' . $row['id'] . ')" title="View Permissions"><i class="bi bi-eye"></i></button>';
+        $actionBtn .= '<button class="btn btn-sm btn-primary me-1" onclick="editRole(' . $row['id'] . ')"><i class="bi bi-pencil"></i></button>';
+        $actionBtn .= '<button class="btn btn-sm btn-danger" onclick="deleteRole(' . $row['id'] . ')"><i class="bi bi-trash"></i></button>';
 
         $data[] = [
             'role_name' => $row['role_name'],
@@ -326,11 +351,12 @@ function get_roles() {
     ]);
 }
 
-function get_role() {
+function get_role()
+{
     header('Content-Type: application/json');
     global $conn;
     $id = $_GET['id'];
-    
+
     // Get Role Details
     $stmt = $conn->prepare("SELECT * FROM roles WHERE id = ?");
     $stmt->bind_param("i", $id);
@@ -348,11 +374,12 @@ function get_role() {
     }
 
     $role['permissions'] = $permissions;
-    
+
     echo json_encode($role);
 }
 
-function delete_role() {
+function delete_role()
+{
     header('Content-Type: application/json');
     global $conn;
     $id = $_POST['id'];
@@ -367,7 +394,7 @@ function delete_role() {
 
     $stmt = $conn->prepare("DELETE FROM roles WHERE id = ?");
     $stmt->bind_param("i", $id);
-    
+
     if ($stmt->execute()) {
         echo json_encode(['error' => false, 'msg' => 'Role deleted successfully.']);
     } else {
@@ -375,24 +402,26 @@ function delete_role() {
     }
 }
 
-function get_all_permissions() {
+function get_all_permissions()
+{
     header('Content-Type: application/json');
     global $conn;
-    
+
     $result = $conn->query("SELECT * FROM permissions ORDER BY permission_name");
     $permissions = [];
     while ($row = $result->fetch_assoc()) {
         $permissions[] = $row;
     }
-    
+
     echo json_encode($permissions);
 }
 
-function get_role_permissions() {
+function get_role_permissions()
+{
     header('Content-Type: application/json');
     global $conn;
     $id = $_GET['id'];
-    
+
     $stmt = $conn->prepare("SELECT r.role_name, p.permission_name, p.description 
                            FROM role_permissions rp 
                            JOIN permissions p ON rp.permission_id = p.id 
@@ -401,32 +430,33 @@ function get_role_permissions() {
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $result = $stmt->get_result();
-    
+
     $permissions = [];
     $role_name = '';
-    
+
     while ($row = $result->fetch_assoc()) {
         $role_name = $row['role_name'];
         $permissions[] = $row;
     }
-    
+
     echo json_encode(['role_name' => $role_name, 'permissions' => $permissions]);
 }
 
 /**
  * Get all active users for manager dropdown
  */
-function get_managers() {
+function get_managers()
+{
     header('Content-Type: application/json');
     global $conn;
-    
+
     $result = $conn->query("SELECT id, name FROM users WHERE status = 'active' ORDER BY name");
     $managers = [];
-    
+
     while ($row = $result->fetch_assoc()) {
         $managers[] = $row;
     }
-    
+
     echo json_encode($managers);
 }
 ?>

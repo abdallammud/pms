@@ -2,6 +2,8 @@
 ob_start();
 date_default_timezone_set('Africa/Mogadishu');
 require_once('db.php');
+require_once('Model.php');
+
 require_once('utilities.php');
 require_once('config.php');
 require_once('helpers.php');

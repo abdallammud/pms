@@ -178,23 +178,18 @@ function get_menu_config()
                 'vendors' => ['default' => 'vendors', 'route' => 'vendors', 'name' => 'Vendors / Staff', 'auth' => 'vendor_manage'],
             ],
         ],
-        // 'reports' => [
-        //     'folder' => 'reports',
-        //     'default' => 'rent_collection',
-        //     'name' => 'Reports',
-        //     'icon' => 'bar-chart',
-        //     'auth' => 'reports_view',
-        //     'menu' => 'reports',
-        //     'route' => 'reports',
-        //     'sub' => [
-        //         'rent_collection' => ['default' => 'rent_collection', 'route' => 'rent_collection', 'name' => 'Rent Collection Report', 'auth' => 'reports_view'],
-        //         'occupancy' => ['default' => 'occupancy', 'route' => 'occupancy', 'name' => 'Occupancy Report', 'auth' => 'reports_view'],
-        //         'tenant_report' => ['default' => 'tenant_report', 'route' => 'tenant_report', 'name' => 'Tenant Report', 'auth' => 'reports_view'],
-        //         'outstanding' => ['default' => 'outstanding', 'route' => 'outstanding', 'name' => 'Outstanding Balances', 'auth' => 'reports_view'],
-        //         'income_expense' => ['default' => 'income_expense', 'route' => 'income_expense', 'name' => 'Income vs Expense', 'auth' => 'reports_view'],
-        //         'maintenance_cost' => ['default' => 'maintenance_cost', 'route' => 'maintenance_cost', 'name' => 'Maintenance Cost Report', 'auth' => 'reports_view'],
-        //     ],
-        // ],
+        'reports' => [
+            'folder' => 'reports',
+            'default' => 'reports_page',
+            'name' => 'Reports',
+            'icon' => 'bar-chart',
+            'auth' => 'reports_view',
+            'menu' => 'reports',
+            'route' => 'reports',
+            'actions' => [
+                'report_display' => ['file' => 'report_display', 'auth' => 'reports_view'],
+            ]
+        ],
         'settings' => [
             'folder' => 'settings',
             'default' => 'system_settings',

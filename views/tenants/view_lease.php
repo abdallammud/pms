@@ -39,11 +39,19 @@ $witnesses = json_decode($lease['witnesses'] ?? '[]', true) ?: [];
 // Status badge class
 $statusClass = 'bg-secondary';
 $statusText = ucfirst($lease['status']);
-switch($lease['status']) {
-    case 'active': $statusClass = 'bg-success'; break;
-    case 'pending': $statusClass = 'bg-warning'; break;
-    case 'expired': $statusClass = 'bg-danger'; break;
-    case 'terminated': $statusClass = 'bg-secondary'; break;
+switch ($lease['status']) {
+    case 'active':
+        $statusClass = 'bg-success';
+        break;
+    case 'pending':
+        $statusClass = 'bg-warning';
+        break;
+    case 'expired':
+        $statusClass = 'bg-danger';
+        break;
+    case 'terminated':
+        $statusClass = 'bg-secondary';
+        break;
 }
 
 // Format dates
@@ -66,16 +74,18 @@ $createdAt = $lease['created_at'] ? date('F d, Y H:i', strtotime($lease['created
                             <i class="bi bi-file-earmark-text me-2 text-primary"></i>Lease Agreement
                         </h4>
                         <span class="badge <?= $statusClass ?> fs-6"><?= $statusText ?></span>
-                        <span class="text-muted ms-2">Reference: <strong><?= htmlspecialchars($lease['reference_number'] ?? 'N/A') ?></strong></span>
+                        <span class="text-muted ms-2">Reference:
+                            <strong><?= htmlspecialchars($lease['reference_number'] ?? 'N/A') ?></strong></span>
                     </div>
                     <div>
-                        <a class="btn btn-outline-secondary me-2" href="<?=baseUri();?>/pdf.php?print=lease&lease_id=<?= $lease_id ?>" title="Print Lease">
-                            <i class="bi bi-printer me-1"></i> Print
+                        <a class="btn btn-outline-secondary me-2"
+                            href="<?= baseUri(); ?>/word.php?print=lease&lease_id=<?= $lease_id ?>" title="Download Word">
+                            <i class="bi bi-file-earmark-word me-1"></i> Download Word
                         </a>
-                        <a href="<?=baseUri();?>/edit_lease/<?= $lease_id ?>" class="btn btn-primary me-2">
+                        <a href="<?= baseUri(); ?>/edit_lease/<?= $lease_id ?>" class="btn btn-primary me-2">
                             <i class="bi bi-pencil me-1"></i> Edit
                         </a>
-                        <a href="<?=baseUri();?>/leases" class="btn btn-secondary">
+                        <a href="<?= baseUri(); ?>/leases" class="btn btn-secondary">
                             <i class="bi bi-arrow-left me-1"></i> Back
                         </a>
                     </div>
@@ -92,7 +102,8 @@ $createdAt = $lease['created_at'] ? date('F d, Y H:i', strtotime($lease['created
                             <div class="card-body">
                                 <div class="row mb-2">
                                     <div class="col-5 text-muted">Full Name:</div>
-                                    <div class="col-7 fw-semibold"><?= htmlspecialchars($lease['tenant_name'] ?? 'N/A') ?></div>
+                                    <div class="col-7 fw-semibold">
+                                        <?= htmlspecialchars($lease['tenant_name'] ?? 'N/A') ?></div>
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-5 text-muted">Phone:</div>
@@ -104,7 +115,8 @@ $createdAt = $lease['created_at'] ? date('F d, Y H:i', strtotime($lease['created
                                 </div>
                                 <div class="row">
                                     <div class="col-5 text-muted">ID Number:</div>
-                                    <div class="col-7"><?= htmlspecialchars($lease['tenant_id_number'] ?? 'N/A') ?></div>
+                                    <div class="col-7"><?= htmlspecialchars($lease['tenant_id_number'] ?? 'N/A') ?>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -119,7 +131,8 @@ $createdAt = $lease['created_at'] ? date('F d, Y H:i', strtotime($lease['created
                             <div class="card-body">
                                 <div class="row mb-2">
                                     <div class="col-5 text-muted">Full Name:</div>
-                                    <div class="col-7 fw-semibold"><?= htmlspecialchars($lease['guarantee_name'] ?? 'N/A') ?></div>
+                                    <div class="col-7 fw-semibold">
+                                        <?= htmlspecialchars($lease['guarantee_name'] ?? 'N/A') ?></div>
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-5 text-muted">Phone:</div>
@@ -131,7 +144,8 @@ $createdAt = $lease['created_at'] ? date('F d, Y H:i', strtotime($lease['created
                                 </div>
                                 <div class="row">
                                     <div class="col-5 text-muted">ID Number:</div>
-                                    <div class="col-7"><?= htmlspecialchars($lease['guarantee_id_number'] ?? 'N/A') ?></div>
+                                    <div class="col-7"><?= htmlspecialchars($lease['guarantee_id_number'] ?? 'N/A') ?>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -146,15 +160,19 @@ $createdAt = $lease['created_at'] ? date('F d, Y H:i', strtotime($lease['created
                             <div class="card-body">
                                 <div class="row mb-2">
                                     <div class="col-5 text-muted">Property:</div>
-                                    <div class="col-7 fw-semibold"><?= htmlspecialchars($lease['property_name'] ?? 'N/A') ?></div>
+                                    <div class="col-7 fw-semibold">
+                                        <?= htmlspecialchars($lease['property_name'] ?? 'N/A') ?></div>
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-5 text-muted">Address:</div>
-                                    <div class="col-7"><?= htmlspecialchars(($lease['property_address'] ?? '') . ', ' . ($lease['property_city'] ?? '')) ?></div>
+                                    <div class="col-7">
+                                        <?= htmlspecialchars(($lease['property_address'] ?? '') . ', ' . ($lease['property_city'] ?? '')) ?>
+                                    </div>
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-5 text-muted">Unit Number:</div>
-                                    <div class="col-7 fw-semibold"><?= htmlspecialchars($lease['unit_number'] ?? 'N/A') ?></div>
+                                    <div class="col-7 fw-semibold">
+                                        <?= htmlspecialchars($lease['unit_number'] ?? 'N/A') ?></div>
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-5 text-muted">Unit Type:</div>
@@ -177,7 +195,8 @@ $createdAt = $lease['created_at'] ? date('F d, Y H:i', strtotime($lease['created
                             <div class="card-body">
                                 <div class="row mb-2">
                                     <div class="col-5 text-muted">Monthly Rent:</div>
-                                    <div class="col-7 fw-bold text-success fs-5">$<?= number_format($lease['monthly_rent'], 2) ?></div>
+                                    <div class="col-7 fw-bold text-success fs-5">
+                                        $<?= number_format($lease['monthly_rent'], 2) ?></div>
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-5 text-muted">Deposit:</div>
@@ -190,7 +209,7 @@ $createdAt = $lease['created_at'] ? date('F d, Y H:i', strtotime($lease['created
                                 <div class="row">
                                     <div class="col-5 text-muted">Auto Invoice:</div>
                                     <div class="col-7">
-                                        <?php if($lease['auto_invoice']): ?>
+                                        <?php if ($lease['auto_invoice']): ?>
                                             <span class="badge bg-success">Yes</span>
                                         <?php else: ?>
                                             <span class="badge bg-secondary">No</span>
@@ -233,19 +252,19 @@ $createdAt = $lease['created_at'] ? date('F d, Y H:i', strtotime($lease['created
                     </div>
 
                     <!-- ✅ LEASE CONDITIONS -->
-                    <?php if(!empty($lease['lease_conditions'])): ?>
-                    <div class="col-md-6">
-                        <div class="card border-0 bg-light h-100">
-                            <div class="card-header bg-secondary text-white fw-bold border-0">
-                                <i class="bi bi-file-text me-2"></i>Lease Conditions
-                            </div>
-                            <div class="card-body">
-                                <div class="bg-white p-3 rounded" style="max-height: 300px; overflow-y: auto;">
-                                    <?= $lease['lease_conditions'] ?>
+                    <?php if (!empty($lease['lease_conditions'])): ?>
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-header bg-secondary text-white fw-bold border-0">
+                                    <i class="bi bi-file-text me-2"></i>Lease Conditions
+                                </div>
+                                <div class="card-body">
+                                    <div class="bg-white p-3 rounded" style="max-height: 300px; overflow-y: auto;">
+                                        <?= $lease['lease_conditions'] ?>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
                     <?php endif; ?>
 
                     <!-- ✅ VEHICLE & WEAPONS -->
@@ -255,60 +274,62 @@ $createdAt = $lease['created_at'] ? date('F d, Y H:i', strtotime($lease['created
                                 <i class="bi bi-car-front me-2"></i>Vehicle & Legal Weapons
                             </div>
                             <div class="card-body">
-                                <?php if(!empty($lease['vehicle_info'])): ?>
-                                <div class="mb-3">
-                                    <label class="text-muted small">Vehicle Information</label>
-                                    <div class="bg-white p-2 rounded"><?= nl2br(htmlspecialchars($lease['vehicle_info'])) ?></div>
-                                </div>
+                                <?php if (!empty($lease['vehicle_info'])): ?>
+                                    <div class="mb-3">
+                                        <label class="text-muted small">Vehicle Information</label>
+                                        <div class="bg-white p-2 rounded">
+                                            <?= nl2br(htmlspecialchars($lease['vehicle_info'])) ?></div>
+                                    </div>
                                 <?php else: ?>
-                                <div class="mb-3 text-muted fst-italic">No vehicle information</div>
+                                    <div class="mb-3 text-muted fst-italic">No vehicle information</div>
                                 <?php endif; ?>
 
-                                <?php if(!empty($lease['legal_weapons'])): ?>
-                                <div>
-                                    <label class="text-muted small">Legal Weapons</label>
-                                    <div class="bg-white p-2 rounded"><?= nl2br(htmlspecialchars($lease['legal_weapons'])) ?></div>
-                                </div>
+                                <?php if (!empty($lease['legal_weapons'])): ?>
+                                    <div>
+                                        <label class="text-muted small">Legal Weapons</label>
+                                        <div class="bg-white p-2 rounded">
+                                            <?= nl2br(htmlspecialchars($lease['legal_weapons'])) ?></div>
+                                    </div>
                                 <?php else: ?>
-                                <div class="text-muted fst-italic">No legal weapons registered</div>
+                                    <div class="text-muted fst-italic">No legal weapons registered</div>
                                 <?php endif; ?>
                             </div>
                         </div>
                     </div>
 
                     <!-- ✅ WITNESSES -->
-                    <?php if(!empty($witnesses)): ?>
-                    <div class="col-12">
-                        <div class="card border-0 bg-light">
-                            <div class="card-header bg-secondary text-white fw-bold border-0">
-                                <i class="bi bi-people me-2"></i>Witnesses
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-bordered table-striped mb-0 bg-white">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th>#</th>
-                                                <th>Name</th>
-                                                <th>Phone</th>
-                                                <th>ID Card</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach($witnesses as $i => $w): ?>
-                                            <tr>
-                                                <td><?= $i + 1 ?></td>
-                                                <td><?= htmlspecialchars($w['name'] ?? '') ?></td>
-                                                <td><?= htmlspecialchars($w['phone'] ?? '') ?></td>
-                                                <td><?= htmlspecialchars($w['id_card'] ?? '') ?></td>
-                                            </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
+                    <?php if (!empty($witnesses)): ?>
+                        <div class="col-12">
+                            <div class="card border-0 bg-light">
+                                <div class="card-header bg-secondary text-white fw-bold border-0">
+                                    <i class="bi bi-people me-2"></i>Witnesses
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-striped mb-0 bg-white">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Name</th>
+                                                    <th>Phone</th>
+                                                    <th>ID Card</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($witnesses as $i => $w): ?>
+                                                    <tr>
+                                                        <td><?= $i + 1 ?></td>
+                                                        <td><?= htmlspecialchars($w['name'] ?? '') ?></td>
+                                                        <td><?= htmlspecialchars($w['phone'] ?? '') ?></td>
+                                                        <td><?= htmlspecialchars($w['id_card'] ?? '') ?></td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
                     <?php endif; ?>
 
                 </div>
@@ -321,21 +342,29 @@ $createdAt = $lease['created_at'] ? date('F d, Y H:i', strtotime($lease['created
 
 <!-- Print Styles -->
 <style>
-@media print {
-    .btn, .page-footer, .sidebar-wrapper, .topbar, .overlay {
-        display: none !important;
+    @media print {
+
+        .btn,
+        .page-footer,
+        .sidebar-wrapper,
+        .topbar,
+        .overlay {
+            display: none !important;
+        }
+
+        .content {
+            margin: 0 !important;
+            padding: 20px !important;
+        }
+
+        .card {
+            border: 1px solid #ddd !important;
+            box-shadow: none !important;
+        }
+
+        .card-header {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
     }
-    .content {
-        margin: 0 !important;
-        padding: 20px !important;
-    }
-    .card {
-        border: 1px solid #ddd !important;
-        box-shadow: none !important;
-    }
-    .card-header {
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-    }
-}
 </style>

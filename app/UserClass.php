@@ -1,12 +1,15 @@
 <?php
-class UserClass {
+class UserClass
+{
     private $conn;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->conn = $GLOBALS['conn'];
     }
 
-    public function login($email, $password) {
+    public function login($email, $password)
+    {
         $stmt = $this->conn->prepare("SELECT id, name, email, password, status FROM users WHERE email = ? OR username = ?");
         $stmt->bind_param("ss", $email, $email);
         $stmt->execute();
@@ -28,16 +31,18 @@ class UserClass {
         }
     }
 
-    public function get($id) {
+    public function get($id)
+    {
         $stmt = $this->conn->prepare("SELECT * FROM users WHERE id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
         return $stmt->get_result()->fetch_assoc();
     }
 
-    public function getPermissions($userId) {
+    public function getPermissions($userId)
+    {
         $permissions = [];
-        
+
         // Get roles for the user
         $stmt = $this->conn->prepare("
             SELECT p.permission_name 
@@ -49,15 +54,16 @@ class UserClass {
         $stmt->bind_param("i", $userId);
         $stmt->execute();
         $result = $stmt->get_result();
-        
+
         while ($row = $result->fetch_assoc()) {
             $permissions[] = $row['permission_name'];
         }
-        
+
         return array_unique($permissions);
     }
 
-    public function getRoleInfo($userId) {
+    public function getRoleInfo($userId)
+    {
         $stmt = $this->conn->prepare("SELECT role_id, role_name FROM user_roles ur INNER JOIN roles r ON ur.role_id = r.id WHERE user_id = ?");
         $stmt->bind_param("i", $userId);
         $stmt->execute();

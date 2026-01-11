@@ -36,6 +36,7 @@
 <script src="<?= baseUri(); ?>/public/plugins/datatable/js/dataTables.bootstrap5.min.js"></script>
 <script src="<?= baseUri(); ?>/public/plugins/moment/moment.js"></script>
 <script src="<?= baseUri(); ?>/public/plugins/pikaday/pikaday.js"></script>
+<script src="<?= baseUri(); ?>/public/plugins/select2/js/select2.min.js"></script>
 <script>
 
 	// $(".data-attributes span").peity("donut")
@@ -51,6 +52,7 @@
 <script src="<?= baseUri(); ?>/public/js/modules/lease.js"></script>
 <script src="<?= baseUri(); ?>/public/js/modules/properties.js"></script>
 <script src="<?= baseUri(); ?>/public/js/modules/expenses.js"></script>
+<script src="<?= baseUri(); ?>/public/js/modules/report.js"></script>
 
 <!-- <script src="<?= baseUri(); ?>/public/js/dashboard1.js"></script> -->
 <script>

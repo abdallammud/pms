@@ -106,81 +106,87 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function initCharts(chartData) {
         // 1. Occupancy Chart
-        const occupancyCtx = document.getElementById('occupancyChart').getContext('2d');
-        if (occupancyChart) occupancyChart.destroy();
-        occupancyChart = new Chart(occupancyCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Occupied', 'Vacant'],
-                datasets: [{
-                    data: chartData.occupancy,
-                    backgroundColor: ['rgba(15, 59, 108, 0.8)', 'rgba(253, 185, 19, 0.8)'],
-                    borderColor: ['rgba(15, 59, 108, 1)', 'rgba(253, 185, 19, 1)'],
-                    borderWidth: 2,
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '70%',
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: 'rgba(15, 59, 108, 0.8)',
-                        callbacks: {
-                            label: function (context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                if (total === 0) return context.label + ': 0 (0%)';
-                                const percentage = Math.round((context.parsed / total) * 100);
-                                return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+        const occupancyEl = document.getElementById('occupancyChart');
+        if (occupancyEl) {
+            const occupancyCtx = occupancyEl.getContext('2d');
+            if (occupancyChart) occupancyChart.destroy();
+            occupancyChart = new Chart(occupancyCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Occupied', 'Vacant'],
+                    datasets: [{
+                        data: chartData.occupancy,
+                        backgroundColor: ['rgba(15, 59, 108, 0.8)', 'rgba(253, 185, 19, 0.8)'],
+                        borderColor: ['rgba(15, 59, 108, 1)', 'rgba(253, 185, 19, 1)'],
+                        borderWidth: 2,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 59, 108, 0.8)',
+                            callbacks: {
+                                label: function (context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    if (total === 0) return context.label + ': 0 (0%)';
+                                    const percentage = Math.round((context.parsed / total) * 100);
+                                    return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
 
         // 2. Income vs Expense Chart
-        const incomeExpenseCtx = document.getElementById('incomeExpenseChart').getContext('2d');
-        if (incomeExpenseChart) incomeExpenseChart.destroy();
-        incomeExpenseChart = new Chart(incomeExpenseCtx, {
-            type: 'bar',
-            data: {
-                labels: chartData.income_expense.labels,
-                datasets: [
-                    {
-                        label: 'Income',
-                        data: chartData.income_expense.income,
-                        backgroundColor: 'rgba(15, 59, 108, 0.8)',
-                        borderColor: 'rgba(15, 59, 108, 1)',
-                        borderWidth: 2,
-                        borderRadius: 8,
-                        barPercentage: 0.7
-                    },
-                    {
-                        label: 'Expense',
-                        data: chartData.income_expense.expense,
-                        backgroundColor: 'rgba(253, 185, 19, 0.8)',
-                        borderColor: 'rgba(253, 185, 19, 1)',
-                        borderWidth: 2,
-                        borderRadius: 8,
-                        barPercentage: 0.7
+        const incomeExpenseEl = document.getElementById('incomeExpenseChart');
+        if (incomeExpenseEl) {
+            const incomeExpenseCtx = incomeExpenseEl.getContext('2d');
+            if (incomeExpenseChart) incomeExpenseChart.destroy();
+            incomeExpenseChart = new Chart(incomeExpenseCtx, {
+                type: 'bar',
+                data: {
+                    labels: chartData.income_expense.labels,
+                    datasets: [
+                        {
+                            label: 'Income',
+                            data: chartData.income_expense.income,
+                            backgroundColor: 'rgba(15, 59, 108, 0.8)',
+                            borderColor: 'rgba(15, 59, 108, 1)',
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            barPercentage: 0.7
+                        },
+                        {
+                            label: 'Expense',
+                            data: chartData.income_expense.expense,
+                            backgroundColor: 'rgba(253, 185, 19, 0.8)',
+                            borderColor: 'rgba(253, 185, 19, 1)',
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            barPercentage: 0.7
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: value => '$' + value.toLocaleString() },
+                            grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                        },
+                        x: { grid: { display: false } }
                     }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { callback: value => '$' + value.toLocaleString() },
-                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
-                    },
-                    x: { grid: { display: false } }
                 }
-            }
-        });
+            });
+        }
     }
 });

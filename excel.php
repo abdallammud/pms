@@ -4,15 +4,33 @@
  * Uses PHPSpreadsheet library from public folder
  */
 
-ob_start();
-ini_set('display_errors', 0);
-ini_set('log_errors', 1);
+// ob_start();
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-require('./public/PhpSpreadsheet/Autoloader.php');
+require('./public/phpspreadsheet/Autoloader.php');
 \PhpOffice\PhpSpreadsheet\Autoloader::register();
 
 require('./app/init.php');
+
+// Environment Checks
+if (!class_exists('ZipArchive')) {
+    die("Error: PHP 'zip' extension is not installed on this server. Please enable it.");
+}
+
+if (!function_exists('mb_strlen')) {
+    die("Error: PHP 'mbstring' extension is not installed on this server. Please enable it.");
+}
+
+$tempDir = sys_get_temp_dir();
+if (!is_writable($tempDir)) {
+    // Try to fallback to a local temp folder if system temp is not writable
+    $tempDir = __DIR__ . '/public/uploads/temp';
+    if (!file_exists($tempDir)) {
+        mkdir($tempDir, 0777, true);
+    }
+}
 
 if (!authenticate()) {
     ob_end_clean();

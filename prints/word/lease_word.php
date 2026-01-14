@@ -160,14 +160,14 @@ $section->addTextBreak();
 // ============================================================
 // TENANT & GUARANTEE INFO
 // ============================================================
-$mainTable = $section->addTable(['borderSize' => 0, 'cellMargin' => 0]);
+$mainTable = $section->addTable(['borderSize' => 0, 'borderColor' => 'FFFFFF', 'cellMargin' => 0]);
 $mainTable->addRow();
 
 // Tenant
 $leftCell = $mainTable->addCell($halfWidth, ['valign' => 'top']);
 $h1 = $leftCell->addTable(['borderSize' => 0, 'cellMargin' => 40]);
 $h1->addRow();
-$h1->addCell($halfWidth, ['bgColor' => $customBlue])->addText('Tenant Information', ['bold' => true, 'size' => 10, 'color' => 'FFFFFF']);
+$h1->addCell($halfWidth, ['bgColor' => $customBlue])->addText('Tenant Information / Macluumaadka Kiraystaha', ['bold' => true, 'size' => 10, 'color' => 'FFFFFF']);
 
 $tTable = $leftCell->addTable(['borderSize' => 4, 'borderColor' => 'DDDDDD', 'cellMargin' => 60]);
 $tRows = [
@@ -188,7 +188,7 @@ $mainTable->addCell($spacerWidth);
 $rightCell = $mainTable->addCell($halfWidth, ['valign' => 'top']);
 $h2 = $rightCell->addTable(['borderSize' => 0, 'cellMargin' => 40]);
 $h2->addRow();
-$h2->addCell($halfWidth, ['bgColor' => $customBlue])->addText('Guarantee Information', ['bold' => true, 'size' => 10, 'color' => 'FFFFFF']);
+$h2->addCell($halfWidth, ['bgColor' => $customBlue])->addText('Guarantee Information / Macluumaadka Damiinaha', ['bold' => true, 'size' => 10, 'color' => 'FFFFFF']);
 
 $gTable = $rightCell->addTable(['borderSize' => 4, 'borderColor' => 'DDDDDD', 'cellMargin' => 60]);
 $gRows = [
@@ -208,14 +208,14 @@ $section->addTextBreak();
 // ============================================================
 // PROPERTY & FINANCIAL
 // ============================================================
-$mainTable2 = $section->addTable(['borderSize' => 0, 'cellMargin' => 0]);
+$mainTable2 = $section->addTable(['borderSize' => 0, 'borderColor' => 'FFFFFF', 'cellMargin' => 0]);
 $mainTable2->addRow();
 
 // Property
 $leftCell2 = $mainTable2->addCell($halfWidth, ['valign' => 'top']);
 $h3 = $leftCell2->addTable(['borderSize' => 0, 'cellMargin' => 40]);
 $h3->addRow();
-$h3->addCell($halfWidth, ['bgColor' => $customBlue])->addText('Property and Unit', ['bold' => true, 'size' => 10, 'color' => 'FFFFFF']);
+$h3->addCell($halfWidth, ['bgColor' => $customBlue])->addText('Property and Unit / Dhismaha and Guriga', ['bold' => true, 'size' => 10, 'color' => 'FFFFFF']);
 
 $pTable = $leftCell2->addTable(['borderSize' => 4, 'borderColor' => 'DDDDDD', 'cellMargin' => 60]);
 $pRows = [
@@ -237,9 +237,14 @@ $mainTable2->addCell($spacerWidth);
 $rightCell2 = $mainTable2->addCell($halfWidth, ['valign' => 'top']);
 $h4 = $rightCell2->addTable(['borderSize' => 0, 'cellMargin' => 40]);
 $h4->addRow();
-$h4->addCell($halfWidth, ['bgColor' => $customBlue])->addText('Financial Details', ['bold' => true, 'size' => 10, 'color' => 'FFFFFF']);
+$h4->addCell($halfWidth, ['bgColor' => $customBlue])->addText('Financial Details / Faahfaahinta Lacagta', ['bold' => true, 'size' => 10, 'color' => 'FFFFFF']);
 
 $fTable = $rightCell2->addTable(['borderSize' => 4, 'borderColor' => 'DDDDDD', 'cellMargin' => 60]);
+// Lease Start
+$fTable->addRow();
+$fTable->addCell(2000, ['bgColor' => 'F8F9FA'])->addText('Lease Start', ['bold' => true, 'size' => 8, 'color' => $labelColor]);
+$fTable->addCell(3150)->addText(date('F d, Y', strtotime($lease['start_date'] ?? 'now')), ['size' => 9, 'bold' => true]);
+
 $fTable->addRow();
 $fTable->addCell(2000, ['bgColor' => 'F8F9FA'])->addText('Monthly Rent', ['bold' => true, 'size' => 8, 'color' => $labelColor]);
 $fTable->addCell(3150)->addText('$' . number_format((float) ($lease['monthly_rent'] ?? 0), 2), ['bold' => true, 'size' => 10, 'color' => '28A745']);
@@ -258,12 +263,42 @@ foreach ($fRows as $row) {
 $section->addTextBreak();
 
 // ============================================================
+// VEHICLE & WEAPONS INFO
+// ============================================================
+$mainTable3 = $section->addTable(['borderSize' => 0, 'borderColor' => 'FFFFFF', 'cellMargin' => 0]);
+$mainTable3->addRow();
+
+// Vehicle
+$leftCell3 = $mainTable3->addCell($halfWidth, ['valign' => 'top']);
+$hV = $leftCell3->addTable(['borderSize' => 0, 'cellMargin' => 40]);
+$hV->addRow();
+$hV->addCell($halfWidth, ['bgColor' => $customBlue])->addText('Vehicle Information / Macluumaadka Gaariga', ['bold' => true, 'size' => 10, 'color' => 'FFFFFF']);
+
+$vTable = $leftCell3->addTable(['borderSize' => 4, 'borderColor' => 'DDDDDD', 'cellMargin' => 60]);
+$vTable->addRow();
+$vTable->addCell(5150)->addText(safeStr($lease['vehicle_info'] ?? 'N/A'), ['size' => 9]);
+
+$mainTable3->addCell($spacerWidth);
+
+// Weapons
+$rightCell3 = $mainTable3->addCell($halfWidth, ['valign' => 'top']);
+$hW = $rightCell3->addTable(['borderSize' => 0, 'cellMargin' => 40]);
+$hW->addRow();
+$hW->addCell($halfWidth, ['bgColor' => $customBlue])->addText('Weapons Information / Hubka Sharciga ah', ['bold' => true, 'size' => 10, 'color' => 'FFFFFF']);
+
+$wTable = $rightCell3->addTable(['borderSize' => 4, 'borderColor' => 'DDDDDD', 'cellMargin' => 60]);
+$wTable->addRow();
+$wTable->addCell(5150)->addText(safeStr($lease['legal_weapons'] ?? 'N/A'), ['size' => 9]);
+
+$section->addTextBreak();
+
+// ============================================================
 // LEASE CONDITIONS (HTML Handling)
 // ============================================================
 if (!empty($lease['lease_conditions'])) {
     $h5 = $section->addTable(['borderSize' => 0, 'cellMargin' => 40]);
     $h5->addRow();
-    $h5->addCell($fullWidth, ['bgColor' => $customBlue])->addText('Lease Conditions', ['bold' => true, 'size' => 10, 'color' => 'FFFFFF']);
+    $h5->addCell($fullWidth, ['bgColor' => $customBlue])->addText('Lease Conditions / Shuruudaha Heshiiska', ['bold' => true, 'size' => 10, 'color' => 'FFFFFF']);
 
     $condTable = $section->addTable(['borderSize' => 4, 'borderColor' => 'DDDDDD', 'cellMargin' => 80]);
     $condTable->addRow();
@@ -282,7 +317,7 @@ if (!empty($lease['lease_conditions'])) {
 if (!empty($witnesses)) {
     $hw = $section->addTable(['borderSize' => 0, 'cellMargin' => 40]);
     $hw->addRow();
-    $hw->addCell($fullWidth, ['bgColor' => $customBlue])->addText('Witnesses', ['bold' => true, 'size' => 10, 'color' => 'FFFFFF']);
+    $hw->addCell($fullWidth, ['bgColor' => $customBlue])->addText('Witnesses / Marqaatiyaal', ['bold' => true, 'size' => 10, 'color' => 'FFFFFF']);
     $section->addTextBreak();
 
     $witTable = $section->addTable(['borderSize' => 4, 'borderColor' => 'DDDDDD', 'cellMargin' => 60]);

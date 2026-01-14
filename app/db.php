@@ -6,10 +6,10 @@ $username = 'root';
 $password = '';
 
 
-$db_name = 'aayacsqa_pms'; // Extract from DSN or define directly
-$charset = 'utf8mb4'; // Extract from DSN or define directly
-$username = 'aayacsqa_pms';
-$password = 'Z(wfv2srWUaG';
+// $db_name = 'aayacsqa_pms'; // Extract from DSN or define directly
+// $charset = 'utf8mb4'; // Extract from DSN or define directly
+// $username = 'aayacsqa_pms';
+// $password = 'Z(wfv2srWUaG';
 
 // $username = 'u562838275_pms';
 // $db_name = 'u562838275_pms';

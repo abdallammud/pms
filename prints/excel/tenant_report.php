@@ -22,6 +22,8 @@ $logoRow = $logoQuery ? $logoQuery->fetch_assoc() : null;
 $logoPath = ($logoRow && !empty($logoRow['setting_value'])) ? $logoRow['setting_value'] : 'public/images/logo.png';
 $logoPath = realpath($logoPath);
 
+$logoPath = 'public/images/logo.jpg';
+
 $status = $_GET['tenant_status'] ?? 'all';
 $startDate = $_GET['startDate'] ?? date('Y-m-01');
 $endDate = $_GET['endDate'] ?? date('Y-m-d');

@@ -42,7 +42,7 @@ function get_charge_types()
     $search_value = $_POST['search']['value'] ?? '';
 
     // Base query
-    $sql = "SELECT * FROM charge_types WHERE 1=1";
+    $sql = "SELECT * FROM charge_types WHERE " . tenant_where_clause();
 
     // Search
     if (!empty($search_value)) {
@@ -51,7 +51,7 @@ function get_charge_types()
     }
 
     // Total records
-    $total_records_res = $conn->query("SELECT COUNT(*) as count FROM charge_types");
+    $total_records_res = $conn->query("SELECT COUNT(*) as count FROM charge_types WHERE " . tenant_where_clause());
     $total_records = ($total_records_res) ? $total_records_res->fetch_assoc()['count'] : 0;
 
     // Total filtered records
@@ -116,7 +116,7 @@ function get_active_charge_types()
     header('Content-Type: application/json');
     $conn = $GLOBALS['conn'];
 
-    $result = $conn->query("SELECT id, name, default_amount FROM charge_types WHERE status = 'active' ORDER BY name ASC");
+    $result = $conn->query("SELECT id, name, default_amount FROM charge_types WHERE status = 'active' AND " . tenant_where_clause() . " ORDER BY name ASC");
     $data = [];
 
     while ($row = $result->fetch_assoc()) {
@@ -144,6 +144,7 @@ function save_charge_type()
     $description = trim($_POST['description'] ?? '');
     $default_amount = $_POST['default_amount'] ?? null;
     $status = $_POST['status'] ?? 'active';
+    $org_id = resolve_request_org_id();
 
     // Validation
     if (empty($name)) {
@@ -152,10 +153,10 @@ function save_charge_type()
     }
 
     // Check for duplicate name
-    $check_sql = "SELECT id FROM charge_types WHERE name = ? AND id != ?";
+    $check_sql = "SELECT id FROM charge_types WHERE name = ? AND id != ? AND org_id = ?";
     $check_stmt = $conn->prepare($check_sql);
     $check_id = $id ?: 0;
-    $check_stmt->bind_param("si", $name, $check_id);
+    $check_stmt->bind_param("sii", $name, $check_id, $org_id);
     $check_stmt->execute();
     if ($check_stmt->get_result()->num_rows > 0) {
         echo json_encode(['error' => true, 'msg' => 'A charge type with this name already exists.']);
@@ -171,8 +172,8 @@ function save_charge_type()
 
     if (empty($id)) {
         // Insert
-        $stmt = $conn->prepare("INSERT INTO charge_types (name, description, default_amount, status) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssds", $name, $description, $default_amount, $status);
+        $stmt = $conn->prepare("INSERT INTO charge_types (org_id, name, description, default_amount, status) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("issds", $org_id, $name, $description, $default_amount, $status);
 
         if ($stmt->execute()) {
             echo json_encode(['error' => false, 'msg' => 'Charge type created successfully.', 'id' => $conn->insert_id]);
@@ -181,7 +182,7 @@ function save_charge_type()
         }
     } else {
         // Update
-        $stmt = $conn->prepare("UPDATE charge_types SET name=?, description=?, default_amount=?, status=? WHERE id=?");
+        $stmt = $conn->prepare("UPDATE charge_types SET name=?, description=?, default_amount=?, status=? WHERE id=? AND " . tenant_where_clause());
         $stmt->bind_param("ssdsi", $name, $description, $default_amount, $status, $id);
 
         if ($stmt->execute()) {
@@ -209,12 +210,12 @@ function delete_charge_type()
     }
 
     // Check if charge type is in use
-    $check = $conn->query("SELECT COUNT(*) as count FROM invoices WHERE charge_type_id = $id");
+    $check = $conn->query("SELECT COUNT(*) as count FROM invoices WHERE charge_type_id = $id AND " . tenant_where_clause());
     $usage = $check->fetch_assoc()['count'];
 
     if ($usage > 0) {
         // Soft delete - set to inactive
-        $stmt = $conn->prepare("UPDATE charge_types SET status = 'inactive' WHERE id = ?");
+        $stmt = $conn->prepare("UPDATE charge_types SET status = 'inactive' WHERE id = ? AND " . tenant_where_clause());
         $stmt->bind_param("i", $id);
 
         if ($stmt->execute()) {
@@ -224,7 +225,7 @@ function delete_charge_type()
         }
     } else {
         // Hard delete
-        $stmt = $conn->prepare("DELETE FROM charge_types WHERE id = ?");
+        $stmt = $conn->prepare("DELETE FROM charge_types WHERE id = ? AND " . tenant_where_clause());
         $stmt->bind_param("i", $id);
 
         if ($stmt->execute()) {
@@ -251,7 +252,7 @@ function get_charge_type()
         exit;
     }
 
-    $stmt = $conn->prepare("SELECT * FROM charge_types WHERE id = ?");
+    $stmt = $conn->prepare("SELECT * FROM charge_types WHERE id = ? AND " . tenant_where_clause());
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $result = $stmt->get_result()->fetch_assoc();

@@ -30,7 +30,7 @@ function get_guarantees()
     $search_value = $_POST['search']['value'] ?? '';
 
     // Base query
-    $sql = "SELECT * FROM guarantees WHERE 1=1";
+    $sql = "SELECT * FROM guarantees WHERE " . tenant_where_clause();
 
     // Search
     if (!empty($search_value)) {
@@ -38,7 +38,7 @@ function get_guarantees()
     }
 
     // Total records (before filtering)
-    $total_records_query = $conn->query("SELECT COUNT(*) as count FROM guarantees");
+    $total_records_query = $conn->query("SELECT COUNT(*) as count FROM guarantees WHERE " . tenant_where_clause());
     $total_records = $total_records_query->fetch_assoc()['count'];
 
     // Total filtered records
@@ -141,6 +141,7 @@ function save_guarantee()
     $id_number = trim($_POST['id_number'] ?? '');
     $work_info = trim($_POST['work_info'] ?? '');
     $status = $_POST['status'] ?? 'active';
+    $org_id = resolve_request_org_id();
 
     // Existing photo paths (for edit mode)
     $existing_id_photo = trim($_POST['existing_id_photo'] ?? '');
@@ -183,8 +184,8 @@ function save_guarantee()
 
     if (empty($id)) {
         // Insert
-        $stmt = $conn->prepare("INSERT INTO guarantees (full_name, phone, email, id_number, id_photo, work_id_photo, work_info, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssssss", $full_name, $phone, $email, $id_number, $id_photo, $work_id_photo, $work_info, $status);
+        $stmt = $conn->prepare("INSERT INTO guarantees (org_id, full_name, phone, email, id_number, id_photo, work_id_photo, work_info, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("issssssss", $org_id, $full_name, $phone, $email, $id_number, $id_photo, $work_id_photo, $work_info, $status);
 
         if ($stmt->execute()) {
             echo json_encode(['error' => false, 'msg' => 'Guarantor added successfully.']);
@@ -193,7 +194,7 @@ function save_guarantee()
         }
     } else {
         // Update
-        $stmt = $conn->prepare("UPDATE guarantees SET full_name=?, phone=?, email=?, id_number=?, id_photo=?, work_id_photo=?, work_info=?, status=? WHERE id=?");
+        $stmt = $conn->prepare("UPDATE guarantees SET full_name=?, phone=?, email=?, id_number=?, id_photo=?, work_id_photo=?, work_info=?, status=? WHERE id=? AND " . tenant_where_clause());
         $stmt->bind_param("ssssssssi", $full_name, $phone, $email, $id_number, $id_photo, $work_id_photo, $work_info, $status, $id);
 
         if ($stmt->execute()) {
@@ -218,7 +219,7 @@ function delete_guarantee()
     }
 
     // Check if guarantor is linked to an active lease
-    $check = $conn->prepare("SELECT id FROM leases WHERE guarantor_id = ? AND status = 'active' LIMIT 1");
+    $check = $conn->prepare("SELECT id FROM leases WHERE guarantee_id = ? AND status = 'active' AND " . tenant_where_clause() . " LIMIT 1");
     $check->bind_param("i", $id);
     $check->execute();
     if ($check->get_result()->num_rows > 0) {
@@ -226,7 +227,7 @@ function delete_guarantee()
         exit;
     }
 
-    $stmt = $conn->prepare("DELETE FROM guarantees WHERE id = ?");
+    $stmt = $conn->prepare("DELETE FROM guarantees WHERE id = ? AND " . tenant_where_clause());
     $stmt->bind_param("i", $id);
 
     if ($stmt->execute()) {
@@ -249,7 +250,7 @@ function get_guarantee()
         exit;
     }
 
-    $stmt = $conn->prepare("SELECT * FROM guarantees WHERE id = ?");
+    $stmt = $conn->prepare("SELECT * FROM guarantees WHERE id = ? AND " . tenant_where_clause());
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $result = $stmt->get_result()->fetch_assoc();
@@ -284,14 +285,14 @@ function bulk_action()
 
     if ($action_type == 'delete') {
         // Check if any guarantor has active lease
-        $check_leases = $conn->query("SELECT id FROM leases WHERE guarantor_id IN ($ids_str) AND status = 'active' LIMIT 1");
+        $check_leases = $conn->query("SELECT id FROM leases WHERE guarantee_id IN ($ids_str) AND status = 'active' AND " . tenant_where_clause() . " LIMIT 1");
 
         if ($check_leases && $check_leases->num_rows > 0) {
             echo json_encode(['error' => true, 'msg' => 'Cannot delete selected guarantors because one or more have active leases.']);
             exit;
         }
 
-        if ($conn->query("DELETE FROM guarantees WHERE id IN ($ids_str)")) {
+        if ($conn->query("DELETE FROM guarantees WHERE id IN ($ids_str) AND " . tenant_where_clause())) {
             echo json_encode(['error' => false, 'msg' => 'Selected guarantors deleted successfully.']);
         } else {
             echo json_encode(['error' => true, 'msg' => 'Error deleting guarantors: ' . $conn->error]);

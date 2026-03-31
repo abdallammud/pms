@@ -3,7 +3,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content shadow-lg border-0">
 
-            <div class="modal-header bg-primary text-white">
+            <div class="modal-header">
                 <h5 class="modal-title" id="modal_title"><i class="bi bi-person-badge me-2"></i>Add New Vendor</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>

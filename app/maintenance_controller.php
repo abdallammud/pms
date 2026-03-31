@@ -20,6 +20,37 @@ if (isset($_GET['action'])) {
         assign_request();
     } elseif ($action == 'get_assignment') {
         get_assignment();
+    } elseif ($action == 'get_unit_tenant') {
+        get_unit_tenant();
+    }
+}
+
+/**
+ * Return the active tenant name for a given unit (for auto-requester fill)
+ */
+function get_unit_tenant()
+{
+    ob_clean();
+    header('Content-Type: application/json');
+    $conn = $GLOBALS['conn'];
+
+    $unit_id = intval($_GET['unit_id'] ?? 0);
+    if ($unit_id <= 0) { echo json_encode(['error' => true]); exit; }
+
+    $res = $conn->query("
+        SELECT t.full_name, t.phone
+        FROM leases l
+        JOIN tenants t ON t.id = l.tenant_id
+        WHERE l.unit_id = $unit_id
+          AND l.status = 'active'
+          AND " . tenant_where_clause('l') . "
+        LIMIT 1
+    ")->fetch_assoc();
+
+    if ($res) {
+        echo json_encode(['error' => false, 'tenant_name' => $res['full_name'], 'phone' => $res['phone']]);
+    } else {
+        echo json_encode(['error' => true, 'msg' => 'No active tenant on this unit.']);
     }
 }
 
@@ -40,7 +71,7 @@ function get_requests()
             LEFT JOIN units u ON m.unit_id = u.id 
             LEFT JOIN maintenance_assignments ma ON m.id = ma.request_id 
             LEFT JOIN vendors v ON ma.vendor_id = v.id 
-            WHERE 1=1";
+            WHERE " . tenant_where_clause('m');
 
     // Search
     if (!empty($search_value)) {
@@ -54,7 +85,7 @@ function get_requests()
     }
 
     // Total records (before filtering)
-    $total_records_res = $conn->query("SELECT COUNT(*) as count FROM maintenance_requests");
+    $total_records_res = $conn->query("SELECT COUNT(*) as count FROM maintenance_requests m WHERE " . tenant_where_clause('m'));
     $total_records = ($total_records_res) ? $total_records_res->fetch_assoc()['count'] : 0;
 
     // Total filtered records
@@ -132,6 +163,7 @@ function save_request()
     $requester = trim($_POST['requester'] ?? '');
     $description = trim($_POST['description'] ?? '');
     $status = $_POST['status'] ?? 'new';
+    $org_id = resolve_request_org_id();
 
     if (empty($property_id) || empty($description) || empty($requester)) {
         ob_clean();
@@ -145,8 +177,8 @@ function save_request()
         // Generate reference number
         $reference_number = generate_reference_number('maintenance');
 
-        $stmt = $conn->prepare("INSERT INTO maintenance_requests (reference_number, property_id, unit_id, priority, requester, description, status) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("siissss", $reference_number, $property_id, $unit_id, $priority, $requester, $description, $status);
+        $stmt = $conn->prepare("INSERT INTO maintenance_requests (org_id, reference_number, property_id, unit_id, priority, requester, description, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("isiissss", $org_id, $reference_number, $property_id, $unit_id, $priority, $requester, $description, $status);
 
         if ($stmt->execute()) {
             ob_clean();
@@ -159,7 +191,7 @@ function save_request()
         }
     } else {
         // Update
-        $stmt = $conn->prepare("UPDATE maintenance_requests SET property_id=?, unit_id=?, priority=?, requester=?, description=?, status=? WHERE id=?");
+        $stmt = $conn->prepare("UPDATE maintenance_requests SET property_id=?, unit_id=?, priority=?, requester=?, description=?, status=? WHERE id=? AND " . tenant_where_clause());
         $stmt->bind_param("iissssi", $property_id, $unit_id, $priority, $requester, $description, $status, $id);
 
         if ($stmt->execute()) {
@@ -186,7 +218,7 @@ function delete_request()
         exit;
     }
 
-    $stmt = $conn->prepare("DELETE FROM maintenance_requests WHERE id = ?");
+    $stmt = $conn->prepare("DELETE FROM maintenance_requests WHERE id = ? AND " . tenant_where_clause());
     $stmt->bind_param("i", $id);
 
     if ($stmt->execute()) {
@@ -212,7 +244,7 @@ function get_request()
         exit;
     }
 
-    $stmt = $conn->prepare("SELECT * FROM maintenance_requests WHERE id = ?");
+    $stmt = $conn->prepare("SELECT * FROM maintenance_requests WHERE id = ? AND " . tenant_where_clause());
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $result = $stmt->get_result()->fetch_assoc();
@@ -231,7 +263,7 @@ function get_available_units()
     $conn = $GLOBALS['conn'];
     $property_id = isset($_POST['property_id']) ? intval($_POST['property_id']) : 0;
 
-    $stmt = $conn->prepare("SELECT id, unit_number FROM units WHERE property_id = ? ORDER BY unit_number");
+    $stmt = $conn->prepare("SELECT id, unit_number FROM units WHERE property_id = ? AND " . tenant_where_clause() . " ORDER BY unit_number");
     $stmt->bind_param("i", $property_id);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -254,7 +286,7 @@ function get_pending_requests()
             FROM maintenance_requests m 
             LEFT JOIN properties p ON m.property_id = p.id 
             LEFT JOIN units u ON m.unit_id = u.id 
-            WHERE m.status != 'completed' 
+            WHERE m.status != 'completed' AND " . tenant_where_clause('m') . "
             ORDER BY m.created_at DESC";
 
     $result = $conn->query($sql);
@@ -282,6 +314,7 @@ function assign_request()
     $assigned_date = $_POST['assigned_date'] ?? '';
     $expected_completion = $_POST['expected_completion'] ?? '';
     $notes = trim($_POST['notes'] ?? '');
+    $org_id = resolve_request_org_id();
 
     if (empty($request_id) || empty($vendor_id) || empty($assigned_date)) {
         ob_clean();
@@ -292,7 +325,7 @@ function assign_request()
 
     if (empty($assignment_id)) {
         // Check if already assigned
-        $check = $conn->prepare("SELECT id FROM maintenance_assignments WHERE request_id = ?");
+        $check = $conn->prepare("SELECT id FROM maintenance_assignments WHERE request_id = ? AND " . tenant_where_clause());
         $check->bind_param("i", $request_id);
         $check->execute();
         if ($check->get_result()->num_rows > 0) {
@@ -303,12 +336,12 @@ function assign_request()
         }
 
         // Insert new assignment
-        $stmt = $conn->prepare("INSERT INTO maintenance_assignments (request_id, vendor_id, assigned_date, expected_completion, notes) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("iisss", $request_id, $vendor_id, $assigned_date, $expected_completion, $notes);
+        $stmt = $conn->prepare("INSERT INTO maintenance_assignments (org_id, request_id, vendor_id, assigned_date, expected_completion, notes) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("iiisss", $org_id, $request_id, $vendor_id, $assigned_date, $expected_completion, $notes);
 
         if ($stmt->execute()) {
             // Update request status to in_progress
-            $conn->query("UPDATE maintenance_requests SET status = 'in_progress' WHERE id = $request_id");
+            $conn->query("UPDATE maintenance_requests SET status = 'in_progress' WHERE id = $request_id AND " . tenant_where_clause());
 
             ob_clean();
             header('Content-Type: application/json');
@@ -320,7 +353,7 @@ function assign_request()
         }
     } else {
         // Update existing assignment
-        $stmt = $conn->prepare("UPDATE maintenance_assignments SET vendor_id=?, assigned_date=?, expected_completion=?, notes=? WHERE id=?");
+        $stmt = $conn->prepare("UPDATE maintenance_assignments SET vendor_id=?, assigned_date=?, expected_completion=?, notes=? WHERE id=? AND " . tenant_where_clause());
         $stmt->bind_param("isssi", $vendor_id, $assigned_date, $expected_completion, $notes, $assignment_id);
 
         if ($stmt->execute()) {
@@ -349,7 +382,7 @@ function get_assignment()
 
     $stmt = $conn->prepare("SELECT ma.*, v.vendor_name FROM maintenance_assignments ma 
                             LEFT JOIN vendors v ON ma.vendor_id = v.id 
-                            WHERE ma.request_id = ?");
+                            WHERE ma.request_id = ? AND " . tenant_where_clause('ma'));
     $stmt->bind_param("i", $request_id);
     $stmt->execute();
     $result = $stmt->get_result()->fetch_assoc();

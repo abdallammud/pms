@@ -7,6 +7,30 @@
 
 		</div>
 		<ul class="navbar-nav gap-1 nav-right-links align-items-center">
+
+			<?php if (is_super_admin()): ?>
+			<!-- Super-admin org context switcher -->
+			<li class="nav-item dropdown" id="orgSwitcherNav">
+				<a class="nav-link dropdown-toggle dropdown-toggle-nocaret d-flex align-items-center gap-1"
+					href="javascript:;" data-bs-toggle="dropdown" title="Switch Organization">
+					<i class="bi bi-buildings"></i>
+					<small class="d-none d-md-inline ms-1" id="activeOrgLabel">
+						<?= current_org_id() === 0 ? 'All Orgs' : ('Org #' . current_org_id()); ?>
+					</small>
+				</a>
+				<ul class="dropdown-menu dropdown-menu-end" id="orgSwitcherDropdown" style="min-width:220px;">
+					<li><h6 class="dropdown-header">Switch Organization</h6></li>
+					<li>
+						<a class="dropdown-item" href="javascript:;" onclick="switchOrg(0)">
+							<i class="bi bi-globe me-2"></i> All Organizations
+						</a>
+					</li>
+					<li><hr class="dropdown-divider my-1"></li>
+					<li><div class="px-3 text-muted small">Loading...</div></li>
+				</ul>
+			</li>
+			<?php endif; ?>
+
 			<!-- <li class="nav-item d-lg-none mobile-search-btn">
 				<a class="nav-link" href="javascript:;">
 					<i class="material-icons-outlined">search</i>

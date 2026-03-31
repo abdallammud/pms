@@ -62,7 +62,10 @@ switch ($report_type) {
                 ]);
                 ?>
                 <a href="./excel.php?<?php echo $excelParams; ?>" class="btn btn-success btn-sm">
-                    <i class="fas fa-file-excel mr-1"></i> Download Excel
+                    <i class="fas fa-file-excel me-1"></i> Download Excel
+                </a>
+                <a href="./pdf.php?<?php echo $excelParams; ?>" class="btn btn-danger btn-sm ms-1" target="_blank">
+                    <i class="fas fa-file-pdf me-1"></i> Download PDF
                 </a>
             </div>
         </div>

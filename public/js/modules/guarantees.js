@@ -3,9 +3,6 @@ document.addEventListener('DOMContentLoaded', function () {
         loadGuarantees();
     }
 
-    // Initialize photo upload preview handlers
-    initGuaranteePhotoUploadHandlers();
-
     // Handle Save Guarantee Form Submission
     $(document).on('click', '#saveGuaranteeBtn', function () {
         var form = $('#addGuaranteeForm')[0];
@@ -45,48 +42,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 /**
- * Initialize photo upload preview handlers for guarantees
- */
-function initGuaranteePhotoUploadHandlers() {
-    // ID Photo handler
-    $(document).on('change', '#guarantee_id_photo', function () {
-        previewGuaranteePhoto(this, 'guarantee_id_photo_area');
-    });
-
-    // Work ID Photo handler
-    $(document).on('change', '#guarantee_work_id_photo', function () {
-        previewGuaranteePhoto(this, 'guarantee_work_id_photo_area');
-    });
-}
-
-/**
- * Preview photo after selection
- */
-function previewGuaranteePhoto(input, areaId) {
-    var area = $('#' + areaId);
-    var placeholder = area.find('.upload-placeholder');
-    var preview = area.find('.upload-preview');
-    var img = preview.find('img');
-
-    if (input.files && input.files[0]) {
-        // Validate file size (5MB max)
-        if (input.files[0].size > 5 * 1024 * 1024) {
-            swal('Error', 'File size must be less than 5MB', 'error');
-            input.value = '';
-            return;
-        }
-
-        var reader = new FileReader();
-        reader.onload = function (e) {
-            img.attr('src', e.target.result);
-            placeholder.hide();
-            preview.show();
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
-/**
  * Reset guarantee form including photo previews
  */
 function resetGuaranteeForm() {
@@ -95,14 +50,17 @@ function resetGuaranteeForm() {
     $('#guarantee_existing_id_photo').val('');
     $('#guarantee_existing_work_id_photo').val('');
 
-    // Reset photo previews
-    $('#guarantee_id_photo_area .upload-placeholder').show();
-    $('#guarantee_id_photo_area .upload-preview').hide();
-    $('#guarantee_work_id_photo_area .upload-placeholder').show();
-    $('#guarantee_work_id_photo_area .upload-preview').hide();
+    // Reset photo zones to placeholder state
+    ['guarantee_id_photo_area', 'guarantee_work_id_photo_area'].forEach(function (areaId) {
+        var area = document.getElementById(areaId);
+        if (!area) return;
+        area.querySelector('.photo-zone-placeholder').classList.remove('d-none');
+        area.querySelector('.photo-zone-preview').classList.add('d-none');
+        area.querySelector('.photo-preview-img').src = '';
+    });
 
-    $('#addGuaranteeLabel').html('<i class="bi bi-person-plus me-2"></i>Add Guarantor');
-    $('#saveGuaranteeBtn').text('Save Guarantor');
+    $('#addGuaranteeLabel').html('<i class="bi bi-shield-check me-2"></i>Add Guarantor');
+    $('#saveGuaranteeBtn').html('<i class="bi bi-save me-1"></i> Save Guarantor');
 }
 
 function loadGuarantees() {
@@ -159,7 +117,7 @@ function editGuarantee(id) {
                 }
 
                 $('#addGuaranteeLabel').html('<i class="bi bi-pencil me-2"></i>Edit Guarantor');
-                $('#saveGuaranteeBtn').text('Update Guarantor');
+                $('#saveGuaranteeBtn').html('<i class="bi bi-save me-1"></i> Update Guarantor');
 
                 $('#addGuaranteeModal').modal('show');
             } else {
@@ -173,17 +131,15 @@ function editGuarantee(id) {
 }
 
 /**
- * Show existing photo in upload area
+ * Show existing photo in upload area (new photo-zone structure)
  */
 function showGuaranteeExistingPhoto(areaId, photoUrl) {
-    var area = $('#' + areaId);
-    var placeholder = area.find('.upload-placeholder');
-    var preview = area.find('.upload-preview');
-    var img = preview.find('img');
-
-    img.attr('src', photoUrl);
-    placeholder.hide();
-    preview.show();
+    var area = document.getElementById(areaId);
+    if (!area) return;
+    area.querySelector('.photo-zone-placeholder').classList.add('d-none');
+    var preview = area.querySelector('.photo-zone-preview');
+    preview.querySelector('.photo-preview-img').src = photoUrl;
+    preview.classList.remove('d-none');
 }
 
 /**

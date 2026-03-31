@@ -26,10 +26,12 @@ if (function_exists('authenticate')) {
 
 <!-- Modals -->
 <?php require_once 'views/properties/modals/add_property.php'; ?>
+<?php require_once 'views/properties/modals/edit_property.php'; ?>
 <?php require_once 'views/tenants/modals/add_tenant.php'; ?>
 <?php require_once 'views/accounting/modals/add_invoice.php'; ?>
 <?php require_once 'views/accounting/modals/add_expense.php'; ?>
 <?php require_once 'views/maintenance/modals/create_request.php'; ?>
 <?php require_once 'views/maintenance/modals/assign_request.php'; ?>
 <?php require_once 'views/properties/modals/add_unit.php'; ?>
+<?php require_once 'views/properties/modals/edit_unit.php'; ?>
 <?php require_once 'views/partials/app_footer.php'; ?>

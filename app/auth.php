@@ -43,6 +43,8 @@ function set_sessions($user_id)
     $_SESSION['user_id'] = $user['id'];
     $_SESSION['user_name'] = $user['name'];
     $_SESSION['user_email'] = $user['email'];
+    $_SESSION['org_id'] = isset($user['org_id']) ? (int) $user['org_id'] : 0;
+    $_SESSION['is_super_admin'] = !empty($user['is_super_admin']) ? 1 : 0;
     $_SESSION['is_logged_in'] = true;
 
     // Get Role Info
@@ -60,6 +62,58 @@ function set_sessions($user_id)
     $_SESSION['permissions'] = $permissions;
 
     return true;
+}
+
+function is_super_admin()
+{
+    return !empty($_SESSION['is_super_admin']);
+}
+
+function current_org_id()
+{
+    if (is_super_admin()) {
+        if (isset($_SESSION['active_org_id']) && (int) $_SESSION['active_org_id'] > 0) {
+            return (int) $_SESSION['active_org_id'];
+        }
+        return 0;
+    }
+    return isset($_SESSION['org_id']) ? (int) $_SESSION['org_id'] : 0;
+}
+
+function tenant_where_clause($alias = '')
+{
+    $org_id = current_org_id();
+    if (is_super_admin() && $org_id === 0) {
+        return "1=1";
+    }
+    $prefix = $alias ? $alias . "." : "";
+    return $prefix . "org_id = " . (int) $org_id;
+}
+
+function require_same_tenant_or_super($org_id)
+{
+    if (is_super_admin()) {
+        return true;
+    }
+    return (int) $org_id === (int) current_org_id();
+}
+
+function resolve_request_org_id($fallback_to_current = true)
+{
+    if (!is_super_admin()) {
+        return current_org_id();
+    }
+
+    $org_id = 0;
+    if (isset($_POST['org_id'])) {
+        $org_id = (int) $_POST['org_id'];
+    } elseif (isset($_GET['org_id'])) {
+        $org_id = (int) $_GET['org_id'];
+    } elseif ($fallback_to_current) {
+        $org_id = current_org_id();
+    }
+
+    return $org_id;
 }
 
 function authenticate()
@@ -91,6 +145,14 @@ function check_session($permission = null)
     }
 
     if ($permission) {
+        // 'super_admin' is a virtual permission only granted to super admins
+        if ($permission === 'super_admin') {
+            return is_super_admin();
+        }
+        // Super admins bypass all regular permission checks
+        if (is_super_admin()) {
+            return true;
+        }
         // Check if user has the required permission
         if (isset($_SESSION['permissions']) && in_array($permission, $_SESSION['permissions'])) {
             return true;

@@ -31,7 +31,7 @@ function get_expenses()
     $sql = "SELECT e.*, p.name as property_name 
             FROM expenses e 
             LEFT JOIN properties p ON e.property_id = p.id 
-            WHERE 1=1";
+            WHERE " . tenant_where_clause('e');
 
     // Search
     if (!empty($search_value)) {
@@ -44,7 +44,7 @@ function get_expenses()
     }
 
     // Total records (before filtering)
-    $total_records_query = $conn->query("SELECT COUNT(*) as count FROM expenses");
+    $total_records_query = $conn->query("SELECT COUNT(*) as count FROM expenses e WHERE " . tenant_where_clause('e'));
     $total_records = ($total_records_query) ? $total_records_query->fetch_assoc()['count'] : 0;
 
     // Total filtered records
@@ -99,6 +99,7 @@ function save_expense()
     $amount = floatval($_POST['amount'] ?? 0);
     $expense_date = $_POST['expense_date'] ?? date('Y-m-d');
     $description = $_POST['description'] ?? '';
+    $org_id = resolve_request_org_id();
 
     // Validation
     if ($expense_type == 'Property' && empty($property_id)) {
@@ -120,8 +121,8 @@ function save_expense()
         // Generate reference number (simple logic for now, or use same pattern as invoices)
         $reference_number = 'EXP-' . date('Ymd') . '-' . rand(100, 999);
 
-        $sql = "INSERT INTO expenses (property_id, expense_type, category, amount, description, expense_date, reference_number) 
-                VALUES ($property_id_val, '$expense_type', '$category', $amount, '$description', '$expense_date', '$reference_number')";
+        $sql = "INSERT INTO expenses (org_id, property_id, expense_type, category, amount, description, expense_date, reference_number) 
+                VALUES ($org_id, $property_id_val, '$expense_type', '$category', $amount, '$description', '$expense_date', '$reference_number')";
 
         if ($conn->query($sql)) {
             echo json_encode(['error' => false, 'msg' => 'Expense added successfully.']);
@@ -138,7 +139,7 @@ function save_expense()
                     amount = $amount, 
                     description = '$description', 
                     expense_date = '$expense_date' 
-                WHERE id = $id";
+                WHERE id = $id AND " . tenant_where_clause();
 
         if ($conn->query($sql)) {
             echo json_encode(['error' => false, 'msg' => 'Expense updated successfully.']);
@@ -161,7 +162,7 @@ function delete_expense()
         exit;
     }
 
-    $sql = "DELETE FROM expenses WHERE id = $id";
+    $sql = "DELETE FROM expenses WHERE id = $id AND " . tenant_where_clause();
 
     if ($conn->query($sql)) {
         echo json_encode(['error' => false, 'msg' => 'Expense deleted successfully.']);
@@ -183,7 +184,7 @@ function get_expense()
         exit;
     }
 
-    $sql = "SELECT * FROM expenses WHERE id = $id";
+    $sql = "SELECT * FROM expenses WHERE id = $id AND " . tenant_where_clause();
     $result = $conn->query($sql);
     $data = $result->fetch_assoc();
 

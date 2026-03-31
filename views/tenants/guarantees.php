@@ -2,9 +2,9 @@
 <main class="content">
     <!-- Page Header -->
     <div class="d-flex justify-content-between mt-3 align-items-center  mb-3">
-        <h5 class="page-title">Guarantees List</h5>
+        <h5 class="page-title">Guarantors</h5>
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGuaranteeModal">
-            <i class="bi bi-plus me-2"></i> Add Guarantee
+            <i class="bi bi-plus me-1"></i> Add Guarantor
         </button>
     </div>
     <!-- Page Content -->

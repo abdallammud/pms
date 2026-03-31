@@ -38,7 +38,7 @@ function get_property_types()
     $search_value = $_POST['search']['value'] ?? '';
 
     // Base query
-    $sql = "SELECT * FROM property_types WHERE 1=1";
+    $sql = "SELECT * FROM property_types WHERE " . tenant_where_clause();
 
     // Search
     if (!empty($search_value)) {
@@ -47,7 +47,7 @@ function get_property_types()
     }
 
     // Total records
-    $total_records_res = $conn->query("SELECT COUNT(*) as count FROM property_types");
+    $total_records_res = $conn->query("SELECT COUNT(*) as count FROM property_types WHERE " . tenant_where_clause());
     $total_records = ($total_records_res) ? $total_records_res->fetch_assoc()['count'] : 0;
 
     // Filtered records
@@ -115,7 +115,7 @@ function get_property_type()
         exit;
     }
 
-    $stmt = $conn->prepare("SELECT * FROM property_types WHERE id = ?");
+    $stmt = $conn->prepare("SELECT * FROM property_types WHERE id = ? AND " . tenant_where_clause());
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $result = $stmt->get_result()->fetch_assoc();
@@ -136,6 +136,7 @@ function save_property_type()
     $type_name = trim($_POST['type_name'] ?? '');
     $description = trim($_POST['description'] ?? '');
     $status = $_POST['status'] ?? 'active';
+    $org_id = resolve_request_org_id();
 
     // Validation
     if (empty($type_name)) {
@@ -146,16 +147,16 @@ function save_property_type()
     if ($id === 0) {
         // Insert new
         // Check for duplicate name
-        $check = $conn->prepare("SELECT id FROM property_types WHERE type_name = ?");
-        $check->bind_param("s", $type_name);
+        $check = $conn->prepare("SELECT id FROM property_types WHERE type_name = ? AND org_id = ?");
+        $check->bind_param("si", $type_name, $org_id);
         $check->execute();
         if ($check->get_result()->num_rows > 0) {
             echo json_encode(['error' => true, 'msg' => 'Property type with this name already exists.']);
             exit;
         }
 
-        $stmt = $conn->prepare("INSERT INTO property_types (type_name, description, status) VALUES (?, ?, ?)");
-        $stmt->bind_param("sss", $type_name, $description, $status);
+        $stmt = $conn->prepare("INSERT INTO property_types (org_id, type_name, description, status) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("isss", $org_id, $type_name, $description, $status);
 
         if ($stmt->execute()) {
             echo json_encode(['error' => false, 'msg' => 'Property type added successfully.']);
@@ -165,15 +166,15 @@ function save_property_type()
     } else {
         // Update existing
         // Check for duplicate name (excluding current)
-        $check = $conn->prepare("SELECT id FROM property_types WHERE type_name = ? AND id != ?");
-        $check->bind_param("si", $type_name, $id);
+        $check = $conn->prepare("SELECT id FROM property_types WHERE type_name = ? AND id != ? AND org_id = ?");
+        $check->bind_param("sii", $type_name, $id, $org_id);
         $check->execute();
         if ($check->get_result()->num_rows > 0) {
             echo json_encode(['error' => true, 'msg' => 'Property type with this name already exists.']);
             exit;
         }
 
-        $stmt = $conn->prepare("UPDATE property_types SET type_name = ?, description = ?, status = ? WHERE id = ?");
+        $stmt = $conn->prepare("UPDATE property_types SET type_name = ?, description = ?, status = ? WHERE id = ? AND " . tenant_where_clause());
         $stmt->bind_param("sssi", $type_name, $description, $status, $id);
 
         if ($stmt->execute()) {
@@ -201,7 +202,7 @@ function delete_property_type()
     }
 
     // Check if type is in use
-    $check = $conn->prepare("SELECT id FROM properties WHERE type_id = ? LIMIT 1");
+    $check = $conn->prepare("SELECT id FROM properties WHERE type_id = ? AND " . tenant_where_clause() . " LIMIT 1");
     $check->bind_param("i", $id);
     $check->execute();
     if ($check->get_result()->num_rows > 0) {
@@ -209,7 +210,7 @@ function delete_property_type()
         exit;
     }
 
-    $stmt = $conn->prepare("DELETE FROM property_types WHERE id = ?");
+    $stmt = $conn->prepare("DELETE FROM property_types WHERE id = ? AND " . tenant_where_clause());
     $stmt->bind_param("i", $id);
 
     if ($stmt->execute()) {
@@ -228,7 +229,7 @@ function get_active_types()
     header('Content-Type: application/json');
     $conn = $GLOBALS['conn'];
 
-    $result = $conn->query("SELECT id, type_name FROM property_types WHERE status = 'active' ORDER BY type_name");
+    $result = $conn->query("SELECT id, type_name FROM property_types WHERE status = 'active' AND " . tenant_where_clause() . " ORDER BY type_name");
     $types = [];
 
     while ($row = $result->fetch_assoc()) {

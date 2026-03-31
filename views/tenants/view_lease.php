@@ -118,6 +118,14 @@ $createdAt = $lease['created_at'] ? date('F d, Y H:i', strtotime($lease['created
                                     <div class="col-7"><?= htmlspecialchars($lease['tenant_id_number'] ?? 'N/A') ?>
                                     </div>
                                 </div>
+                                <?php if (!empty($lease['tenant_phone'])): ?>
+                                <div class="mt-3">
+                                    <button class="btn btn-info btn-sm text-white w-100"
+                                        onclick="openSmsModal(<?= intval($lease['tenant_id'] ?? 0) ?>, '<?= addslashes(htmlspecialchars($lease['tenant_name'] ?? '')) ?>', '<?= addslashes(htmlspecialchars($lease['tenant_phone'])) ?>')">
+                                        <i class="bi bi-chat-text me-1"></i> Send SMS to Tenant
+                                    </button>
+                                </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>

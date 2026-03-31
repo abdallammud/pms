@@ -3,20 +3,16 @@
  */
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Load settings on page load
     loadSettings();
     loadTransactionSeries();
     loadLeaseConditions();
     loadChargeTypes();
     loadAutoInvoiceSettings();
+    loadSmsSettings();
 
-    // Setup navigation
     setupSettingsNav();
-
-    // Setup live preview for transaction series
     setupTransactionPreview();
 
-    // Charge Type Form Submission
     $('#chargeTypeForm').on('submit', function (e) {
         e.preventDefault();
         saveChargeType();
@@ -86,10 +82,20 @@ function loadSettings() {
                 $('#org_street2').val(settings.org_street2 || '');
                 $('#org_city').val(settings.org_city || '');
 
-                // Logo preview
+                // System logo preview
                 if (settings.logo_path) {
-                    $('#logoPreview').attr('src', settings.logo_path).removeClass('d-none');
-                    $('#logoPlaceholder').addClass('d-none');
+                    $('#sysLogoPreview').attr('src', settings.logo_path).removeClass('d-none');
+                    $('#sysLogoPlaceholder').addClass('d-none');
+                }
+                // Document logo preview
+                if (settings.doc_logo_path) {
+                    $('#docLogoPreview').attr('src', settings.doc_logo_path).removeClass('d-none');
+                    $('#docLogoPlaceholder').addClass('d-none');
+                }
+                // Brand color picker
+                if (settings.brand_primary_color) {
+                    var hex = settings.brand_primary_color.startsWith('#') ? settings.brand_primary_color : '#' + settings.brand_primary_color;
+                    $('#brand_primary_color').val(hex);
                 }
             }
         },
@@ -110,14 +116,36 @@ function saveProfile() {
     }, 'json');
 }
 
-function uploadLogo() {
-    const fileInput = document.getElementById('logoFile');
-    if (!fileInput.files || !fileInput.files[0]) {
-        swal("Error", "Please select an image file.", "error");
+/**
+ * Preview logo in the given zones before uploading
+ */
+function previewLogoZone(input, previewId, placeholderId) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            $('#' + previewId).attr('src', e.target.result).removeClass('d-none');
+            $('#' + placeholderId).addClass('d-none');
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+/**
+ * Upload logo — logoType: 'system' or 'document'
+ */
+function uploadLogoZone(logoType, fileInputId) {
+    const fileInput = document.getElementById(fileInputId);
+    if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+        swal("Error", "Please select an image file first.", "error");
         return;
     }
     const formData = new FormData();
     formData.append('logo', fileInput.files[0]);
+    formData.append('logo_type', logoType);
+
+    const previewId   = logoType === 'system' ? 'sysLogoPreview'  : 'docLogoPreview';
+    const holderId    = logoType === 'system' ? 'sysLogoPlaceholder' : 'docLogoPlaceholder';
+
     $.ajax({
         url: 'app/settings_controller.php?action=save_branding',
         type: 'POST',
@@ -129,8 +157,8 @@ function uploadLogo() {
             if (!res.error) {
                 toaster.success(res.msg);
                 if (res.path) {
-                    $('#logoPreview').attr('src', res.path).removeClass('d-none');
-                    $('#logoPlaceholder').addClass('d-none');
+                    $('#' + previewId).attr('src', res.path).removeClass('d-none');
+                    $('#' + holderId).addClass('d-none');
                 }
                 fileInput.value = '';
             } else {
@@ -140,15 +168,25 @@ function uploadLogo() {
     });
 }
 
-function previewLogo(input) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            $('#logoPreview').attr('src', e.target.result).removeClass('d-none');
-            $('#logoPlaceholder').addClass('d-none');
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
+/**
+ * Save brand primary color
+ */
+function saveBrandColor() {
+    var color = $('#brand_primary_color').val();
+    if (!color) { swal("Error", "Please pick a color.", "error"); return; }
+    $.post('app/settings_controller.php?action=save_brand_color', { brand_primary_color: color }, function (res) {
+        if (!res.error) {
+            toaster.success(res.msg);
+            // Live-update the CSS variable so changes are visible immediately
+            document.documentElement.style.setProperty('--brand-primary', color);
+            document.documentElement.style.setProperty('--sidebar-bg', color);
+            document.querySelectorAll('.sidebar-wrapper').forEach(function(el) {
+                el.style.background = color;
+            });
+        } else {
+            swal("Error", res.msg, "error");
+        }
+    }, 'json');
 }
 
 /**
@@ -353,6 +391,39 @@ function saveLeaseConditions() {
     $.post('app/settings_controller.php?action=save_lease_conditions', { lease_conditions: content }, function (res) {
         if (!res.error) {
             toaster.success(res.msg);
+        } else {
+            swal("Error", res.msg, "error");
+        }
+    }, 'json');
+}
+
+/**
+ * SMS / Communication Settings
+ */
+function loadSmsSettings() {
+    $.get('app/settings_controller.php?action=get_settings', function (res) {
+        if (!res.error && res.data) {
+            $('#sms_enabled').prop('checked', res.data.sms_enabled === 'yes');
+            $('#sms_username').val(res.data.sms_username || '');
+            $('#sms_sender_name').val(res.data.sms_sender_name || '');
+            // Never pre-fill password into the field for security; leave blank
+        }
+    }, 'json');
+}
+
+function saveSmsSettings() {
+    var data = {
+        sms_enabled:     $('#sms_enabled').is(':checked') ? 'yes' : 'no',
+        sms_username:    $('#sms_username').val(),
+        sms_sender_name: $('#sms_sender_name').val(),
+    };
+    var pw = $('#sms_password').val();
+    if (pw) data.sms_password = pw; // only send if the admin typed a new one
+
+    $.post('app/settings_controller.php?action=save_sms_settings', data, function (res) {
+        if (!res.error) {
+            toaster.success(res.msg);
+            $('#sms_password').val('');
         } else {
             swal("Error", res.msg, "error");
         }

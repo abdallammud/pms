@@ -170,14 +170,30 @@ function get_setting($type)
 
 
 $GLOBALS['MAIL'] = [
-    'host' => 'smtp.gmail.com',
-    'port' => 587,
+    'host'     => 'smtp.gmail.com',
+    'port'     => 587,
     'username' => 'random.my.gm@gmail.com',
-    'password' => 'esez afrv dnpe nukx', // ⚠️ Use App Password, not Gmail password
-    'secure' => 'tls',        // 'tls' or 'ssl'
-    'from' => 'random.my.gm@gmail.com',
+    'password' => 'esez afrv dnpe nukx',
+    'secure'   => 'tls',
+    'from'     => 'random.my.gm@gmail.com',
     'fromName' => 'SUPPORT CENTER',
-    'replyTo' => 'no-reply@yourdomain.com'
+    'replyTo'  => 'no-reply@yourdomain.com'
+];
+
+// SMS configuration — static defaults (provider: Hormuud via 1s2u API v2.0)
+// Only sms_username, sms_sender_name, and sms_password are dynamic (stored per-org in system_settings).
+// All other fields are system-wide constants.
+$GLOBALS['SMS'] = [
+    'userAllowance' => 10,
+    'msgAllowance'  => 'on',
+    'msgProvider'   => 'hormuud',
+    'sms_username'  => 'SOSTEC1',                    // overridden per org from system_settings
+    'sms_password'  => '0iLUAuy/emJYYyHytvOF8g==',  // overridden per org from system_settings
+    'sms_sid'       => 'SOSTEC',
+    'sms_signature' => 'SOSTEC',
+    'sender_name'   => 'SOSTEC TECHNOLOGIES',        // overridden per org from system_settings
+    'sms_subject'   => 'SMS Subject',
+    'api_url'       => 'https://api.1s2u.io/bulksms', // 1s2u.com API-V2.0
 ];
 function settingsArray()
 {
@@ -860,10 +876,16 @@ function generate_reference_number($module)
     $conn->begin_transaction();
 
     try {
+        $org_id = function_exists('resolve_request_org_id') ? (int) resolve_request_org_id() : 0;
+        if ($org_id <= 0 && function_exists('current_org_id')) {
+            $org_id = (int) current_org_id();
+        }
+
         // Lock the settings row for update to prevent race conditions
         $result = $conn->query("
             SELECT setting_value FROM system_settings
             WHERE setting_key = 'transaction_series'
+            AND org_id = $org_id
             FOR UPDATE
         ");
         $row = $result->fetch_assoc();
@@ -921,7 +943,7 @@ function generate_reference_number($module)
             // Update current number
             $series[$module]['current_number'] = $next_number;
             $updated_series = $conn->real_escape_string(json_encode($series));
-            $conn->query("UPDATE system_settings SET setting_value = '$updated_series' WHERE setting_key = 'transaction_series'");
+            $conn->query("UPDATE system_settings SET setting_value = '$updated_series' WHERE setting_key = 'transaction_series' AND org_id = $org_id");
 
             // Format number with leading zeros
             $formatted_number = str_pad($next_number, 5, '0', STR_PAD_LEFT);

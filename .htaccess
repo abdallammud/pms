@@ -11,23 +11,27 @@ RewriteRule ^dashboard/?$ index.php?menu=dashboard [NC,L]
 # Properties
 RewriteRule ^properties/?$ index.php?menu=properties&tab=all [NC,L]
 RewriteRule ^properties/add/?$ index.php?menu=properties&tab=add [NC,L]
+RewriteRule ^property/([0-9]+)/?$ index.php?menu=properties&action=property_show&id=$1 [NC,L,QSA]
 RewriteRule ^units/?$ index.php?menu=properties&tab=units [NC,L]
 
 # Tenants
 RewriteRule ^tenants/?$ index.php?menu=tenants&tab=directory [NC,L]
 RewriteRule ^tenants/add/?$ index.php?menu=tenants&tab=add [NC,L]
-RewriteRule ^leases/?$ index.php?menu=tenants&tab=leases [NC,L]
-RewriteRule ^add_lease/?$ index.php?menu=tenants&tab=add_lease [NC,L]
-RewriteRule ^edit_lease/([0-9]+)/?$ index.php?menu=tenants&tab=edit_lease&id=$1 [NC,L]
-RewriteRule ^view_lease/([0-9]+)/?$ index.php?menu=tenants&tab=view_lease&id=$1 [NC,L]
-
 RewriteRule ^guarantees/?$ index.php?menu=tenants&tab=guarantees [NC,L]
 
-# Accounting
+# Lease (standalone menu)
+RewriteRule ^leases/?$ index.php?menu=leases [NC,L]
+RewriteRule ^add_lease/?$ index.php?menu=leases&action=add_lease [NC,L]
+RewriteRule ^edit_lease/([0-9]+)/?$ index.php?menu=leases&action=edit_lease&id=$1 [NC,L,QSA]
+RewriteRule ^view_lease/([0-9]+)/?$ index.php?menu=leases&action=view_lease&id=$1 [NC,L,QSA]
+
+# Accounting / Finance
 RewriteRule ^accounting/?$ index.php?menu=accounting&tab=invoices [NC,L]
 RewriteRule ^invoices/?$ index.php?menu=accounting&tab=invoices [NC,L]
+RewriteRule ^invoice/([0-9]+)/?$ index.php?menu=accounting&action=invoice_show&id=$1 [NC,L,QSA]
 RewriteRule ^create_invoice/?$ index.php?menu=accounting&tab=create_invoice [NC,L]
 RewriteRule ^payments_received/?$ index.php?menu=accounting&tab=payments_received [NC,L]
+RewriteRule ^payment/([0-9]+)/?$ index.php?menu=accounting&action=payment_show&id=$1 [NC,L,QSA]
 RewriteRule ^expenses/?$ index.php?menu=accounting&tab=expenses [NC,L]
 RewriteRule ^bills/?$ index.php?menu=accounting&tab=bills [NC,L]
 RewriteRule ^payments_made/?$ index.php?menu=accounting&tab=payments_made [NC,L]
@@ -46,9 +50,15 @@ RewriteRule ^reports/tenant/?$ index.php?menu=reports&tab=tenant_report [NC,L]
 RewriteRule ^reports/outstanding/?$ index.php?menu=reports&tab=outstanding [NC,L]
 RewriteRule ^reports/income-expense/?$ index.php?menu=reports&tab=income_expense [NC,L]
 RewriteRule ^reports/maintenance-cost/?$ index.php?menu=reports&tab=maintenance_cost [NC,L]
+RewriteRule ^report_display/?$ index.php?menu=reports&action=report_display [NC,L,QSA]
+
+
 
 # Settings
 RewriteRule ^settings/?$ index.php?menu=settings&tab=system [NC,L]
 RewriteRule ^users/?$ index.php?menu=settings&tab=users [NC,L]
 RewriteRule ^system_settings/?$ index.php?menu=settings&tab=system [NC,L]
 RewriteRule ^property_types/?$ index.php?menu=settings&tab=property_types [NC,L]
+RewriteRule ^unit_types/?$     index.php?menu=settings&tab=unit_types    [NC,L]
+RewriteRule ^amenities/?$      index.php?menu=settings&tab=amenities     [NC,L]
+RewriteRule ^organizations/?$  index.php?menu=settings&tab=organizations [NC,L]

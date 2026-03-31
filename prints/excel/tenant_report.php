@@ -15,14 +15,7 @@ while (ob_get_level()) {
     ob_end_clean();
 }
 
-// Get logo path
-require_once('./app/db.php');
-$logoQuery = $conn->query("SELECT setting_value FROM system_settings WHERE setting_key = 'logo_path'");
-$logoRow = $logoQuery ? $logoQuery->fetch_assoc() : null;
-$logoPath = ($logoRow && !empty($logoRow['setting_value'])) ? $logoRow['setting_value'] : 'public/images/logo.png';
-$logoPath = realpath($logoPath);
-
-$logoPath = 'public/images/logo.jpg';
+require_once('./prints/excel/_branding.php'); // sets $logoPath and $brandColorHex
 
 $status = $_GET['tenant_status'] ?? 'all';
 $startDate = $_GET['startDate'] ?? date('Y-m-01');
@@ -50,9 +43,9 @@ if ($logoPath && file_exists($logoPath)) {
 
 $headerStyle = [
     'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 11],
-    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4E73DF']],
+    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $brandColorHex]],
     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
-    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '4E73DF']]]
+    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => $brandColorHex]]]
 ];
 
 $dataStyle = [
@@ -64,7 +57,7 @@ $dataStyle = [
 $sheet->mergeCells('C1:E1');
 $sheet->setCellValue('C1', 'Tenant Report');
 $sheet->getStyle('C1')->applyFromArray([
-    'font' => ['bold' => true, 'size' => 16, 'color' => ['rgb' => '4E73DF']],
+    'font' => ['bold' => true, 'size' => 16, 'color' => ['rgb' => $brandColorHex]],
     'alignment' => [
         'horizontal' => Alignment::HORIZONTAL_RIGHT,
         'vertical' => Alignment::VERTICAL_CENTER

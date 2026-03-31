@@ -40,7 +40,7 @@ class ReportController extends Model
             JOIN tenants t ON l.tenant_id = t.id
             JOIN properties p ON l.property_id = p.id
             JOIN units u ON l.unit_id = u.id
-            WHERE 1=1";
+            WHERE " . tenant_where_clause('pr');
         $params = [];
         $types = '';
         if (!empty($startDate) && !empty($endDate)) {
@@ -75,7 +75,7 @@ class ReportController extends Model
             FROM units u
             JOIN properties p ON u.property_id = p.id
             LEFT JOIN tenants t ON u.tenant_id = t.id
-            WHERE 1=1
+            WHERE " . tenant_where_clause('u') . "
         ";
 
         $params = [];
@@ -99,7 +99,7 @@ class ReportController extends Model
     {
         $status = $filters['tenant_status'] ?? 'all';
 
-        $sql = "SELECT full_name, phone, email, status, created_at FROM tenants WHERE 1=1";
+        $sql = "SELECT full_name, phone, email, status, created_at FROM tenants WHERE " . tenant_where_clause();
         $params = [];
         $types = '';
 
@@ -139,6 +139,7 @@ class ReportController extends Model
             JOIN properties p ON l.property_id = p.id
             JOIN units u ON l.unit_id = u.id
             WHERE i.status != 'paid'
+            AND " . tenant_where_clause('i') . "
             AND i.invoice_date BETWEEN ? AND ?
         ";
 
@@ -178,7 +179,8 @@ class ReportController extends Model
             JOIN leases l ON i.lease_id = l.id
             JOIN tenants t ON l.tenant_id = t.id
             JOIN properties p ON l.property_id = p.id
-            WHERE pr.received_date BETWEEN ? AND ?
+            WHERE " . tenant_where_clause('pr') . "
+            AND pr.received_date BETWEEN ? AND ?
             " . (!empty($propertyId) ? " AND p.id = ?" : "") . ")
             
             UNION ALL
@@ -191,7 +193,8 @@ class ReportController extends Model
                 p.name AS property_name
             FROM expenses e
             JOIN properties p ON e.property_id = p.id
-            WHERE e.expense_date BETWEEN ? AND ?
+            WHERE " . tenant_where_clause('e') . "
+            AND e.expense_date BETWEEN ? AND ?
             " . (!empty($propertyId) ? " AND p.id = ?" : "") . ")
             
             ORDER BY trans_date ASC
@@ -242,7 +245,8 @@ class ReportController extends Model
             FROM maintenance_requests mr
             JOIN properties p ON mr.property_id = p.id
             LEFT JOIN units u ON mr.unit_id = u.id
-            WHERE mr.created_at BETWEEN ? AND ?
+            WHERE " . tenant_where_clause('mr') . "
+            AND mr.created_at BETWEEN ? AND ?
         ";
 
         $params = [$startDate . ' 00:00:00', $endDate . ' 23:59:59'];
@@ -278,7 +282,8 @@ class ReportController extends Model
                 p.name AS property_name
             FROM expenses e
             JOIN properties p ON e.property_id = p.id
-            WHERE (e.category LIKE '%maintenance%' OR e.category LIKE '%repair%')
+            WHERE " . tenant_where_clause('e') . "
+            AND (e.category LIKE '%maintenance%' OR e.category LIKE '%repair%')
             AND e.expense_date BETWEEN ? AND ?
         ";
 

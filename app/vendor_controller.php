@@ -26,7 +26,7 @@ function get_vendors()
     $search_value = $_POST['search']['value'] ?? '';
 
     // Base query
-    $sql = "SELECT * FROM vendors WHERE 1=1";
+    $sql = "SELECT * FROM vendors WHERE " . tenant_where_clause();
 
     // Search
     if (!empty($search_value)) {
@@ -38,7 +38,7 @@ function get_vendors()
     }
 
     // Total records
-    $total_records_res = $conn->query("SELECT COUNT(*) as count FROM vendors");
+    $total_records_res = $conn->query("SELECT COUNT(*) as count FROM vendors WHERE " . tenant_where_clause());
     $total_records = ($total_records_res) ? $total_records_res->fetch_assoc()['count'] : 0;
 
     // Total filtered records
@@ -92,6 +92,7 @@ function save_vendor()
     $service_type = trim($_POST['service_type'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
     $email = trim($_POST['email'] ?? '');
+    $org_id = resolve_request_org_id();
 
     if (empty($vendor_name) || empty($phone)) {
         ob_clean();
@@ -102,8 +103,8 @@ function save_vendor()
 
     if (empty($id)) {
         // Insert
-        $stmt = $conn->prepare("INSERT INTO vendors (vendor_name, service_type, phone, email) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssss", $vendor_name, $service_type, $phone, $email);
+        $stmt = $conn->prepare("INSERT INTO vendors (org_id, vendor_name, service_type, phone, email) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("issss", $org_id, $vendor_name, $service_type, $phone, $email);
 
         if ($stmt->execute()) {
             ob_clean();
@@ -116,7 +117,7 @@ function save_vendor()
         }
     } else {
         // Update
-        $stmt = $conn->prepare("UPDATE vendors SET vendor_name=?, service_type=?, phone=?, email=? WHERE id=?");
+        $stmt = $conn->prepare("UPDATE vendors SET vendor_name=?, service_type=?, phone=?, email=? WHERE id=? AND " . tenant_where_clause());
         $stmt->bind_param("ssssi", $vendor_name, $service_type, $phone, $email, $id);
 
         if ($stmt->execute()) {
@@ -144,7 +145,7 @@ function delete_vendor()
     }
 
     // Check if vendor has assignments
-    $check = $conn->query("SELECT id FROM maintenance_assignments WHERE vendor_id = $id LIMIT 1");
+    $check = $conn->query("SELECT id FROM maintenance_assignments WHERE vendor_id = $id AND " . tenant_where_clause() . " LIMIT 1");
     if ($check && $check->num_rows > 0) {
         ob_clean();
         header('Content-Type: application/json');
@@ -152,7 +153,7 @@ function delete_vendor()
         exit;
     }
 
-    $stmt = $conn->prepare("DELETE FROM vendors WHERE id = ?");
+    $stmt = $conn->prepare("DELETE FROM vendors WHERE id = ? AND " . tenant_where_clause());
     $stmt->bind_param("i", $id);
 
     if ($stmt->execute()) {
@@ -178,7 +179,7 @@ function get_vendor()
         exit;
     }
 
-    $stmt = $conn->prepare("SELECT * FROM vendors WHERE id = ?");
+    $stmt = $conn->prepare("SELECT * FROM vendors WHERE id = ? AND " . tenant_where_clause());
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $result = $stmt->get_result()->fetch_assoc();

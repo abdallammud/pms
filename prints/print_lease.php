@@ -43,17 +43,21 @@ $startDate = date('F d, Y', strtotime($lease['start_date']));
 $endDate = date('F d, Y', strtotime($lease['end_date']));
 $printedDate = date('F d, Y'); 
 
-// Org Info
-$orgName = ''; $orgAddress = ''; $orgPhone = ''; $logoPath = "./public/images/logo.jpg";
-$result = $conn->query("SELECT setting_key, setting_value FROM system_settings");
+// Org Info — scoped to the lease's org
+$orgName = ''; $orgAddress = ''; $orgPhone = '';
+$logoPath = './public/images/logo.png'; // default fallback
+$result = $conn->query("SELECT setting_key, setting_value FROM system_settings WHERE org_id = " . intval($lease['org_id'] ?? 0));
 while ($row = $result->fetch_assoc()) {
-    if ($row['setting_key'] == 'org_name') $orgName = $row['setting_value'];
-    if ($row['setting_key'] == 'org_street1') $orgAddress = $row['setting_value'];
-    if ($row['setting_key'] == 'org_city') $orgAddress .= ', ' . $row['setting_value'];
-    if ($row['setting_key'] == 'org_phone') $orgPhone = $row['setting_value'];
-    if ($row['setting_key'] == 'logo_path' && !empty($row['setting_value'])) $logoPath = $row['setting_value'];
+    if ($row['setting_key'] == 'org_name')    $orgName    = $row['setting_value'];
+    if ($row['setting_key'] == 'org_street1') $orgAddress  = $row['setting_value'];
+    if ($row['setting_key'] == 'org_city')    $orgAddress .= ', ' . $row['setting_value'];
+    if ($row['setting_key'] == 'org_phone')   $orgPhone    = $row['setting_value'];
+    if ($row['setting_key'] == 'doc_logo_path' && !empty($row['setting_value']))
+        $logoPath = './' . ltrim($row['setting_value'], './');
+    // Fall back to system logo if no document logo set
+    if ($row['setting_key'] == 'logo_path' && !empty($row['setting_value']) && $logoPath === './public/images/logo.png')
+        $logoPath = './' . ltrim($row['setting_value'], './');
 }
-$logoPath = "./public/images/logo.jpg";
 // Init PDF
 // Clean any existing output buffer to prevent "Some data has already been output" errors
 if (ob_get_length()) ob_end_clean();

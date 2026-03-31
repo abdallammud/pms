@@ -217,6 +217,16 @@
         </div>
         <div class="settings-nav-group">
             <div class="settings-nav-group-title">
+                <i class="bi bi-chat-text"></i> Communication
+            </div>
+            <ul class="settings-nav">
+                <li class="settings-nav-item">
+                    <a href="#" class="settings-nav-link" data-section="section-sms">SMS / Messaging</a>
+                </li>
+            </ul>
+        </div>
+        <div class="settings-nav-group">
+            <div class="settings-nav-group-title">
                 <i class="bi bi-file-earmark-text"></i> Templates
             </div>
             <ul class="settings-nav">
@@ -285,32 +295,72 @@
         <!-- Branding Section -->
         <div id="section-branding" class="settings-section d-none">
             <h2 class="settings-section-title">Branding</h2>
-            <p class="settings-section-desc">Upload your organization logo for invoices and reports.</p>
+            <p class="settings-section-desc">Manage your logos and brand color. Changes apply immediately across all documents and the interface.</p>
 
-            <div class="settings-card">
+            <!-- Brand Color -->
+            <div class="settings-card mb-4">
+                <h5 class="settings-card-title"><i class="bi bi-palette me-2 text-primary"></i>Brand Color</h5>
                 <div class="row align-items-center">
-                    <div class="col-md-5">
-                        <div class="logo-upload-area" onclick="document.getElementById('logoFile').click()">
-                            <img id="logoPreview" src="" alt="Logo Preview" class="logo-preview d-none">
-                            <div id="logoPlaceholder" class="logo-placeholder">
+                    <div class="col-auto">
+                        <input type="color" id="brand_primary_color" class="form-control form-control-color"
+                               style="width:60px;height:44px;" title="Pick brand color">
+                    </div>
+                    <div class="col">
+                        <label class="fw-bold d-block mb-0">Primary Color</label>
+                        <small class="text-muted">Used in the sidebar, buttons, and all printed documents.</small>
+                    </div>
+                    <div class="col-auto">
+                        <button type="button" class="btn btn-primary" onclick="saveBrandColor()">
+                            <i class="bi bi-save me-1"></i> Save Color
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Two Logo Zones -->
+            <div class="row g-4">
+                <!-- System Logo -->
+                <div class="col-md-6">
+                    <div class="settings-card h-100">
+                        <h5 class="settings-card-title"><i class="bi bi-display me-2 text-primary"></i>System Logo</h5>
+                        <p class="small text-muted mb-3">Used in the navigation sidebar and header. A white or transparent version is recommended.</p>
+                        <div class="logo-upload-area" onclick="document.getElementById('sysLogoFile').click()">
+                            <img id="sysLogoPreview" src="" alt="System Logo" class="logo-preview d-none">
+                            <div id="sysLogoPlaceholder" class="logo-placeholder">
                                 <i class="bi bi-cloud-upload"></i>
-                                <p class="mb-1">Click to upload logo</p>
-                                <small class="text-muted">Recommended: 240×240px</small>
+                                <p class="mb-1">Click to upload</p>
+                                <small class="text-muted">Recommended: 240×80px, PNG</small>
                             </div>
-                            <input type="file" id="logoFile" accept=".jpg,.jpeg,.png,.gif,.bmp" class="d-none"
-                                onchange="previewLogo(this)">
+                            <input type="file" id="sysLogoFile" accept=".jpg,.jpeg,.png,.gif,.bmp" class="d-none"
+                                onchange="previewLogoZone(this,'sysLogoPreview','sysLogoPlaceholder')">
+                        </div>
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-primary w-100" onclick="uploadLogoZone('system','sysLogoFile')">
+                                <i class="bi bi-upload me-2"></i> Upload System Logo
+                            </button>
                         </div>
                     </div>
-                    <div class="col-md-7 ps-md-4">
-                        <h6>Logo Guidelines</h6>
-                        <ul class="small text-muted mb-4">
-                            <li>Supported formats: JPG, PNG, GIF, BMP</li>
-                            <li>Maximum file size: 1MB</li>
-                            <li>Transparent background (PNG) is recommended for best results on invoices</li>
-                        </ul>
-                        <button type="button" class="btn btn-primary" onclick="uploadLogo()">
-                            <i class="bi bi-upload me-2"></i> Upload Logo
-                        </button>
+                </div>
+                <!-- Document Logo -->
+                <div class="col-md-6">
+                    <div class="settings-card h-100">
+                        <h5 class="settings-card-title"><i class="bi bi-file-earmark-image me-2 text-primary"></i>Document Logo</h5>
+                        <p class="small text-muted mb-3">Used on invoices, reports, and lease documents. Full-colour version recommended.</p>
+                        <div class="logo-upload-area" onclick="document.getElementById('docLogoFile').click()">
+                            <img id="docLogoPreview" src="" alt="Document Logo" class="logo-preview d-none">
+                            <div id="docLogoPlaceholder" class="logo-placeholder">
+                                <i class="bi bi-cloud-upload"></i>
+                                <p class="mb-1">Click to upload</p>
+                                <small class="text-muted">Recommended: 400×150px, PNG</small>
+                            </div>
+                            <input type="file" id="docLogoFile" accept=".jpg,.jpeg,.png,.gif,.bmp" class="d-none"
+                                onchange="previewLogoZone(this,'docLogoPreview','docLogoPlaceholder')">
+                        </div>
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-primary w-100" onclick="uploadLogoZone('document','docLogoFile')">
+                                <i class="bi bi-upload me-2"></i> Upload Document Logo
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -491,6 +541,52 @@
 
                     <button type="button" class="btn btn-primary px-4" onclick="saveAutoInvoiceSettings()">
                         <i class="bi bi-save me-2"></i> Save Automation Settings
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- SMS / Communication Settings Section -->
+        <div id="section-sms" class="settings-section d-none">
+            <h2 class="settings-section-title">SMS / Communication</h2>
+            <p class="settings-section-desc">Configure the SMS provider credentials used to send messages to tenants.</p>
+
+            <div class="settings-card">
+                <div class="alert alert-info border-0 d-flex align-items-start mb-4">
+                    <i class="bi bi-info-circle-fill fs-5 me-3 mt-1 flex-shrink-0"></i>
+                    <div class="small">
+                        <strong>Provider:</strong> Hormuud via <a href="https://1s2u.com/sms/API-V2.0.pdf" target="_blank">1s2u API v2.0</a>.
+                        Only your <strong>username</strong>, <strong>sender name</strong>, and <strong>password</strong> need to be set here — all other API parameters are system defaults.
+                    </div>
+                </div>
+
+                <form id="smsSettingsForm">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="sms_enabled" name="sms_enabled">
+                                <label class="form-check-label fw-bold" for="sms_enabled">Enable SMS Sending</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">API Username <span class="text-danger">*</span></label>
+                            <input type="text" id="sms_username" class="form-control" placeholder="e.g. SOSTEC1">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Sender Name / ID <span class="text-danger">*</span></label>
+                            <input type="text" id="sms_sender_name" class="form-control" placeholder="e.g. SOSTEC TECHNOLOGIES">
+                            <div class="form-text small">Name shown on recipient's phone.</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">API Password</label>
+                            <input type="password" id="sms_password" class="form-control" placeholder="Leave blank to keep existing">
+                            <div class="form-text small">Leave blank to keep the current password.</div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary px-4" onclick="saveSmsSettings()">
+                        <i class="bi bi-save me-2"></i> Save SMS Settings
                     </button>
                 </form>
             </div>

@@ -28,6 +28,8 @@ if (isset($_GET['action'])) {
         get_role_permissions();
     } elseif ($action == 'get_managers') {
         get_managers();
+    } elseif ($action == 'get_roles_list') {
+        get_roles_list();
     }
 }
 
@@ -44,6 +46,7 @@ function save_user()
     $role_id = $_POST['role_id'] ?? '';
     $status = $_POST['status'] ?? 'active';
     $current_user_id = $_SESSION['user_id'];
+    $org_id = resolve_request_org_id();
 
     if (empty($name) || empty($username) || empty($email) || empty($role_id)) {
         echo json_encode(['error' => true, 'msg' => 'Please fill in all required fields.']);
@@ -58,8 +61,8 @@ function save_user()
         }
 
         // Check if username already exists
-        $check = $conn->prepare("SELECT id FROM users WHERE username = ?");
-        $check->bind_param("s", $username);
+        $check = $conn->prepare("SELECT id FROM users WHERE username = ? AND org_id = ?");
+        $check->bind_param("si", $username, $org_id);
         $check->execute();
         if ($check->get_result()->num_rows > 0) {
             echo json_encode(['error' => true, 'msg' => 'Username already exists.']);
@@ -68,8 +71,8 @@ function save_user()
 
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-        $stmt = $conn->prepare("INSERT INTO users (name, username, email, password, status, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssssii", $name, $username, $email, $hashed_password, $status, $current_user_id, $current_user_id);
+        $stmt = $conn->prepare("INSERT INTO users (org_id, name, username, email, password, status, is_super_admin, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)");
+        $stmt->bind_param("isssssii", $org_id, $name, $username, $email, $hashed_password, $status, $current_user_id, $current_user_id);
 
         if ($stmt->execute()) {
             $new_user_id = $stmt->insert_id;
@@ -85,8 +88,8 @@ function save_user()
     } else {
         // Update
         // Check if username already exists for other users
-        $check = $conn->prepare("SELECT id FROM users WHERE username = ? AND id != ?");
-        $check->bind_param("si", $username, $id);
+        $check = $conn->prepare("SELECT id FROM users WHERE username = ? AND id != ? AND org_id = ?");
+        $check->bind_param("sii", $username, $id, $org_id);
         $check->execute();
         if ($check->get_result()->num_rows > 0) {
             echo json_encode(['error' => true, 'msg' => 'Username already exists.']);
@@ -103,16 +106,17 @@ function save_user()
             $types .= "s";
         }
 
-        $sql .= " WHERE id=?";
+        $sql .= " WHERE id=? AND org_id=?";
         $params[] = $id;
-        $types .= "i";
+        $params[] = $org_id;
+        $types .= "ii";
 
         $stmt = $conn->prepare($sql);
         $stmt->bind_param($types, ...$params);
 
         if ($stmt->execute()) {
             // Update Role
-            $conn->query("DELETE FROM user_roles WHERE user_id = $id");
+            $conn->query("DELETE ur FROM user_roles ur INNER JOIN users u ON ur.user_id = u.id WHERE ur.user_id = $id AND u.org_id = $org_id");
             $stmt_role = $conn->prepare("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)");
             $stmt_role->bind_param("ii", $id, $role_id);
             $stmt_role->execute();
@@ -140,7 +144,7 @@ function get_users()
             FROM users u 
             LEFT JOIN user_roles ur ON u.id = ur.user_id 
             LEFT JOIN roles r ON ur.role_id = r.id 
-            WHERE 1=1";
+            WHERE " . tenant_where_clause('u');
 
     // Search
     if (!empty($search_value)) {
@@ -148,7 +152,7 @@ function get_users()
     }
 
     // Total records (before filtering)
-    $total_records_query = $conn->query("SELECT COUNT(*) as count FROM users");
+    $total_records_query = $conn->query("SELECT COUNT(*) as count FROM users u WHERE " . tenant_where_clause('u'));
     $total_records = $total_records_query->fetch_assoc()['count'];
 
     // Total filtered records
@@ -189,7 +193,7 @@ function get_user()
     global $conn;
     $id = $_GET['id'];
 
-    $stmt = $conn->prepare("SELECT u.*, ur.role_id FROM users u LEFT JOIN user_roles ur ON u.id = ur.user_id WHERE u.id = ?");
+    $stmt = $conn->prepare("SELECT u.*, ur.role_id FROM users u LEFT JOIN user_roles ur ON u.id = ur.user_id WHERE u.id = ? AND " . tenant_where_clause('u'));
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $result = $stmt->get_result()->fetch_assoc();
@@ -209,7 +213,7 @@ function delete_user()
         exit;
     }
 
-    $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
+    $stmt = $conn->prepare("DELETE FROM users WHERE id = ? AND " . tenant_where_clause());
     $stmt->bind_param("i", $id);
 
     if ($stmt->execute()) {
@@ -228,7 +232,8 @@ function save_role()
     $id = isset($_POST['role_id']) && is_numeric($_POST['role_id']) ? (int) $_POST['role_id'] : 0;
     $role_name = trim($_POST['role_name'] ?? '');
     $description = $_POST['description'] ?? '';
-    $permissions = $_POST['permissions'] ?? []; // Array of permission IDs
+    $permissions = $_POST['permissions'] ?? [];
+    $org_id = resolve_request_org_id();
 
     if (empty($role_name)) {
         echo json_encode(['error' => true, 'msg' => 'Role Name is required.']);
@@ -236,23 +241,21 @@ function save_role()
     }
 
     if ($id === 0) {
-        // Insert
-        // Check if role name exists
-        $check = $conn->prepare("SELECT id FROM roles WHERE role_name = ?");
-        $check->bind_param("s", $role_name);
+        // Check if role name already exists within this org
+        $check = $conn->prepare("SELECT id FROM roles WHERE role_name = ? AND org_id = ?");
+        $check->bind_param("si", $role_name, $org_id);
         $check->execute();
         if ($check->get_result()->num_rows > 0) {
-            echo json_encode(['error' => true, 'msg' => 'Role Name already exists.']);
+            echo json_encode(['error' => true, 'msg' => 'A role with this name already exists for your organization.']);
             exit;
         }
 
-        $stmt = $conn->prepare("INSERT INTO roles (role_name, description) VALUES (?, ?)");
-        $stmt->bind_param("ss", $role_name, $description);
+        $stmt = $conn->prepare("INSERT INTO roles (org_id, role_name, description) VALUES (?, ?, ?)");
+        $stmt->bind_param("iss", $org_id, $role_name, $description);
 
         if ($stmt->execute()) {
             $new_role_id = $stmt->insert_id;
 
-            // Insert Permissions
             if (!empty($permissions)) {
                 $stmt_perm = $conn->prepare("INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)");
                 foreach ($permissions as $perm_id) {
@@ -266,21 +269,28 @@ function save_role()
             echo json_encode(['error' => true, 'msg' => 'Error adding role: ' . $conn->error]);
         }
     } else {
-        // Update
-        // Check if role name exists for other roles
-        $check = $conn->prepare("SELECT id FROM roles WHERE role_name = ? AND id != ?");
-        $check->bind_param("si", $role_name, $id);
-        $check->execute();
-        if ($check->get_result()->num_rows > 0) {
-            echo json_encode(['error' => true, 'msg' => 'Role Name already exists.']);
+        // Verify the role belongs to this org before editing
+        $owns = $conn->prepare("SELECT id FROM roles WHERE id = ? AND org_id = ?");
+        $owns->bind_param("ii", $id, $org_id);
+        $owns->execute();
+        if ($owns->get_result()->num_rows === 0) {
+            echo json_encode(['error' => true, 'msg' => 'Role not found or access denied.']);
             exit;
         }
 
-        $stmt = $conn->prepare("UPDATE roles SET role_name=?, description=? WHERE id=?");
-        $stmt->bind_param("ssi", $role_name, $description, $id);
+        // Check duplicate name within same org (excluding self)
+        $check = $conn->prepare("SELECT id FROM roles WHERE role_name = ? AND org_id = ? AND id != ?");
+        $check->bind_param("sii", $role_name, $org_id, $id);
+        $check->execute();
+        if ($check->get_result()->num_rows > 0) {
+            echo json_encode(['error' => true, 'msg' => 'A role with this name already exists for your organization.']);
+            exit;
+        }
+
+        $stmt = $conn->prepare("UPDATE roles SET role_name=?, description=? WHERE id=? AND org_id=?");
+        $stmt->bind_param("ssii", $role_name, $description, $id, $org_id);
 
         if ($stmt->execute()) {
-            // Update Permissions: Delete all and re-insert
             $conn->query("DELETE FROM role_permissions WHERE role_id = $id");
 
             if (!empty($permissions)) {
@@ -303,51 +313,45 @@ function get_roles()
     header('Content-Type: application/json');
     global $conn;
 
-    // Server-side processing for DataTables
-    $draw = $_POST['draw'] ?? 1;
-    $start = $_POST['start'] ?? 0;
+    $draw   = $_POST['draw'] ?? 1;
+    $start  = $_POST['start'] ?? 0;
     $length = $_POST['length'] ?? 10;
     $search_value = $_POST['search']['value'] ?? '';
 
-    // Base query
-    $sql = "SELECT * FROM roles WHERE 1=1";
+    $sql = "SELECT * FROM roles WHERE " . tenant_where_clause();
 
-    // Search
     if (!empty($search_value)) {
+        $search_value = $conn->real_escape_string($search_value);
         $sql .= " AND (role_name LIKE '%$search_value%' OR description LIKE '%$search_value%')";
     }
 
-    // Total records (before filtering)
-    $total_records_query = $conn->query("SELECT COUNT(*) as count FROM roles");
-    $total_records = $total_records_query->fetch_assoc()['count'];
+    $total_records = $conn->query("SELECT COUNT(*) as count FROM roles WHERE " . tenant_where_clause())->fetch_assoc()['count'];
 
-    // Total filtered records
-    $filtered_records_query = $conn->query(str_replace("SELECT *", "SELECT COUNT(*) as count", $sql));
-    $filtered_records = $filtered_records_query->fetch_assoc()['count'];
+    $filtered_sql = preg_replace('/SELECT\b.*?\bFROM/is', 'SELECT COUNT(*) as count FROM', $sql, 1);
+    $filtered_records = $conn->query($filtered_sql)->fetch_assoc()['count'];
 
-    // Pagination
-    $sql .= " LIMIT $start, $length";
+    $sql .= " ORDER BY role_name ASC LIMIT $start, $length";
 
     $result = $conn->query($sql);
     $data = [];
 
     while ($row = $result->fetch_assoc()) {
-        $actionBtn = '<button class="btn btn-sm btn-info me-1" onclick="viewPermissions(' . $row['id'] . ')" title="View Permissions"><i class="bi bi-eye"></i></button>';
+        $actionBtn  = '<button class="btn btn-sm btn-info me-1" onclick="viewPermissions(' . $row['id'] . ')" title="View Permissions"><i class="bi bi-eye"></i></button>';
         $actionBtn .= '<button class="btn btn-sm btn-primary me-1" onclick="editRole(' . $row['id'] . ')"><i class="bi bi-pencil"></i></button>';
         $actionBtn .= '<button class="btn btn-sm btn-danger" onclick="deleteRole(' . $row['id'] . ')"><i class="bi bi-trash"></i></button>';
 
         $data[] = [
-            'role_name' => $row['role_name'],
+            'role_name'   => $row['role_name'],
             'description' => $row['description'],
-            'actions' => $actionBtn
+            'actions'     => $actionBtn,
         ];
     }
 
     echo json_encode([
-        "draw" => intval($draw),
-        "recordsTotal" => intval($total_records),
-        "recordsFiltered" => intval($filtered_records),
-        "data" => $data
+        'draw'            => intval($draw),
+        'recordsTotal'    => intval($total_records),
+        'recordsFiltered' => intval($filtered_records),
+        'data'            => $data,
     ]);
 }
 
@@ -355,13 +359,19 @@ function get_role()
 {
     header('Content-Type: application/json');
     global $conn;
-    $id = $_GET['id'];
+    $id     = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+    $org_id = resolve_request_org_id();
 
-    // Get Role Details
-    $stmt = $conn->prepare("SELECT * FROM roles WHERE id = ?");
-    $stmt->bind_param("i", $id);
+    // Get Role Details — must belong to current org
+    $stmt = $conn->prepare("SELECT * FROM roles WHERE id = ? AND org_id = ?");
+    $stmt->bind_param("ii", $id, $org_id);
     $stmt->execute();
     $role = $stmt->get_result()->fetch_assoc();
+
+    if (!$role) {
+        echo json_encode(['error' => true, 'msg' => 'Role not found or access denied.']);
+        exit;
+    }
 
     // Get Role Permissions
     $stmt_perms = $conn->prepare("SELECT permission_id FROM role_permissions WHERE role_id = ?");
@@ -382,18 +392,35 @@ function delete_role()
 {
     header('Content-Type: application/json');
     global $conn;
-    $id = $_POST['id'];
+    $id     = isset($_POST['id']) ? (int) $_POST['id'] : 0;
+    $org_id = resolve_request_org_id();
 
-    // Prevent deleting Admin role (assuming ID 1 or name Admin)
-    // Let's check name
-    $check = $conn->query("SELECT role_name FROM roles WHERE id = $id")->fetch_assoc();
-    if ($check && $check['role_name'] == 'Admin') {
-        echo json_encode(['error' => true, 'msg' => 'Cannot delete Admin role.']);
+    // Verify ownership — role must belong to the current org
+    $check = $conn->prepare("SELECT role_name FROM roles WHERE id = ? AND org_id = ?");
+    $check->bind_param("ii", $id, $org_id);
+    $check->execute();
+    $role = $check->get_result()->fetch_assoc();
+
+    if (!$role) {
+        echo json_encode(['error' => true, 'msg' => 'Role not found or access denied.']);
         exit;
     }
 
-    $stmt = $conn->prepare("DELETE FROM roles WHERE id = ?");
-    $stmt->bind_param("i", $id);
+    // Prevent deleting the built-in Admin role
+    if (strtolower($role['role_name']) === 'admin') {
+        echo json_encode(['error' => true, 'msg' => 'Cannot delete the Admin role.']);
+        exit;
+    }
+
+    // Check if any users are currently assigned this role
+    $in_use = $conn->query("SELECT COUNT(*) as c FROM user_roles WHERE role_id = $id")->fetch_assoc()['c'];
+    if ($in_use > 0) {
+        echo json_encode(['error' => true, 'msg' => "Cannot delete. $in_use user(s) are assigned this role."]);
+        exit;
+    }
+
+    $stmt = $conn->prepare("DELETE FROM roles WHERE id = ? AND org_id = ?");
+    $stmt->bind_param("ii", $id, $org_id);
 
     if ($stmt->execute()) {
         echo json_encode(['error' => false, 'msg' => 'Role deleted successfully.']);
@@ -420,14 +447,16 @@ function get_role_permissions()
 {
     header('Content-Type: application/json');
     global $conn;
-    $id = $_GET['id'];
+    $id     = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+    $org_id = resolve_request_org_id();
 
+    // Ensure the role belongs to this org
     $stmt = $conn->prepare("SELECT r.role_name, p.permission_name, p.description 
                            FROM role_permissions rp 
                            JOIN permissions p ON rp.permission_id = p.id 
                            JOIN roles r ON rp.role_id = r.id
-                           WHERE rp.role_id = ?");
-    $stmt->bind_param("i", $id);
+                           WHERE rp.role_id = ? AND r.org_id = ?");
+    $stmt->bind_param("ii", $id, $org_id);
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -443,6 +472,23 @@ function get_role_permissions()
 }
 
 /**
+ * Get roles list for user-assignment dropdown — org-scoped
+ */
+function get_roles_list()
+{
+    header('Content-Type: application/json');
+    global $conn;
+
+    $result = $conn->query("SELECT id, role_name FROM roles WHERE " . tenant_where_clause() . " ORDER BY role_name ASC");
+    $roles = [];
+    while ($row = $result->fetch_assoc()) {
+        $roles[] = $row;
+    }
+
+    echo json_encode($roles);
+}
+
+/**
  * Get all active users for manager dropdown
  */
 function get_managers()
@@ -450,7 +496,7 @@ function get_managers()
     header('Content-Type: application/json');
     global $conn;
 
-    $result = $conn->query("SELECT id, name FROM users WHERE status = 'active' ORDER BY name");
+    $result = $conn->query("SELECT id, name FROM users WHERE status = 'active' AND " . tenant_where_clause() . " ORDER BY name");
     $managers = [];
 
     while ($row = $result->fetch_assoc()) {

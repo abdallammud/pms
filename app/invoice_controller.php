@@ -33,6 +33,12 @@ if (isset($_GET['action'])) {
         case 'check_duplicate_rent':
             check_duplicate_rent();
             break;
+        case 'get_invoice_show':
+            get_invoice_show();
+            break;
+        case 'get_invoice_items':
+            get_invoice_items();
+            break;
     }
 }
 
@@ -61,7 +67,7 @@ function get_invoices()
             LEFT JOIN tenants t ON l.tenant_id = t.id 
             LEFT JOIN units u ON l.unit_id = u.id 
             LEFT JOIN charge_types ct ON i.charge_type_id = ct.id
-            WHERE 1=1";
+            WHERE " . tenant_where_clause('i');
 
     // Type filter
     if (!empty($type_filter)) {
@@ -80,7 +86,7 @@ function get_invoices()
     }
 
     // Total records
-    $total_records_res = $conn->query("SELECT COUNT(*) as count FROM invoices");
+    $total_records_res = $conn->query("SELECT COUNT(*) as count FROM invoices i WHERE " . tenant_where_clause('i'));
     $total_records = ($total_records_res) ? $total_records_res->fetch_assoc()['count'] : 0;
 
     // Total filtered records
@@ -126,7 +132,7 @@ function get_invoices()
             : ($row['charge_type_name'] ?? '<span class="text-muted">N/A</span>');
 
         // Action buttons
-        $actionBtn = '';
+        $actionBtn = '<button class="btn btn-sm btn-outline-primary me-1" onclick="viewInvoice(' . $row['id'] . ')" title="View"><i class="bi bi-eye"></i></button>';
         if ($row['status'] != 'paid') {
             $actionBtn .= '<button class="btn btn-sm btn-danger" onclick="deleteInvoice(' . $row['id'] . ')" title="Delete"><i class="bi bi-trash"></i></button>';
         }
@@ -173,13 +179,37 @@ function save_invoice()
     $invoice_type = $_POST['invoice_type'] ?? 'rent';
     $charge_type_id = $_POST['charge_type_id'] ?? null;
     $lease_ids = $_POST['lease_id'] ?? [];
-    $amount = floatval($_POST['amount'] ?? 0);
     $due_date = $_POST['due_date'] ?? '';
     $invoice_date = $_POST['invoice_date'] ?? '';
     $billing_month = intval($_POST['billing_month'] ?? date('m'));
     $billing_year = intval($_POST['billing_year'] ?? date('Y'));
     $notes = $_POST['notes'] ?? '';
     $status = $_POST['status'] ?? 'unpaid';
+    $org_id = resolve_request_org_id();
+
+    // Parse line items
+    $items_desc = $_POST['item_description'] ?? [];
+    $items_qty = $_POST['item_qty'] ?? [];
+    $items_unit_price = $_POST['item_unit_price'] ?? [];
+    $items_tax_rate = $_POST['item_tax_rate'] ?? [];
+    $has_items = !empty($items_desc) && is_array($items_desc);
+
+    // Compute totals from items if provided; otherwise use legacy amount field
+    $amount = 0;
+    if ($has_items) {
+        foreach ($items_desc as $i => $desc) {
+            if (trim($desc) === '')
+                continue;
+            $qty = floatval($items_qty[$i] ?? 1);
+            $uprc = floatval($items_unit_price[$i] ?? 0);
+            $taxr = floatval($items_tax_rate[$i] ?? 0);
+            $ltax = round($qty * $uprc * ($taxr / 100), 2);
+            $ltot = round($qty * $uprc + $ltax, 2);
+            $amount += $ltot;
+        }
+    } else {
+        $amount = floatval($_POST['amount'] ?? 0);
+    }
 
     // Normalize lease_ids to array
     if (!is_array($lease_ids)) {
@@ -247,7 +277,7 @@ function save_invoice()
             }
 
             // Verify lease exists and is active
-            $lease_check = $conn->query("SELECT id, status FROM leases WHERE id = $lease_id");
+            $lease_check = $conn->query("SELECT id, status FROM leases WHERE id = $lease_id AND " . tenant_where_clause());
             $lease_data = $lease_check->fetch_assoc();
 
             if (!$lease_data) {
@@ -268,16 +298,18 @@ function save_invoice()
 
             // Insert invoice
             $sql = "INSERT INTO invoices (
-                        invoice_type, charge_type_id, lease_id, reference_number,
+                        org_id, invoice_type, charge_type_id, lease_id, reference_number,
                         amount, invoice_date, due_date, billing_month, billing_year, 
                         notes, status
                     ) VALUES (
-                        '$invoice_type', " . ($charge_type_id ? $charge_type_id : 'NULL') . ", 
+                        $org_id, '$invoice_type', " . ($charge_type_id ? $charge_type_id : 'NULL') . ", 
                         $lease_id, '$reference_number', $amount, '$invoice_date', 
                         '$due_date', $billing_month, $billing_year, '$notes', '$status'
                     )";
 
             if ($conn->query($sql)) {
+                $new_invoice_id = $conn->insert_id;
+                save_invoice_items($conn, $new_invoice_id, $org_id, $items_desc, $items_qty, $items_unit_price, $items_tax_rate, $has_items, $amount);
                 $success_count++;
             } else {
                 $error_count++;
@@ -325,7 +357,7 @@ function save_invoice()
         }
 
         // Get current invoice data to check type
-        $current = $conn->query("SELECT invoice_type FROM invoices WHERE id = $id")->fetch_assoc();
+        $current = $conn->query("SELECT invoice_type FROM invoices WHERE id = $id AND " . tenant_where_clause())->fetch_assoc();
         if (!$current) {
             echo json_encode(['error' => true, 'msg' => 'Invoice not found.']);
             exit;
@@ -347,14 +379,191 @@ function save_invoice()
             $sql .= ", charge_type_id = $charge_type_id";
         }
 
-        $sql .= " WHERE id = $id";
+        $sql .= " WHERE id = $id AND " . tenant_where_clause();
 
         if ($conn->query($sql)) {
+            save_invoice_items($conn, intval($id), $org_id, $items_desc, $items_qty, $items_unit_price, $items_tax_rate, $has_items, $amount);
+            // Recompute payment status against new items
+            update_invoice_status_from_items(intval($id));
             echo json_encode(['error' => false, 'msg' => 'Invoice updated successfully.']);
         } else {
             echo json_encode(['error' => true, 'msg' => 'Error updating invoice: ' . $conn->error]);
         }
     }
+}
+
+/**
+ * Save invoice line items – replace all existing items then redistribute payments
+ */
+function save_invoice_items($conn, $invoice_id, $org_id, $items_desc, $items_qty, $items_unit_price, $items_tax_rate, $has_items, $fallback_amount)
+{
+    if (!$has_items) {
+        // Legacy: ensure at least one item exists
+        $exists = $conn->query("SELECT id FROM invoice_items WHERE invoice_id = $invoice_id LIMIT 1");
+        if ($exists && $exists->num_rows === 0) {
+            $desc = $conn->real_escape_string('Invoice Amount');
+            $ltot = floatval($fallback_amount);
+            $conn->query("INSERT INTO invoice_items (org_id, invoice_id, description, qty, unit_price, tax_rate, tax_amount, line_total, amount_paid, balance, sort_order)
+                          VALUES ($org_id, $invoice_id, '$desc', 1, $ltot, 0, 0, $ltot, 0, $ltot, 1)");
+        }
+        return;
+    }
+
+    // Delete old items (payment_allocations cascade-delete via FK)
+    $conn->query("DELETE FROM invoice_items WHERE invoice_id = $invoice_id");
+
+    $sort = 1;
+    foreach ($items_desc as $i => $desc) {
+        $desc = trim($desc);
+        if ($desc === '')
+            continue;
+
+        $qty = round(floatval($items_qty[$i] ?? 1), 2);
+        $uprc = round(floatval($items_unit_price[$i] ?? 0), 2);
+        $taxr = round(floatval($items_tax_rate[$i] ?? 0), 2);
+        $ltax = round($qty * $uprc * ($taxr / 100), 2);
+        $ltot = round($qty * $uprc + $ltax, 2);
+
+        $desc_esc = $conn->real_escape_string($desc);
+        $conn->query("INSERT INTO invoice_items (org_id, invoice_id, description, qty, unit_price, tax_rate, tax_amount, line_total, amount_paid, balance, sort_order)
+                      VALUES ($org_id, $invoice_id, '$desc_esc', $qty, $uprc, $taxr, $ltax, $ltot, 0, $ltot, $sort)");
+        $sort++;
+    }
+}
+
+/**
+ * Return invoice items as JSON (for receipt form / invoice show)
+ */
+function get_invoice_items()
+{
+    ob_clean();
+    header('Content-Type: application/json');
+    $conn = $GLOBALS['conn'];
+
+    $invoice_id = intval($_GET['invoice_id'] ?? 0);
+    if ($invoice_id <= 0) {
+        echo json_encode([]);
+        exit;
+    }
+
+    $rows = $conn->query("
+        SELECT ii.*, 
+               (ii.line_total - COALESCE(
+                   (SELECT SUM(pa.amount) FROM payment_allocations pa WHERE pa.invoice_item_id = ii.id), 0
+               )) AS current_balance
+        FROM invoice_items ii
+        WHERE ii.invoice_id = $invoice_id AND ii.org_id = " . current_org_id() . "
+        ORDER BY ii.sort_order, ii.id
+    ");
+
+    $items = [];
+    while ($r = $rows->fetch_assoc()) {
+        $items[] = $r;
+    }
+    echo json_encode($items);
+}
+
+/**
+ * Full invoice show data (header + items + payments)
+ */
+function get_invoice_show()
+{
+    ob_clean();
+    header('Content-Type: application/json');
+    $conn = $GLOBALS['conn'];
+
+    $id = intval($_GET['id'] ?? 0);
+    if ($id <= 0) {
+        http_response_code(404);
+        echo json_encode(['error' => true, 'msg' => 'Invoice not found.']);
+        exit;
+    }
+
+    $row = $conn->query(
+        "
+        SELECT i.*,
+               t.full_name     AS tenant_name,
+               t.phone         AS tenant_phone,
+               u.unit_number,
+               p.name          AS property_name,
+               ct.name         AS charge_type_name,
+               l.monthly_rent  AS rent_amount
+        FROM invoices i
+        LEFT JOIN leases l   ON l.id  = i.lease_id
+        LEFT JOIN tenants t  ON t.id  = l.tenant_id
+        LEFT JOIN units u    ON u.id  = l.unit_id
+        LEFT JOIN properties p ON p.id = u.property_id
+        LEFT JOIN charge_types ct ON ct.id = i.charge_type_id
+        WHERE i.id = $id AND " . tenant_where_clause('i')
+    )->fetch_assoc();
+
+    if (!$row) {
+        http_response_code(404);
+        echo json_encode(['error' => true, 'msg' => 'Invoice not found.']);
+        exit;
+    }
+
+    // Items
+    $items_res = $conn->query("
+        SELECT ii.*,
+               COALESCE((SELECT SUM(pa.amount) FROM payment_allocations pa WHERE pa.invoice_item_id = ii.id), 0) AS allocated
+        FROM invoice_items ii
+        WHERE ii.invoice_id = $id
+        ORDER BY ii.sort_order, ii.id
+    ");
+    $items = [];
+    while ($ir = $items_res->fetch_assoc()) {
+        $ir['item_balance'] = round($ir['line_total'] - $ir['allocated'], 2);
+        $items[] = $ir;
+    }
+
+    // Payments
+    $pmts_res = $conn->query("
+        SELECT pr.*, pr.receipt_number
+        FROM payments_received pr
+        WHERE pr.invoice_id = $id AND " . tenant_where_clause('pr') . "
+        ORDER BY pr.received_date ASC, pr.id ASC
+    ");
+    $payments = [];
+    while ($pr = $pmts_res->fetch_assoc()) {
+        $payments[] = $pr;
+    }
+
+    $row['items'] = $items;
+    $row['payments'] = $payments;
+
+    echo json_encode($row);
+}
+
+/**
+ * Recompute invoice status based on item-level allocations
+ */
+function update_invoice_status_from_items($invoice_id)
+{
+    $conn = $GLOBALS['conn'];
+
+    $res = $conn->query("
+        SELECT SUM(line_total) AS total,
+               SUM(COALESCE((SELECT SUM(pa.amount) FROM payment_allocations pa WHERE pa.invoice_item_id = ii.id), 0)) AS paid
+        FROM invoice_items ii
+        WHERE ii.invoice_id = $invoice_id
+    ")->fetch_assoc();
+
+    $total = floatval($res['total'] ?? 0);
+    $paid = floatval($res['paid'] ?? 0);
+
+    if ($total <= 0)
+        return;
+
+    if ($paid <= 0) {
+        $status = 'unpaid';
+    } elseif ($paid >= $total) {
+        $status = 'paid';
+    } else {
+        $status = 'partial';
+    }
+
+    $conn->query("UPDATE invoices SET status = '$status', amount = $total WHERE id = $invoice_id");
 }
 
 /**
@@ -367,12 +576,14 @@ function check_duplicate_rent_invoice($lease_id, $billing_month, $billing_year)
     $stmt = $conn->prepare("
         SELECT id FROM invoices 
         WHERE lease_id = ? 
+        AND org_id = ? 
         AND invoice_type = 'rent' 
         AND billing_month = ? 
         AND billing_year = ?
         LIMIT 1
     ");
-    $stmt->bind_param("iii", $lease_id, $billing_month, $billing_year);
+    $org_id = resolve_request_org_id();
+    $stmt->bind_param("iiii", $lease_id, $org_id, $billing_month, $billing_year);
     $stmt->execute();
 
     return $stmt->get_result()->num_rows > 0;
@@ -384,6 +595,7 @@ function check_duplicate_rent_invoice($lease_id, $billing_month, $billing_year)
 function generate_invoice_reference($module)
 {
     $conn = $GLOBALS['conn'];
+    $org_id = (int) resolve_request_org_id();
 
     $conn->begin_transaction();
 
@@ -392,6 +604,7 @@ function generate_invoice_reference($module)
         $result = $conn->query("
             SELECT setting_value FROM system_settings 
             WHERE setting_key = 'transaction_series' 
+            AND org_id = $org_id
             FOR UPDATE
         ");
         $row = $result->fetch_assoc();
@@ -447,7 +660,7 @@ function generate_invoice_reference($module)
 
             // Save updated series
             $updated_series = $conn->real_escape_string(json_encode($series));
-            $conn->query("UPDATE system_settings SET setting_value = '$updated_series' WHERE setting_key = 'transaction_series'");
+            $conn->query("UPDATE system_settings SET setting_value = '$updated_series' WHERE setting_key = 'transaction_series' AND org_id = $org_id");
 
             // Format number
             $formatted_number = str_pad($next_number, 5, '0', STR_PAD_LEFT);
@@ -490,14 +703,14 @@ function delete_invoice()
     }
 
     // Check status
-    $check = $conn->query("SELECT status FROM invoices WHERE id = $id");
+    $check = $conn->query("SELECT status FROM invoices WHERE id = $id AND " . tenant_where_clause());
     $inv = $check->fetch_assoc();
     if ($inv && $inv['status'] == 'paid') {
         echo json_encode(['error' => true, 'msg' => 'Paid invoices cannot be deleted.']);
         exit;
     }
 
-    $stmt = $conn->prepare("DELETE FROM invoices WHERE id = ?");
+    $stmt = $conn->prepare("DELETE FROM invoices WHERE id = ? AND " . tenant_where_clause());
     $stmt->bind_param("i", $id);
 
     if ($stmt->execute()) {
@@ -528,13 +741,13 @@ function bulk_action()
         $id_list = implode(',', array_map('intval', $ids));
 
         // Check for paid invoices
-        $check = $conn->query("SELECT COUNT(*) as count FROM invoices WHERE id IN ($id_list) AND status = 'paid'");
+        $check = $conn->query("SELECT COUNT(*) as count FROM invoices WHERE id IN ($id_list) AND status = 'paid' AND " . tenant_where_clause());
         if ($check->fetch_assoc()['count'] > 0) {
             echo json_encode(['error' => true, 'msg' => 'One or more selected invoices are Paid and cannot be deleted.']);
             exit;
         }
 
-        $sql = "DELETE FROM invoices WHERE id IN ($id_list)";
+        $sql = "DELETE FROM invoices WHERE id IN ($id_list) AND " . tenant_where_clause();
 
         if ($conn->query($sql)) {
             echo json_encode(['error' => false, 'msg' => count($ids) . ' invoice(s) deleted successfully.']);
@@ -565,7 +778,7 @@ function get_invoice()
     $sql = "SELECT i.*, ct.name as charge_type_name 
             FROM invoices i 
             LEFT JOIN charge_types ct ON i.charge_type_id = ct.id
-            WHERE i.id = ?";
+            WHERE i.id = ? AND " . tenant_where_clause('i');
 
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $id);
@@ -587,6 +800,7 @@ function generate_rent_invoices_bulk()
     ob_clean();
     header('Content-Type: application/json');
     $conn = $GLOBALS['conn'];
+    $org_id = resolve_request_org_id();
 
     $lease_ids = $_POST['lease_ids'] ?? [];
     $billing_month = intval($_POST['billing_month'] ?? date('m'));
@@ -611,7 +825,7 @@ function generate_rent_invoices_bulk()
             SELECT l.id, l.monthly_rent, l.status, l.auto_invoice, t.full_name
             FROM leases l
             LEFT JOIN tenants t ON l.tenant_id = t.id
-            WHERE l.id = $lease_id
+            WHERE l.id = $lease_id AND " . tenant_where_clause('l') . "
         ")->fetch_assoc();
 
         if (!$lease) {
@@ -650,17 +864,20 @@ function generate_rent_invoices_bulk()
         $reference_number = generate_invoice_reference('rent_invoice');
 
         $sql = "INSERT INTO invoices (
-                    invoice_type, lease_id, reference_number, amount, 
+                    org_id, invoice_type, lease_id, reference_number, amount, 
                     invoice_date, due_date, billing_month, billing_year, status
                 ) VALUES (
-                    'rent', $lease_id, '$reference_number', $amount,
+                    $org_id, 'rent', $lease_id, '$reference_number', $amount,
                     '$invoice_date', '$due_date', $billing_month, $billing_year, 'unpaid'
                 )";
 
         if ($conn->query($sql)) {
+            $new_inv_id = $conn->insert_id;
+            $conn->query("INSERT INTO invoice_items (org_id, invoice_id, description, qty, unit_price, tax_rate, tax_amount, line_total, amount_paid, balance, sort_order)
+                          VALUES ($org_id, $new_inv_id, 'Rent Charge', 1, $amount, 0, 0, $amount, 0, $amount, 1)");
             $result['status'] = 'success';
             $result['message'] = 'Invoice created: ' . $reference_number;
-            $result['invoice_id'] = $conn->insert_id;
+            $result['invoice_id'] = $new_inv_id;
             $result['reference_number'] = $reference_number;
             $result['tenant_name'] = $lease['full_name'];
             $success_count++;
@@ -702,7 +919,7 @@ function get_lease_rent()
         exit;
     }
 
-    $stmt = $conn->prepare("SELECT monthly_rent FROM leases WHERE id = ?");
+    $stmt = $conn->prepare("SELECT monthly_rent FROM leases WHERE id = ? AND " . tenant_where_clause());
     $stmt->bind_param("i", $lease_id);
     $stmt->execute();
     $result = $stmt->get_result()->fetch_assoc();

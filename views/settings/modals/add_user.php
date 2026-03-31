@@ -32,7 +32,7 @@
                             <option value="">Select Role</option>
                             <?php
                             // Fetch roles for the dropdown
-                            $roles = $GLOBALS['conn']->query("SELECT * FROM roles");
+                            $roles = $GLOBALS['conn']->query("SELECT * FROM roles WHERE org_id = " . current_org_id());
                             while ($role = $roles->fetch_assoc()) {
                                 echo '<option value="' . $role['id'] . '">' . $role['role_name'] . '</option>';
                             }

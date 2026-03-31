@@ -30,7 +30,7 @@ function get_tenants()
         $search_value = $_POST['search']['value'] ?? '';
 
         // Base query
-        $sql = "SELECT * FROM tenants WHERE 1=1";
+        $sql = "SELECT * FROM tenants WHERE " . tenant_where_clause();
 
         // Search
         if (!empty($search_value)) {
@@ -38,7 +38,7 @@ function get_tenants()
         }
 
         // Total records (before filtering)
-        $total_records_res = $conn->query("SELECT COUNT(*) as count FROM tenants");
+        $total_records_res = $conn->query("SELECT COUNT(*) as count FROM tenants WHERE " . tenant_where_clause());
         $total_records = ($total_records_res) ? $total_records_res->fetch_assoc()['count'] : 0;
 
         // Total filtered records
@@ -58,6 +58,11 @@ function get_tenants()
 
         while ($row = $result->fetch_assoc()) {
                 $actionBtn = '<button class="btn btn-sm btn-primary me-1" onclick="editTenant(' . $row['id'] . ')"><i class="bi bi-pencil"></i></button>';
+                if (!empty($row['phone'])) {
+                    $tName  = addslashes($row['full_name']);
+                    $tPhone = addslashes($row['phone']);
+                    $actionBtn .= '<button class="btn btn-sm btn-info text-white me-1" title="Send SMS" onclick="openSmsModal(' . $row['id'] . ',\'' . $tName . '\',\'' . $tPhone . '\')"><i class="bi bi-chat-text"></i></button>';
+                }
                 $actionBtn .= '<button class="btn btn-sm btn-danger" onclick="deleteTenant(' . $row['id'] . ')"><i class="bi bi-trash"></i></button>';
 
                 $statusBadge = '';
@@ -148,6 +153,7 @@ function save_tenant()
         $id_number = trim($_POST['id_number'] ?? '');
         $work_info = trim($_POST['work_info'] ?? '');
         $status = $_POST['status'] ?? 'active';
+        $org_id = resolve_request_org_id();
 
         // Existing photo paths (for edit mode)
         $existing_id_photo = trim($_POST['existing_id_photo'] ?? '');
@@ -190,8 +196,8 @@ function save_tenant()
 
         if (empty($id)) {
                 // Insert
-                $stmt = $conn->prepare("INSERT INTO tenants (full_name, phone, email, id_number, id_photo, work_id_photo, work_info, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("ssssssss", $full_name, $phone, $email, $id_number, $id_photo, $work_id_photo, $work_info, $status);
+                $stmt = $conn->prepare("INSERT INTO tenants (org_id, full_name, phone, email, id_number, id_photo, work_id_photo, work_info, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("issssssss", $org_id, $full_name, $phone, $email, $id_number, $id_photo, $work_id_photo, $work_info, $status);
 
                 if ($stmt->execute()) {
                         echo json_encode(['error' => false, 'msg' => 'Tenant added successfully.']);
@@ -200,7 +206,7 @@ function save_tenant()
                 }
         } else {
                 // Update
-                $stmt = $conn->prepare("UPDATE tenants SET full_name=?, phone=?, email=?, id_number=?, id_photo=?, work_id_photo=?, work_info=?, status=? WHERE id=?");
+                $stmt = $conn->prepare("UPDATE tenants SET full_name=?, phone=?, email=?, id_number=?, id_photo=?, work_id_photo=?, work_info=?, status=? WHERE id=? AND " . tenant_where_clause());
                 $stmt->bind_param("ssssssssi", $full_name, $phone, $email, $id_number, $id_photo, $work_id_photo, $work_info, $status, $id);
 
                 if ($stmt->execute()) {
@@ -225,7 +231,7 @@ function delete_tenant()
         }
 
         // Check if tenant has active lease
-        $check = $conn->prepare("SELECT id FROM leases WHERE tenant_id = ? AND status = 'active' LIMIT 1");
+        $check = $conn->prepare("SELECT id FROM leases WHERE tenant_id = ? AND status = 'active' AND " . tenant_where_clause() . " LIMIT 1");
         $check->bind_param("i", $id);
         $check->execute();
         if ($check->get_result()->num_rows > 0) {
@@ -233,7 +239,7 @@ function delete_tenant()
                 exit;
         }
 
-        $stmt = $conn->prepare("DELETE FROM tenants WHERE id = ?");
+        $stmt = $conn->prepare("DELETE FROM tenants WHERE id = ? AND " . tenant_where_clause());
         $stmt->bind_param("i", $id);
 
         if ($stmt->execute()) {
@@ -256,7 +262,7 @@ function get_tenant()
                 exit;
         }
 
-        $stmt = $conn->prepare("SELECT * FROM tenants WHERE id = ?");
+        $stmt = $conn->prepare("SELECT * FROM tenants WHERE id = ? AND " . tenant_where_clause());
         $stmt->bind_param("i", $id);
         $stmt->execute();
         $result = $stmt->get_result()->fetch_assoc();
@@ -291,7 +297,7 @@ function bulk_action()
 
         if ($action_type == 'delete') {
                 // Check if any tenant has active lease
-                $check_leases = $conn->query("SELECT id FROM leases WHERE tenant_id IN ($ids_str) AND status = 'active' LIMIT 1");
+                $check_leases = $conn->query("SELECT id FROM leases WHERE tenant_id IN ($ids_str) AND status = 'active' AND " . tenant_where_clause() . " LIMIT 1");
 
                 if ($check_leases && $check_leases->num_rows > 0) {
                         echo json_encode([
@@ -301,7 +307,7 @@ function bulk_action()
                         exit;
                 }
 
-                if ($conn->query("DELETE FROM tenants WHERE id IN ($ids_str)")) {
+                if ($conn->query("DELETE FROM tenants WHERE id IN ($ids_str) AND " . tenant_where_clause())) {
                         echo json_encode(['error' => false, 'msg' => 'Selected tenants deleted successfully.']);
                 } else {
                         echo json_encode(['error' => true, 'msg' => 'Error deleting tenants: ' . $conn->error]);

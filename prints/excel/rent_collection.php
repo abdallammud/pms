@@ -18,14 +18,7 @@ while (ob_get_level()) {
     ob_end_clean();
 }
 
-// Get logo path from system_settings or default
-require_once('./app/db.php');
-$logoQuery = $conn->query("SELECT setting_value FROM system_settings WHERE setting_key = 'logo_path'");
-$logoRow = $logoQuery ? $logoQuery->fetch_assoc() : null;
-$logoPath = ($logoRow && !empty($logoRow['setting_value'])) ? $logoRow['setting_value'] : 'public/images/logo.png';
-$logoPath = realpath($logoPath);
-
-$logoPath = 'public/images/logo.jpg';
+require_once('./prints/excel/_branding.php'); // sets $logoPath and $brandColorHex
 
 // Get filters from request
 $startDate = $_GET['startDate'] ?? date('Y-m-01');
@@ -66,7 +59,7 @@ $headerStyle = [
     ],
     'fill' => [
         'fillType' => Fill::FILL_SOLID,
-        'startColor' => ['rgb' => '4E73DF']
+        'startColor' => ['rgb' => $brandColorHex]
     ],
     'alignment' => [
         'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -75,7 +68,7 @@ $headerStyle = [
     'borders' => [
         'allBorders' => [
             'borderStyle' => Border::BORDER_THIN,
-            'color' => ['rgb' => '4E73DF']
+            'color' => ['rgb' => $brandColorHex]
         ]
     ]
 ];
@@ -106,7 +99,7 @@ $footerStyle = [
     'borders' => [
         'allBorders' => [
             'borderStyle' => Border::BORDER_THIN,
-            'color' => ['rgb' => '4E73DF']
+            'color' => ['rgb' => $brandColorHex]
         ]
     ]
 ];
@@ -115,7 +108,7 @@ $footerStyle = [
 $sheet->mergeCells('C1:F1');
 $sheet->setCellValue('C1', 'Rent Collection Report');
 $sheet->getStyle('C1')->applyFromArray([
-    'font' => ['bold' => true, 'size' => 16, 'color' => ['rgb' => '4E73DF']],
+    'font' => ['bold' => true, 'size' => 16, 'color' => ['rgb' => $brandColorHex]],
     'alignment' => [
         'horizontal' => Alignment::HORIZONTAL_RIGHT,
         'vertical' => Alignment::VERTICAL_CENTER

@@ -44,7 +44,7 @@ LEFT JOIN tenants t ON l.tenant_id = t.id
 LEFT JOIN units u ON l.unit_id = u.id
 LEFT JOIN properties p ON l.property_id = p.id
 LEFT JOIN guarantees g ON l.guarantee_id = g.id
-WHERE 1=1";
+WHERE " . tenant_where_clause('l');
 
         // Search
         if (!empty($search_value)) {
@@ -57,7 +57,7 @@ OR l.status LIKE '%$search_value%')";
         }
 
         // Total records (before filtering)
-        $total_records_res = $conn->query("SELECT COUNT(*) as count FROM leases");
+        $total_records_res = $conn->query("SELECT COUNT(*) as count FROM leases l WHERE " . tenant_where_clause('l'));
         $total_records = ($total_records_res) ? $total_records_res->fetch_assoc()['count'] : 0;
 
         // Total filtered records
@@ -153,6 +153,7 @@ function save_lease()
         $lease_conditions = $_POST['lease_conditions'] ?? '';
         $vehicle_info = $_POST['vehicle_info'] ?? '';
         $legal_weapons = $_POST['legal_weapons'] ?? '';
+        $org_id = resolve_request_org_id();
 
         // Witnesses (arrays)
         $witness_names = $_POST['witness_name'] ?? [];
@@ -191,11 +192,11 @@ function save_lease()
 
                 // Insert new lease
                 $sql = "INSERT INTO leases (
-        reference_number, tenant_id, guarantee_id, property_id, unit_id,
+        org_id, reference_number, tenant_id, guarantee_id, property_id, unit_id,
         start_date, end_date, monthly_rent, deposit, payment_cycle,
         auto_invoice, status, lease_conditions, vehicle_info, legal_weapons, witnesses, created_at
         ) VALUES (
-        '$reference_number', $tenant_id, $guarantee_id, $property_id, $unit_id,
+        $org_id, '$reference_number', $tenant_id, $guarantee_id, $property_id, $unit_id,
         '$start_date', '$end_date', $monthly_rent, $deposit, '$rent_cycle',
         $auto_invoice, '$status', '$lease_conditions', '$vehicle_info', '$legal_weapons', '$witnesses_json', NOW()
         )";
@@ -229,7 +230,7 @@ function save_lease()
         vehicle_info = '$vehicle_info',
         legal_weapons = '$legal_weapons',
         witnesses = '$witnesses_json'
-        WHERE id = $id";
+        WHERE id = $id AND " . tenant_where_clause();
 
                 if ($conn->query($sql)) {
                         echo json_encode(['error' => false, 'msg' => 'Lease updated successfully.']);
@@ -256,9 +257,9 @@ function delete_lease()
         }
 
         // Get unit_id before deleting to update unit status
-        $lease = $conn->query("SELECT unit_id FROM leases WHERE id = $id")->fetch_assoc();
+        $lease = $conn->query("SELECT unit_id FROM leases WHERE id = $id AND " . tenant_where_clause())->fetch_assoc();
 
-        $stmt = $conn->prepare("DELETE FROM leases WHERE id = ?");
+        $stmt = $conn->prepare("DELETE FROM leases WHERE id = ? AND " . tenant_where_clause());
         $stmt->bind_param("i", $id);
 
         if ($stmt->execute()) {
@@ -298,7 +299,7 @@ function get_lease()
                         LEFT JOIN guarantees g ON l.guarantee_id = g.id
                         LEFT JOIN properties p ON l.property_id = p.id
                         LEFT JOIN units u ON l.unit_id = u.id
-                        WHERE l.id = $id";
+                        WHERE l.id = $id AND " . tenant_where_clause('l');
 
         $result = $conn->query($sql);
         $lease = $result->fetch_assoc();
@@ -320,6 +321,7 @@ function bulk_action()
         ob_clean();
         header('Content-Type: application/json');
         $conn = $GLOBALS['conn'];
+        $org_id = resolve_request_org_id();
 
         $action_type = $_POST['action_type'] ?? '';
         $ids = $_POST['ids'] ?? [];
@@ -344,18 +346,18 @@ function bulk_action()
                 $update_units = "UPDATE units u
                         INNER JOIN leases l ON u.id = l.unit_id
                         SET u.status = 'vacant', u.tenant_id = NULL
-                        WHERE l.id IN ($ids_str)";
+                        WHERE l.id IN ($ids_str) AND " . tenant_where_clause('l');
                 $conn->query($update_units);
 
                 // Delete leases
-                if ($conn->query("DELETE FROM leases WHERE id IN ($ids_str)")) {
+                if ($conn->query("DELETE FROM leases WHERE id IN ($ids_str) AND " . tenant_where_clause())) {
                         echo json_encode(['error' => false, 'msg' => 'Selected leases deleted successfully.']);
                 } else {
                         echo json_encode(['error' => true, 'msg' => 'Error deleting leases: ' . $conn->error]);
                 }
 
         } elseif ($action_type == 'terminate') {
-                if ($conn->query("UPDATE leases SET status = 'terminated' WHERE id IN ($ids_str)")) {
+                if ($conn->query("UPDATE leases SET status = 'terminated' WHERE id IN ($ids_str) AND " . tenant_where_clause())) {
                         echo json_encode(['error' => false, 'msg' => 'Selected leases terminated successfully.']);
                 } else {
                         echo json_encode(['error' => true, 'msg' => 'Error terminating leases: ' . $conn->error]);
@@ -382,7 +384,7 @@ function bulk_action()
                         FROM leases l
                         LEFT JOIN tenants t ON l.tenant_id = t.id
                         LEFT JOIN units u ON l.unit_id = u.id
-                        WHERE l.id = $lease_id
+                        WHERE l.id = $lease_id AND " . tenant_where_clause('l') . "
                         ")->fetch_assoc();
 
                         if (!$lease) {
@@ -409,6 +411,7 @@ function bulk_action()
                         $dup_check = $conn->query("
                         SELECT id FROM invoices
                         WHERE lease_id = $lease_id
+                        AND " . tenant_where_clause() . "
                         AND invoice_type = 'rent'
                         AND billing_month = $billing_month
                         AND billing_year = $billing_year
@@ -431,10 +434,10 @@ function bulk_action()
                         $due_date = sprintf('%04d-%02d-01', $billing_year, $billing_month);
 
                         $sql = "INSERT INTO invoices (
-                        invoice_type, lease_id, reference_number, amount,
+                        org_id, invoice_type, lease_id, reference_number, amount,
                         invoice_date, due_date, billing_month, billing_year, status
                         ) VALUES (
-                        'rent', $lease_id, '$reference_number', $amount,
+                        $org_id, 'rent', $lease_id, '$reference_number', $amount,
                         '$invoice_date', '$due_date', $billing_month, $billing_year, 'unpaid'
                         )";
 

@@ -15,7 +15,9 @@ if (!authenticate()) {
   <!--favicon-->
   <link rel="icon" href="<?= baseUri(); ?>/public/images/favicon-32x32.png" type="image/png">
   <!-- loader-->
-  <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
   <link href="<?= baseUri(); ?>/public/css/font-awesome/css/all.min.css" rel="stylesheet">
   <link href="<?= baseUri(); ?>/public/css/pace.min.css" rel="stylesheet">
   <script src="<?= baseUri(); ?>/public/js/pace.min.js"></script>
@@ -44,6 +46,30 @@ if (!authenticate()) {
   <link href="<?= baseUri(); ?>/public/sass/bordered-theme.css" rel="stylesheet">
   <link href="<?= baseUri(); ?>/public/sass/responsive.css" rel="stylesheet">
   <link href="<?= baseUri(); ?>/public/css/styles.css" rel="stylesheet">
+  <?php
+  $brandHex = '#' . ($GLOBALS['brandPrimaryColor'] ?? '1d3354');
+  ?>
+  <style>
+    :root {
+      --brand-primary:
+        <?= $brandHex ?>
+      ;
+    }
+
+    .btn-primary,
+    .bg-primary {
+      background-color:
+        <?= $brandHex ?>
+        !important;
+      border-color:
+        <?= $brandHex ?>
+        !important;
+    }
+
+    a.btn-primary:hover {
+      filter: brightness(1.15);
+    }
+  </style>
 
   <link rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta2/dist/css/bootstrap-select.min.css">

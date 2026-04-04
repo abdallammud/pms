@@ -41,44 +41,57 @@ if (isset($_GET['action'])) {
 /**
  * Get all settings as key-value pairs
  */
-function get_settings() {
+function get_settings()
+{
     header('Content-Type: application/json');
     global $conn;
 
     $result = $conn->query("SELECT setting_key, setting_value FROM system_settings WHERE " . tenant_where_clause());
     $settings = [];
-    
+
     while ($row = $result->fetch_assoc()) {
         $settings[$row['setting_key']] = $row['setting_value'];
     }
-    
+
+    // Fallback: If no org_name exists in settings, pull from organizations table
+    if (empty($settings['org_name'])) {
+        $org_id = current_org_id();
+        if ($org_id > 0) {
+            $org_res = $conn->query("SELECT name FROM organizations WHERE id = $org_id");
+            if ($org_res && $org_row = $org_res->fetch_assoc()) {
+                $settings['org_name'] = $org_row['name'];
+            }
+        }
+    }
+
     echo json_encode(['error' => false, 'data' => $settings]);
 }
 
 /**
  * Save organization profile settings
  */
-function save_profile() {
+function save_profile()
+{
     header('Content-Type: application/json');
     global $conn;
     $org_id = resolve_request_org_id();
 
     $fields = ['org_name', 'org_email', 'org_phone', 'org_street1', 'org_street2', 'org_city'];
-    
+
     foreach ($fields as $field) {
         $value = $_POST[$field] ?? '';
         $value = $conn->real_escape_string($value);
-        
+
         // Check if setting exists
         $check = $conn->query("SELECT id FROM system_settings WHERE setting_key = '$field' AND org_id = $org_id");
-        
+
         if ($check->num_rows > 0) {
             $conn->query("UPDATE system_settings SET setting_value = '$value' WHERE setting_key = '$field' AND org_id = $org_id");
         } else {
             $conn->query("INSERT INTO system_settings (org_id, setting_key, setting_value) VALUES ($org_id, '$field', '$value')");
         }
     }
-    
+
     echo json_encode(['error' => false, 'msg' => 'Organization profile saved successfully.']);
 }
 
@@ -86,13 +99,14 @@ function save_profile() {
  * Handle logo upload — supports system logo (logo_path) and document logo (doc_logo_path).
  * Pass logo_type = 'system' | 'document' in the POST body.
  */
-function save_branding() {
+function save_branding()
+{
     header('Content-Type: application/json');
     global $conn;
     $org_id = resolve_request_org_id();
 
     // Determine which logo key to update
-    $logo_type   = $_POST['logo_type'] ?? 'system';
+    $logo_type = $_POST['logo_type'] ?? 'system';
     $setting_key = ($logo_type === 'document') ? 'doc_logo_path' : 'logo_path';
 
     if (!isset($_FILES['logo']) || $_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
@@ -100,9 +114,9 @@ function save_branding() {
         exit;
     }
 
-    $file          = $_FILES['logo'];
+    $file = $_FILES['logo'];
     $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/bmp'];
-    $max_size      = 1 * 1024 * 1024; // 1 MB
+    $max_size = 1 * 1024 * 1024; // 1 MB
 
     if (!in_array($file['type'], $allowed_types)) {
         echo json_encode(['error' => true, 'msg' => 'Invalid file type. Allowed: jpg, png, gif, bmp']);
@@ -113,9 +127,9 @@ function save_branding() {
         exit;
     }
 
-    $extension     = pathinfo($file['name'], PATHINFO_EXTENSION);
-    $filename      = 'logo_' . time() . '.' . $extension;
-    $upload_path   = '../public/images/' . $filename;
+    $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+    $filename = 'logo_' . time() . '.' . $extension;
+    $upload_path = '../public/images/' . $filename;
     $relative_path = 'public/images/' . $filename;
 
     if (!is_dir('../public/images/')) {
@@ -147,7 +161,8 @@ function save_branding() {
 /**
  * Save brand primary color
  */
-function save_brand_color() {
+function save_brand_color()
+{
     header('Content-Type: application/json');
     global $conn;
     $org_id = resolve_request_org_id();
@@ -178,7 +193,8 @@ function save_brand_color() {
 /**
  * Get transaction number series
  */
-function get_transaction_series() {
+function get_transaction_series()
+{
     header('Content-Type: application/json');
     global $conn;
     $org_id = resolve_request_org_id();
@@ -205,13 +221,14 @@ function get_transaction_series() {
 /**
  * Save transaction number series
  */
-function save_transaction_series() {
+function save_transaction_series()
+{
     header('Content-Type: application/json');
     global $conn;
     $org_id = resolve_request_org_id();
 
     $series_data = $_POST['series'] ?? '';
-    
+
     if (empty($series_data)) {
         echo json_encode(['error' => true, 'msg' => 'No data provided.']);
         exit;
@@ -225,23 +242,24 @@ function save_transaction_series() {
     }
 
     $series_data = $conn->real_escape_string($series_data);
-    
+
     // Check if setting exists
     $check = $conn->query("SELECT id FROM system_settings WHERE setting_key = 'transaction_series' AND org_id = $org_id");
-    
+
     if ($check->num_rows > 0) {
         $conn->query("UPDATE system_settings SET setting_value = '$series_data' WHERE setting_key = 'transaction_series' AND org_id = $org_id");
     } else {
         $conn->query("INSERT INTO system_settings (org_id, setting_key, setting_value) VALUES ($org_id, 'transaction_series', '$series_data')");
     }
-    
+
     echo json_encode(['error' => false, 'msg' => 'Transaction number series saved successfully.']);
 }
 
 /**
  * Get lease conditions template
  */
-function get_lease_conditions() {
+function get_lease_conditions()
+{
     header('Content-Type: application/json');
     global $conn;
     $org_id = resolve_request_org_id();
@@ -260,30 +278,32 @@ function get_lease_conditions() {
 /**
  * Save lease conditions template
  */
-function save_lease_conditions() {
+function save_lease_conditions()
+{
     header('Content-Type: application/json');
     global $conn;
     $org_id = resolve_request_org_id();
 
     $lease_conditions = $_POST['lease_conditions'] ?? '';
     $lease_conditions = $conn->real_escape_string($lease_conditions);
-    
+
     // Check if setting exists
     $check = $conn->query("SELECT id FROM system_settings WHERE setting_key = 'lease_conditions' AND org_id = $org_id");
-    
+
     if ($check->num_rows > 0) {
         $conn->query("UPDATE system_settings SET setting_value = '$lease_conditions' WHERE setting_key = 'lease_conditions' AND org_id = $org_id");
     } else {
         $conn->query("INSERT INTO system_settings (org_id, setting_key, setting_value) VALUES ($org_id, 'lease_conditions', '$lease_conditions')");
     }
-    
+
     echo json_encode(['error' => false, 'msg' => 'Lease conditions template saved successfully.']);
 }
 
 /**
  * Save auto-invoice settings (B1 fix — previously had no handler)
  */
-function save_settings() {
+function save_settings()
+{
     header('Content-Type: application/json');
     global $conn;
     $org_id = resolve_request_org_id();
@@ -311,7 +331,8 @@ function save_settings() {
  * Only sms_username, sms_sender_name, and sms_password are dynamic per org.
  * Static provider constants live in $GLOBALS['SMS'] (helpers.php).
  */
-function save_sms_settings() {
+function save_sms_settings()
+{
     header('Content-Type: application/json');
     global $conn;
     $org_id = resolve_request_org_id();

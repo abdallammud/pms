@@ -211,6 +211,7 @@ function saveRole() {
                 $('#role_id').val('');
                 // Uncheck all permissions
                 $('.permission-checkbox').prop('checked', false);
+                $('#selectAllPermissions').prop('checked', false);
 
                 rolesTable.ajax.reload();
                 toaster.success(response.msg, 'Success', { top: '10%', right: '20px', hide: true, duration: 1500 });
@@ -248,6 +249,15 @@ function editRole(id) {
                 data.permissions.forEach(function (permId) {
                     $('#perm_' + permId).prop('checked', true);
                 });
+
+                // Update Select All state
+                if ($('.permission-checkbox:checked').length === $('.permission-checkbox').length && $('.permission-checkbox').length > 0) {
+                    $('#selectAllPermissions').prop('checked', true);
+                } else {
+                    $('#selectAllPermissions').prop('checked', false);
+                }
+            } else {
+                $('#selectAllPermissions').prop('checked', false);
             }
 
             $('#addRoleModalLabel').text('Edit Role');
@@ -343,7 +353,21 @@ document.addEventListener('DOMContentLoaded', function () {
         $('#addRoleForm')[0].reset();
         $('#role_id').val('');
         $('.permission-checkbox').prop('checked', false);
+        $('#selectAllPermissions').prop('checked', false);
         $('#addRoleModalLabel').text('Add New Role');
+    });
+
+    // Select All logic
+    $(document).on('change', '#selectAllPermissions', function () {
+        $('.permission-checkbox').prop('checked', $(this).prop('checked'));
+    });
+
+    $(document).on('change', '.permission-checkbox', function () {
+        if ($('.permission-checkbox:checked').length === $('.permission-checkbox').length && $('.permission-checkbox').length > 0) {
+            $('#selectAllPermissions').prop('checked', true);
+        } else {
+            $('#selectAllPermissions').prop('checked', false);
+        }
     });
 
     // Load permissions when modal is shown if not already loaded

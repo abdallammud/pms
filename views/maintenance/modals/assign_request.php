@@ -1,20 +1,20 @@
 <!-- Assign Maintenance Request Modal -->
 <?php
 $conn = $GLOBALS['conn'];
-$org_clause = tenant_where_clause();
+$org_clause_m = tenant_where_clause('m');
 $pending_requests = $conn->query("
     SELECT m.id, m.reference_number, m.description, m.priority,
            p.name AS property_name, u.unit_number
     FROM maintenance_requests m
     LEFT JOIN properties p ON m.property_id = p.id
     LEFT JOIN units u      ON m.unit_id = u.id
-    WHERE m.status != 'completed' AND $org_clause
+    WHERE m.status != 'completed' AND $org_clause_m
     ORDER BY m.created_at DESC
 ");
 $vendors = $conn->query("
     SELECT id, vendor_name, service_type
     FROM vendors
-    WHERE $org_clause
+    WHERE " . tenant_where_clause() . "
     ORDER BY vendor_name
 ");
 ?>
@@ -45,16 +45,19 @@ $vendors = $conn->query("
                                     </h6>
 
                                     <div class="mb-3 multiselect-parent">
-                                        <label class="form-label fw-semibold multiselect-label">Maintenance Request <span class="text-danger">*</span></label>
-                                        <select name="request_id" id="assign_request_id" class="form-select selectpicker"
-                                            data-live-search="true" title="Select Request" required>
+                                        <label class="form-label fw-semibold multiselect-label">Maintenance Request
+                                            <span class="text-danger">*</span></label>
+                                        <select name="request_id" id="assign_request_id"
+                                            class="form-select selectpicker" data-live-search="true"
+                                            title="Select Request" required>
                                             <?php while ($req = $pending_requests->fetch_assoc()):
                                                 $label = $req['reference_number'] . ' — ' . $req['property_name'];
-                                                if ($req['unit_number']) $label .= ' / ' . $req['unit_number'];
+                                                if ($req['unit_number'])
+                                                    $label .= ' / ' . $req['unit_number'];
                                                 $label .= ' · ' . substr($req['description'], 0, 45);
-                                            ?>
+                                                ?>
                                                 <option value="<?= $req['id'] ?>"
-                                                        data-subtext="<?= ucfirst($req['priority']) ?> priority">
+                                                    data-subtext="<?= ucfirst($req['priority']) ?> priority">
                                                     <?= htmlspecialchars($label) ?>
                                                 </option>
                                             <?php endwhile; ?>
@@ -92,12 +95,13 @@ $vendors = $conn->query("
                                     </h6>
 
                                     <div class="mb-3 multiselect-parent">
-                                        <label class="form-label fw-semibold multiselect-label">Assign To (Vendor / Staff) <span class="text-danger">*</span></label>
+                                        <label class="form-label fw-semibold multiselect-label">Assign To (Vendor /
+                                            Staff) <span class="text-danger">*</span></label>
                                         <select name="vendor_id" id="assign_vendor_id" class="form-select selectpicker"
                                             data-live-search="true" title="Select Vendor" required>
                                             <?php while ($v = $vendors->fetch_assoc()): ?>
                                                 <option value="<?= $v['id'] ?>"
-                                                        data-subtext="<?= htmlspecialchars($v['service_type']) ?>">
+                                                    data-subtext="<?= htmlspecialchars($v['service_type']) ?>">
                                                     <?= htmlspecialchars($v['vendor_name']) ?>
                                                 </option>
                                             <?php endwhile; ?>
@@ -105,7 +109,8 @@ $vendors = $conn->query("
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="form-label fw-semibold">Assigned Date <span class="text-danger">*</span></label>
+                                        <label class="form-label fw-semibold">Assigned Date <span
+                                                class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
                                             <input type="date" name="assigned_date" id="assigned_date"
@@ -150,31 +155,31 @@ $vendors = $conn->query("
 </div>
 
 <script>
-/* ── Request preview on selection ─────────────────────── */
-document.addEventListener('DOMContentLoaded', function () {
-    $(document).on('change', '#assign_request_id', function () {
-        var $opt = $(this).find(':selected');
-        if (!$(this).val()) {
-            $('#assign_request_preview').addClass('d-none');
-            return;
-        }
-        var label = $opt.text().split('·');
-        var refProp = (label[0] || '').trim().split('—');
-        $('#preview_ref').text((refProp[0] || '').trim());
-        $('#preview_prop').text((refProp[1] || '').trim());
-        $('#preview_unit').text('—');
-        $('#preview_priority').text($opt.data('subtext') || '—');
-        $('#assign_request_preview').removeClass('d-none');
-    });
+    /* ── Request preview on selection ─────────────────────── */
+    document.addEventListener('DOMContentLoaded', function () {
+        $(document).on('change', '#assign_request_id', function () {
+            var $opt = $(this).find(':selected');
+            if (!$(this).val()) {
+                $('#assign_request_preview').addClass('d-none');
+                return;
+            }
+            var label = $opt.text().split('·');
+            var refProp = (label[0] || '').trim().split('—');
+            $('#preview_ref').text((refProp[0] || '').trim());
+            $('#preview_prop').text((refProp[1] || '').trim());
+            $('#preview_unit').text('—');
+            $('#preview_priority').text($opt.data('subtext') || '—');
+            $('#assign_request_preview').removeClass('d-none');
+        });
 
-    /* ── Reset on close ──────────────────────────────────── */
-    $(document).on('hidden.bs.modal', '#assignMaintenanceModal', function () {
-        $('#assignRequestForm')[0].reset();
-        $('#assignment_id').val('');
-        $('#assign_request_id').selectpicker('val', '').selectpicker('refresh');
-        $('#assign_vendor_id').selectpicker('val', '').selectpicker('refresh');
-        $('#assign_request_preview').addClass('d-none');
-        $('#saveAssignmentBtn').html('<i class="bi bi-check-circle me-1"></i>Assign Request');
+        /* ── Reset on close ──────────────────────────────────── */
+        $(document).on('hidden.bs.modal', '#assignMaintenanceModal', function () {
+            $('#assignRequestForm')[0].reset();
+            $('#assignment_id').val('');
+            $('#assign_request_id').selectpicker('val', '').selectpicker('refresh');
+            $('#assign_vendor_id').selectpicker('val', '').selectpicker('refresh');
+            $('#assign_request_preview').addClass('d-none');
+            $('#saveAssignmentBtn').html('<i class="bi bi-check-circle me-1"></i>Assign Request');
+        });
     });
-});
 </script>

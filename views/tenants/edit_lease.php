@@ -15,7 +15,7 @@ $stmt = $conn->prepare("SELECT l.*, p.name as property_name, u.unit_number
                         FROM leases l 
                         LEFT JOIN properties p ON l.property_id = p.id
                         LEFT JOIN units u ON l.unit_id = u.id
-                        WHERE l.id = ?");
+                        WHERE l.id = ? AND " . tenant_where_clause('l'));
 $stmt->bind_param("i", $lease_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -31,21 +31,21 @@ $witnesses = json_decode($lease['witnesses'] ?? '[]', true) ?: [];
 
 // Fetch tenants
 $tenants = [];
-$tq = $conn->query("SELECT id, full_name FROM tenants WHERE status='active' ORDER BY full_name ASC");
+$tq = $conn->query("SELECT id, full_name FROM tenants WHERE status='active' AND " . tenant_where_clause() . " ORDER BY full_name ASC");
 while ($row = $tq->fetch_assoc()) {
     $tenants[] = $row;
 }
 
 // Fetch guarantees
 $guarantees = [];
-$gq = $conn->query("SELECT id, full_name, phone FROM guarantees ORDER BY full_name ASC");
+$gq = $conn->query("SELECT id, full_name, phone FROM guarantees WHERE " . tenant_where_clause() . " ORDER BY full_name ASC");
 while ($row = $gq->fetch_assoc()) {
     $guarantees[] = $row;
 }
 
 // Fetch properties for dropdown
 $properties = [];
-$pq = $conn->query("SELECT id, name FROM properties ORDER BY name ASC");
+$pq = $conn->query("SELECT id, name FROM properties WHERE " . tenant_where_clause() . " ORDER BY name ASC");
 while ($row = $pq->fetch_assoc()) {
     $properties[] = $row;
 }
@@ -53,7 +53,7 @@ while ($row = $pq->fetch_assoc()) {
 // Fetch units for the selected property
 $units = [];
 if ($lease['property_id']) {
-    $uq = $conn->prepare("SELECT id, unit_number, status FROM units WHERE property_id = ? ORDER BY unit_number ASC");
+    $uq = $conn->prepare("SELECT id, unit_number, status FROM units WHERE property_id = ? AND " . tenant_where_clause() . " ORDER BY unit_number ASC");
     $uq->bind_param("i", $lease['property_id']);
     $uq->execute();
     $uresult = $uq->get_result();

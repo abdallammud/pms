@@ -17,11 +17,17 @@
                         <label for="description" class="form-label">Description</label>
                         <textarea class="form-control" id="description" name="description" rows="2"></textarea>
                     </div>
-                    
+
                     <div class="mb-3">
-                        <label class="form-label">Permissions</label>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label mb-0">Permissions</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="selectAllPermissions">
+                                <label class="form-check-label small" for="selectAllPermissions">Select All</label>
+                            </div>
+                        </div>
                         <div class="card">
-                            <div class="card-body permissionsContainer scroll" >
+                            <div class="card-body permissionsContainer scroll">
                                 <div class="row" id="permissionsContainer">
                                     <!-- Permissions will be loaded here via AJAX -->
                                     <div class="text-center">

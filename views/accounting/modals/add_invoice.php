@@ -1,6 +1,6 @@
 <?php
 $conn = $GLOBALS['conn'];
-$org_clause = tenant_where_clause();
+$org_clause = tenant_where_clause('l');
 $leases = $conn->query("
     SELECT l.id, t.full_name, u.unit_number 
     FROM leases l
@@ -45,7 +45,8 @@ $leases = $conn->query("
                   <div id="charge_type_container" class="mb-3 d-none">
                     <label class="form-label fw-semibold">Charge Type <span class="text-danger">*</span></label>
                     <div class="input-group">
-                      <select name="charge_type_id" id="charge_type_id" class="form-select selectpicker" data-live-search="true" title="Select Charge Type">
+                      <select name="charge_type_id" id="charge_type_id" class="form-select selectpicker"
+                        data-live-search="true" title="Select Charge Type">
                         <!-- Populated via AJAX -->
                       </select>
                       <button type="button" class="btn btn-outline-secondary" id="btnAddNewChargeType" title="Add New">
@@ -55,10 +56,13 @@ $leases = $conn->query("
                   </div>
 
                   <div class="mb-3 multiselect-parent">
-                    <label class="form-label fw-semibold multiselect-label">Lease <span class="text-danger">*</span></label>
-                    <select name="lease_id[]" id="lease_id" class="form-select selectpicker" data-live-search="true" title="Select Lease" required>
+                    <label class="form-label fw-semibold multiselect-label">Lease <span
+                        class="text-danger">*</span></label>
+                    <select name="lease_id[]" id="lease_id" class="form-select selectpicker" data-live-search="true"
+                      title="Select Lease" required>
                       <?php while ($lease = $leases->fetch_assoc()): ?>
-                        <option value="<?= $lease['id'] ?>" data-subtext="Unit <?= htmlspecialchars($lease['unit_number']) ?>">
+                        <option value="<?= $lease['id'] ?>"
+                          data-subtext="Unit <?= htmlspecialchars($lease['unit_number']) ?>">
                           <?= htmlspecialchars($lease['full_name']) ?>
                         </option>
                       <?php endwhile; ?>
@@ -70,7 +74,8 @@ $leases = $conn->query("
                     <label class="form-label fw-semibold">Invoice Date <span class="text-danger">*</span></label>
                     <div class="input-group">
                       <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
-                      <input type="text" value="<?= date('Y-m-d') ?>" name="invoice_date" id="invoice_date" class="form-control datepicker" required>
+                      <input type="text" value="<?= date('Y-m-d') ?>" name="invoice_date" id="invoice_date"
+                        class="form-control datepicker" required>
                     </div>
                   </div>
 
@@ -78,7 +83,8 @@ $leases = $conn->query("
                     <label class="form-label fw-semibold">Due Date <span class="text-danger">*</span></label>
                     <div class="input-group">
                       <span class="input-group-text"><i class="bi bi-calendar-check"></i></span>
-                      <input type="text" value="<?= date('Y-m-d') ?>" name="due_date" id="due_date" class="form-control datepicker" required>
+                      <input type="text" value="<?= date('Y-m-d') ?>" name="due_date" id="due_date"
+                        class="form-control datepicker" required>
                     </div>
                   </div>
 
@@ -87,14 +93,16 @@ $leases = $conn->query("
                       <label class="form-label fw-semibold">Billing Month</label>
                       <select name="billing_month" id="billing_month" class="form-select form-select-sm">
                         <?php for ($m = 1; $m <= 12; $m++): ?>
-                          <option value="<?= $m ?>" <?= $m == date('n') ? 'selected' : '' ?>><?= date('F', mktime(0,0,0,$m,1)) ?></option>
+                          <option value="<?= $m ?>" <?= $m == date('n') ? 'selected' : '' ?>>
+                            <?= date('F', mktime(0, 0, 0, $m, 1)) ?></option>
                         <?php endfor; ?>
                       </select>
                     </div>
                     <div class="col-6">
                       <label class="form-label fw-semibold">Year</label>
                       <select name="billing_year" id="billing_year" class="form-select form-select-sm">
-                        <?php $cy = date('Y'); for ($y = $cy - 1; $y <= $cy + 2; $y++): ?>
+                        <?php $cy = date('Y');
+                        for ($y = $cy - 1; $y <= $cy + 2; $y++): ?>
                           <option value="<?= $y ?>" <?= $y == $cy ? 'selected' : '' ?>><?= $y ?></option>
                         <?php endfor; ?>
                       </select>
@@ -103,7 +111,8 @@ $leases = $conn->query("
 
                   <div class="mb-0">
                     <label class="form-label fw-semibold">Notes</label>
-                    <textarea name="notes" id="notes" class="form-control" rows="2" placeholder="Optional notes..."></textarea>
+                    <textarea name="notes" id="notes" class="form-control" rows="2"
+                      placeholder="Optional notes..."></textarea>
                   </div>
                 </div>
               </div>
@@ -180,16 +189,22 @@ $leases = $conn->query("
 </div>
 
 <style>
-#invoiceItemsTable td { vertical-align: middle; }
-#invoiceItemsBody .inv-item-row input { font-size: .85rem; }
+  #invoiceItemsTable td {
+    vertical-align: middle;
+  }
 
-/* Remove the double-border that bootstrap-select adds inside the Charge Type input-group */
-#charge_type_container .bootstrap-select {
+  #invoiceItemsBody .inv-item-row input {
+    font-size: .85rem;
+  }
+
+  /* Remove the double-border that bootstrap-select adds inside the Charge Type input-group */
+  #charge_type_container .bootstrap-select {
     border: 0 !important;
     padding: 0 !important;
     flex: 1 1 auto;
-}
-#charge_type_container .bootstrap-select > .dropdown-toggle {
+  }
+
+  #charge_type_container .bootstrap-select>.dropdown-toggle {
     border-radius: 0;
-}
+  }
 </style>

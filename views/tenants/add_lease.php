@@ -2,21 +2,21 @@
 // Fetch tenants
 $conn = $GLOBALS['conn'];
 $tenants = [];
-$tq = $conn->query("SELECT id, full_name FROM tenants WHERE status='active' ORDER BY full_name ASC");
+$tq = $conn->query("SELECT id, full_name FROM tenants WHERE status='active' AND " . tenant_where_clause() . " ORDER BY full_name ASC");
 while ($row = $tq->fetch_assoc()) {
     $tenants[] = $row;
 }
 
 // Fetch guarantees
 $guarantees = [];
-$gq = $conn->query("SELECT id, full_name, phone FROM guarantees ORDER BY full_name ASC");
+$gq = $conn->query("SELECT id, full_name, phone FROM guarantees WHERE " . tenant_where_clause() . " ORDER BY full_name ASC");
 while ($row = $gq->fetch_assoc()) {
     $guarantees[] = $row;
 }
 
 // Fetch lease conditions from settings
 $lease_conditions_default = '';
-$lcq = $conn->query("SELECT setting_value FROM system_settings WHERE setting_key = 'lease_conditions'");
+$lcq = $conn->query("SELECT setting_value FROM system_settings WHERE setting_key = 'lease_conditions' AND " . tenant_where_clause());
 if ($lcq && $row = $lcq->fetch_assoc()) {
     $lease_conditions_default = $row['setting_value'];
 }

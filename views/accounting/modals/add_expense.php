@@ -1,8 +1,8 @@
 <!-- Add / Edit Expense Modal -->
 <?php
 $conn = $GLOBALS['conn'];
-$org_clause = tenant_where_clause();
-$properties = $conn->query("SELECT id, name FROM properties WHERE $org_clause ORDER BY name");
+$org_clause = tenant_where_clause('p');
+$properties = $conn->query("SELECT id, name FROM properties p WHERE $org_clause ORDER BY name");
 ?>
 
 <div class="modal fade" id="addExpenseModal" tabindex="-1" aria-hidden="true">
@@ -24,7 +24,8 @@ $properties = $conn->query("SELECT id, name FROM properties WHERE $org_clause OR
 
                         <!-- Expense Type -->
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Expense Type <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">Expense Type <span
+                                    class="text-danger">*</span></label>
                             <select name="expense_type" id="expense_type" class="form-select" required>
                                 <option value="Property">Property Expense</option>
                                 <option value="Aayatiin/Property Manager">Property Manager / Agency</option>
@@ -34,7 +35,8 @@ $properties = $conn->query("SELECT id, name FROM properties WHERE $org_clause OR
 
                         <!-- Property (Conditional) -->
                         <div class="col-md-6 multiselect-parent" id="property_select_container">
-                            <label class="form-label fw-semibold multiselect-label">Property <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold multiselect-label">Property <span
+                                    class="text-danger">*</span></label>
                             <select name="property_id" id="expense_property_select" class="form-select selectpicker"
                                 data-live-search="true" title="Select Property">
                                 <?php while ($row = $properties->fetch_assoc()): ?>
@@ -65,7 +67,8 @@ $properties = $conn->query("SELECT id, name FROM properties WHERE $org_clause OR
 
                         <!-- Date -->
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Expense Date <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">Expense Date <span
+                                    class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
                                 <input type="date" name="expense_date" id="expense_date" class="form-control"
@@ -75,7 +78,8 @@ $properties = $conn->query("SELECT id, name FROM properties WHERE $org_clause OR
 
                         <!-- Description -->
                         <div class="col-12">
-                            <label class="form-label fw-semibold">Description <span class="text-muted">(Optional)</span></label>
+                            <label class="form-label fw-semibold">Description <span
+                                    class="text-muted">(Optional)</span></label>
                             <textarea name="description" id="expense_description" class="form-control" rows="3"
                                 placeholder="Additional details about the expense…"></textarea>
                         </div>
@@ -97,18 +101,18 @@ $properties = $conn->query("SELECT id, name FROM properties WHERE $org_clause OR
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-    $(document).on('change', '#expense_type', function () {
-        var showProp = $(this).val() !== 'General';
-        $('#property_select_container').toggle(showProp);
-        $('#expense_property_select').prop('required', showProp);
+        $(document).on('change', '#expense_type', function () {
+            var showProp = $(this).val() !== 'General';
+            $('#property_select_container').toggle(showProp);
+            $('#expense_property_select').prop('required', showProp);
+        });
+        $(document).on('hidden.bs.modal', '#addExpenseModal', function () {
+            $('#saveExpenseForm')[0].reset();
+            $('#expense_id').val('');
+            $('#addExpenseLabel').html('<i class="bi bi-credit-card-2-back me-2"></i>Add Expense');
+            $('#saveExpenseBtn').html('<i class="bi bi-save me-1"></i>Save Expense');
+            $('#property_select_container').show();
+            if ($.fn.selectpicker) $('#expense_property_select').selectpicker('refresh');
+        });
     });
-    $(document).on('hidden.bs.modal', '#addExpenseModal', function () {
-        $('#saveExpenseForm')[0].reset();
-        $('#expense_id').val('');
-        $('#addExpenseLabel').html('<i class="bi bi-credit-card-2-back me-2"></i>Add Expense');
-        $('#saveExpenseBtn').html('<i class="bi bi-save me-1"></i>Save Expense');
-        $('#property_select_container').show();
-        if ($.fn.selectpicker) $('#expense_property_select').selectpicker('refresh');
-    });
-});
 </script>

@@ -49,6 +49,15 @@ function initAddLeaseForm() {
         loadUnitsByProperty(propertyId);
     });
 
+    // Handle unit change to auto-fill rent
+    $('#lease_unit_select').on('change', function () {
+        var selectedOption = $(this).find('option:selected');
+        var rent = selectedOption.data('rent');
+        if (rent) {
+            $('#lease_monthly_rent').val(rent);
+        }
+    });
+
     // Handle form submission
     $('#addLeaseForm').on('submit', function (e) {
         e.preventDefault();

@@ -1,6 +1,6 @@
 <?php
 $conn = $GLOBALS['conn'];
-$org_clause = tenant_where_clause();
+$org_clause = tenant_where_clause('i');
 $invoices = $conn->query("
     SELECT i.id, i.reference_number, i.amount, i.status,
            t.full_name, u.unit_number
@@ -37,13 +37,13 @@ $invoices = $conn->query("
                   <h6 class="fw-bold mb-3 text-primary"><i class="bi bi-receipt me-1"></i>Invoice &amp; Payment</h6>
 
                   <div class="mb-3 multiselect-parent">
-                    <label class="form-label fw-semibold multiselect-label">Invoice <span class="text-danger">*</span></label>
+                    <label class="form-label fw-semibold multiselect-label">Invoice <span
+                        class="text-danger">*</span></label>
                     <select name="invoice_id" id="receipt_invoice_select" class="form-select selectpicker"
-                            data-live-search="true" title="Select Invoice" required>
+                      data-live-search="true" title="Select Invoice" required>
                       <?php while ($i = $invoices->fetch_assoc()): ?>
-                        <option value="<?= $i['id'] ?>"
-                                data-amount="<?= $i['amount'] ?>"
-                                data-subtext="Unit <?= htmlspecialchars($i['unit_number']) ?>">
+                        <option value="<?= $i['id'] ?>" data-amount="<?= $i['amount'] ?>"
+                          data-subtext="Unit <?= htmlspecialchars($i['unit_number']) ?>">
                           <?= htmlspecialchars($i['reference_number']) ?> —
                           <?= htmlspecialchars($i['full_name']) ?>
                         </option>
@@ -75,8 +75,8 @@ $invoices = $conn->query("
                     <label class="form-label fw-semibold">Received Date <span class="text-danger">*</span></label>
                     <div class="input-group">
                       <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
-                      <input type="text" name="received_date" id="received_date"
-                             class="form-control datepicker" value="<?= date('Y-m-d') ?>" required>
+                      <input type="text" name="received_date" id="received_date" class="form-control datepicker"
+                        value="<?= date('Y-m-d') ?>" required>
                     </div>
                   </div>
 
@@ -84,8 +84,8 @@ $invoices = $conn->query("
                     <label class="form-label fw-semibold">Amount Paid <span class="text-danger">*</span></label>
                     <div class="input-group">
                       <span class="input-group-text">$</span>
-                      <input type="number" step="0.01" name="amount_paid" id="amount_paid"
-                             class="form-control" required min="0.01">
+                      <input type="number" step="0.01" name="amount_paid" id="amount_paid" class="form-control" required
+                        min="0.01">
                     </div>
                     <div class="form-text text-danger d-none" id="amount_warning">
                       Amount cannot exceed invoice balance.
@@ -104,7 +104,7 @@ $invoices = $conn->query("
                   <div class="mb-0">
                     <label class="form-label fw-semibold">Notes</label>
                     <textarea name="notes" id="receipt_notes" rows="2" class="form-control"
-                              placeholder="Optional notes..."></textarea>
+                      placeholder="Optional notes..."></textarea>
                   </div>
                 </div>
               </div>
@@ -114,7 +114,8 @@ $invoices = $conn->query("
             <div class="col-lg-8">
               <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
-                  <h6 class="fw-bold mb-3 text-primary"><i class="bi bi-list-check me-1"></i>Invoice Items &amp; Allocation Preview</h6>
+                  <h6 class="fw-bold mb-3 text-primary"><i class="bi bi-list-check me-1"></i>Invoice Items &amp;
+                    Allocation Preview</h6>
 
                   <div id="receipt_items_placeholder" class="text-center text-muted py-5">
                     <i class="bi bi-receipt fs-1 opacity-25"></i>

@@ -33,7 +33,7 @@ $vendors = $conn->query("
             <form id="assignRequestForm">
                 <input type="hidden" name="assignment_id" id="assignment_id">
 
-                <div class="modal-body">
+                <div class="modal-body modal-scroll-force">
                     <div class="row g-4">
 
                         <!-- Left: Request selection -->

@@ -1,4 +1,4 @@
-# Aaytiin Property Management System (PMS)
+# Kaad PMS Property Management System (PMS)
 
 A full-featured, multi-tenant web application for managing residential and commercial properties — built on PHP, MySQL, Bootstrap 5, and jQuery.
 
@@ -6,7 +6,7 @@ A full-featured, multi-tenant web application for managing residential and comme
 
 ## Overview
 
-Aaytiin PMS is a comprehensive property management platform designed for property owners, managers, and real estate companies. It centralises everything — from listing properties and managing tenants to billing, maintenance tracking, and financial reporting — in a single, clean web interface.
+Kaad PMS PMS is a comprehensive property management platform designed for property owners, managers, and real estate companies. It centralises everything — from listing properties and managing tenants to billing, maintenance tracking, and financial reporting — in a single, clean web interface.
 
 The system supports **multiple organisations** under one installation (SaaS-ready), with strict data isolation between tenants and a role-based access control system that can be tuned per user.
 
@@ -323,4 +323,4 @@ Example permission slugs:
 
 ## License
 
-Proprietary — All rights reserved. © Aaytiin Property Management System
+Proprietary — All rights reserved. © Kaad PMS Property Management System

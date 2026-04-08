@@ -19,7 +19,7 @@ $properties = $conn->query("SELECT id, name FROM properties p WHERE $org_clause 
             <form id="saveExpenseForm">
                 <input type="hidden" name="expense_id" id="expense_id">
 
-                <div class="modal-body">
+                <div class="modal-body modal-scroll-force">
                     <div class="row g-3">
 
                         <!-- Expense Type -->
@@ -28,7 +28,7 @@ $properties = $conn->query("SELECT id, name FROM properties p WHERE $org_clause 
                                     class="text-danger">*</span></label>
                             <select name="expense_type" id="expense_type" class="form-select" required>
                                 <option value="Property">Property Expense</option>
-                                <option value="Aayatiin/Property Manager">Property Manager / Agency</option>
+                                <option value="Kaad PMS/Property Manager">Property Manager / Agency</option>
                                 <option value="General">General / Other</option>
                             </select>
                         </div>

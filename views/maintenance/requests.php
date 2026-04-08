@@ -14,6 +14,14 @@
     </div>
     <!-- Page Content -->
     <div class="page-content fade-in">
+        <?php
+        $summary_cards = [
+            ['label' => 'Total Requests', 'value' => '...', 'icon' => 'bi-tools', 'color' => 'primary'],
+            ['label' => 'Pending/Work', 'value' => '...', 'icon' => 'bi-clock-history', 'color' => 'warning'],
+            ['label' => 'High Priority', 'value' => '...', 'icon' => 'bi-exclamation-triangle', 'color' => 'danger'],
+        ];
+        include 'views/partials/summary_cards.php';
+        ?>
         <div class="card shadow-sm border-0">
             <div class="card-body">
 
@@ -45,4 +53,10 @@
 <?php include 'modals/create_request.php'; ?>
 <?php include 'modals/assign_request.php'; ?>
 
+<script src="public/js/summary_cards.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        loadSummaryStats('app/maintenance_controller.php?action=get_maintenance_stats', '.card-stats-row');
+    });
+</script>
 <script src="<?= baseUri(); ?>/public/js/modules/maintenance.js"></script>

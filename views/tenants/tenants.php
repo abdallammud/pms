@@ -9,6 +9,14 @@
     </div>
     <!-- Page Content -->
     <div class="page-content fade-in">
+        <?php
+        $summary_cards = [
+            ['label' => 'Total Tenants', 'value' => '...', 'icon' => 'bi-people', 'color' => 'primary'],
+            ['label' => 'Active', 'value' => '...', 'icon' => 'bi-person-check', 'color' => 'success'],
+            ['label' => 'Inactive', 'value' => '...', 'icon' => 'bi-person-x', 'color' => 'secondary'],
+        ];
+        include 'views/partials/summary_cards.php';
+        ?>
         <div class="card">
             <div class="card-body table">
                 <div class="table-responsive">
@@ -32,3 +40,9 @@
         </div>
     </div>
 </main>
+<script src="public/js/summary_cards.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        loadSummaryStats('app/tenant_controller.php?action=get_tenant_stats', '.card-stats-row');
+    });
+</script>

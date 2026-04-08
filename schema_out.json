@@ -1,0 +1,29 @@
+{
+    "properties": [
+        "id",
+        "org_id",
+        "name",
+        "type_id",
+        "address",
+        "city",
+        "region",
+        "district",
+        "manager_id",
+        "owner_name",
+        "description",
+        "logo",
+        "created_at",
+        "created_by",
+        "updated_by",
+        "updated_at"
+    ],
+    "property_images": [
+        "id",
+        "org_id",
+        "property_id",
+        "image_path",
+        "is_cover",
+        "caption",
+        "uploaded_at"
+    ]
+}

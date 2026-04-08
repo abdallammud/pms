@@ -25,7 +25,7 @@ $leases = $conn->query("
       <form id="saveInvoiceForm">
         <input type="hidden" name="invoice_id" id="invoice_id">
 
-        <div class="modal-body">
+        <div class="modal-body modal-scroll-force">
           <div class="row g-3">
 
             <!-- Left: Invoice Meta -->
@@ -94,7 +94,8 @@ $leases = $conn->query("
                       <select name="billing_month" id="billing_month" class="form-select form-select-sm">
                         <?php for ($m = 1; $m <= 12; $m++): ?>
                           <option value="<?= $m ?>" <?= $m == date('n') ? 'selected' : '' ?>>
-                            <?= date('F', mktime(0, 0, 0, $m, 1)) ?></option>
+                            <?= date('F', mktime(0, 0, 0, $m, 1)) ?>
+                          </option>
                         <?php endfor; ?>
                       </select>
                     </div>

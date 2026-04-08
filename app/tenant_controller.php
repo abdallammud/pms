@@ -14,6 +14,8 @@ if (isset($_GET['action'])) {
                 get_tenant();
         } elseif ($action == 'bulk_action') {
                 bulk_action();
+        } elseif ($action == 'get_tenant_stats') {
+                get_tenant_stats();
         }
 }
 
@@ -57,11 +59,11 @@ function get_tenants()
         $data = [];
 
         while ($row = $result->fetch_assoc()) {
-                $actionBtn = '<button class="btn btn-sm btn-primary me-1" onclick="editTenant(' . $row['id'] . ')"><i class="bi bi-pencil"></i></button>';
+                $actionBtn = '<button class="btn btn-sm btn-outline-primary me-1" onclick="editTenant(' . $row['id'] . ')"><i class="bi bi-pencil"></i></button>';
                 if (!empty($row['phone'])) {
-                    $tName  = addslashes($row['full_name']);
-                    $tPhone = addslashes($row['phone']);
-                    $actionBtn .= '<button class="btn btn-sm btn-info text-white me-1" title="Send SMS" onclick="openSmsModal(' . $row['id'] . ',\'' . $tName . '\',\'' . $tPhone . '\')"><i class="bi bi-chat-text"></i></button>';
+                        $tName = addslashes($row['full_name']);
+                        $tPhone = addslashes($row['phone']);
+                        $actionBtn .= '<button class="btn btn-sm btn-outline-info me-1" title="Send SMS" onclick="openSmsModal(' . $row['id'] . ',\'' . $tName . '\',\'' . $tPhone . '\')"><i class="bi bi-chat-text"></i></button>';
                 }
                 $actionBtn .= '<button class="btn btn-sm btn-danger" onclick="deleteTenant(' . $row['id'] . ')"><i class="bi bi-trash"></i></button>';
 
@@ -196,8 +198,9 @@ function save_tenant()
 
         if (empty($id)) {
                 // Insert
-                $stmt = $conn->prepare("INSERT INTO tenants (org_id, full_name, phone, email, id_number, id_photo, work_id_photo, work_info, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("issssssss", $org_id, $full_name, $phone, $email, $id_number, $id_photo, $work_id_photo, $work_info, $status);
+                $stmt = $conn->prepare("INSERT INTO tenants (org_id, full_name, phone, email, id_number, id_photo, work_id_photo, work_info, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $creator_id = (int) ($_SESSION['user_id'] ?? 0);
+                $stmt->bind_param("issssssssi", $org_id, $full_name, $phone, $email, $id_number, $id_photo, $work_id_photo, $work_info, $status, $creator_id);
 
                 if ($stmt->execute()) {
                         echo json_encode(['error' => false, 'msg' => 'Tenant added successfully.']);
@@ -206,8 +209,9 @@ function save_tenant()
                 }
         } else {
                 // Update
-                $stmt = $conn->prepare("UPDATE tenants SET full_name=?, phone=?, email=?, id_number=?, id_photo=?, work_id_photo=?, work_info=?, status=? WHERE id=? AND " . tenant_where_clause());
-                $stmt->bind_param("ssssssssi", $full_name, $phone, $email, $id_number, $id_photo, $work_id_photo, $work_info, $status, $id);
+                $stmt = $conn->prepare("UPDATE tenants SET full_name=?, phone=?, email=?, id_number=?, id_photo=?, work_id_photo=?, work_info=?, status=?, updated_by=?, updated_at=CURRENT_TIMESTAMP WHERE id=? AND " . tenant_where_clause());
+                $updater_id = (int) ($_SESSION['user_id'] ?? 0);
+                $stmt->bind_param("ssssssssii", $full_name, $phone, $email, $id_number, $id_photo, $work_id_photo, $work_info, $status, $updater_id, $id);
 
                 if ($stmt->execute()) {
                         echo json_encode(['error' => false, 'msg' => 'Tenant updated successfully.']);
@@ -316,5 +320,27 @@ function bulk_action()
         } else {
                 echo json_encode(['error' => true, 'msg' => 'Invalid action type.']);
         }
+}
+
+
+function get_tenant_stats()
+{
+        ob_clean();
+        header('Content-Type: application/json');
+        $conn = $GLOBALS['conn'];
+        $org_where = tenant_where_clause();
+
+        $total = $conn->query("SELECT COUNT(*) as count FROM tenants WHERE $org_where")->fetch_assoc()['count'] ?? 0;
+        $active = $conn->query("SELECT COUNT(*) as count FROM tenants WHERE status = 'active' AND $org_where")->fetch_assoc()['count'] ?? 0;
+        $inactive = $conn->query("SELECT COUNT(*) as count FROM tenants WHERE status = 'inactive' AND $org_where")->fetch_assoc()['count'] ?? 0;
+
+        echo json_encode([
+                'error' => false,
+                'stats' => [
+                        number_format($total),
+                        number_format($active),
+                        number_format($inactive)
+                ]
+        ]);
 }
 ?>

@@ -9,6 +9,14 @@
     </div>
     <!-- Page Content -->
     <div class="page-content fade-in">
+        <?php
+        $summary_cards = [
+            ['label' => 'Total Received', 'value' => '...', 'icon' => 'bi-cash-coin', 'color' => 'success'],
+            ['label' => 'Receipt Count', 'value' => '...', 'icon' => 'bi-receipt', 'color' => 'primary'],
+            ['label' => 'Received Today', 'value' => '...', 'icon' => 'bi-calendar-check', 'color' => 'info'],
+        ];
+        include 'views/partials/summary_cards.php';
+        ?>
         <div class="card">
             <div class="card-body table">
                 <div class="table-responsive">
@@ -34,4 +42,10 @@
     </div>
 </main>
 <?php require 'views/accounting/modals/add_receipt.php'; ?>
+<script src="public/js/summary_cards.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        loadSummaryStats('app/receipt_controller.php?action=get_payment_stats', '.card-stats-row');
+    });
+</script>
 <script src="<?= baseUri(); ?>/public/js/modules/receipt.js"></script>

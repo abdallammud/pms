@@ -1,6 +1,6 @@
 <!-- Add User Modal -->
 <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="addUserModalLabel">Add New User</h5>
@@ -24,7 +24,8 @@
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
                         <input type="password" class="form-control" id="password" name="password">
-                        <small class="text-muted" id="passwordHelp">Leave blank to keep current password when editing.</small>
+                        <small class="text-muted" id="passwordHelp">Leave blank to keep current password when
+                            editing.</small>
                     </div>
                     <div class="mb-3">
                         <label for="role_id" class="form-label">Role</label>

@@ -391,9 +391,9 @@ if (isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'] === true) {
 
             <form id="loginForm">
                 <div class="form-group">
-                    <label for="email">Username</label>
+                    <label for="email">Email</label>
                     <div class="input-wrap">
-                        <input type="text" id="email" name="email" placeholder="" required autocomplete="username">
+                        <input type="email" id="email" name="email" placeholder="" required autocomplete="email">
                     </div>
                 </div>
 

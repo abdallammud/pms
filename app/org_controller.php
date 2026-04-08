@@ -69,23 +69,23 @@ function get_orgs()
             ? '<span class="badge bg-success">Active</span>'
             : '<span class="badge bg-secondary">Inactive</span>';
 
-        $actionBtn  = '<button class="btn btn-sm btn-primary me-1" onclick="editOrg(' . $row['id'] . ')"><i class="bi bi-pencil"></i></button>';
+        $actionBtn = '<button class="btn btn-sm btn-primary me-1" onclick="editOrg(' . $row['id'] . ')"><i class="bi bi-pencil"></i></button>';
         $actionBtn .= '<button class="btn btn-sm btn-danger" onclick="deleteOrg(' . $row['id'] . ')"><i class="bi bi-trash"></i></button>';
 
         $data[] = [
-            'id'      => $row['id'],
-            'name'    => htmlspecialchars($row['name']),
-            'code'    => htmlspecialchars($row['code'] ?? ''),
-            'status'  => $statusBadge,
+            'id' => $row['id'],
+            'name' => htmlspecialchars($row['name']),
+            'code' => htmlspecialchars($row['code'] ?? ''),
+            'status' => $statusBadge,
             'actions' => $actionBtn,
         ];
     }
 
     echo json_encode([
-        'draw'            => intval($draw),
-        'recordsTotal'    => intval($total_records),
+        'draw' => intval($draw),
+        'recordsTotal' => intval($total_records),
         'recordsFiltered' => intval($filtered_records),
-        'data'            => $data,
+        'data' => $data,
     ]);
 }
 
@@ -96,9 +96,9 @@ function save_org()
     header('Content-Type: application/json');
     $conn = $GLOBALS['conn'];
 
-    $id     = isset($_POST['org_id']) && is_numeric($_POST['org_id']) ? intval($_POST['org_id']) : 0;
-    $name   = trim($_POST['name'] ?? '');
-    $code   = trim($_POST['code'] ?? '');
+    $id = isset($_POST['org_id']) && is_numeric($_POST['org_id']) ? intval($_POST['org_id']) : 0;
+    $name = trim($_POST['name'] ?? '');
+    $code = trim($_POST['code'] ?? '');
     $status = $_POST['status'] ?? 'active';
 
     if (empty($name)) {
@@ -107,16 +107,18 @@ function save_org()
     }
 
     if ($id === 0) {
-        $stmt = $conn->prepare("INSERT INTO organizations (name, code, status) VALUES (?, ?, ?)");
-        $stmt->bind_param("sss", $name, $code, $status);
+        $creator_id = (int) ($_SESSION['user_id'] ?? 0);
+        $stmt = $conn->prepare("INSERT INTO organizations (name, code, status, created_by) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("sssi", $name, $code, $status, $creator_id);
         if ($stmt->execute()) {
             echo json_encode(['error' => false, 'msg' => 'Organization created.', 'id' => $conn->insert_id]);
         } else {
             echo json_encode(['error' => true, 'msg' => 'Error: ' . $conn->error]);
         }
     } else {
-        $stmt = $conn->prepare("UPDATE organizations SET name=?, code=?, status=? WHERE id=?");
-        $stmt->bind_param("sssi", $name, $code, $status, $id);
+        $updater_id = (int) ($_SESSION['user_id'] ?? 0);
+        $stmt = $conn->prepare("UPDATE organizations SET name=?, code=?, status=?, updated_by=?, updated_at=CURRENT_TIMESTAMP WHERE id=?");
+        $stmt->bind_param("sssii", $name, $code, $status, $updater_id, $id);
         if ($stmt->execute()) {
             echo json_encode(['error' => false, 'msg' => 'Organization updated.']);
         } else {
@@ -189,9 +191,9 @@ function switch_org()
     $_SESSION['active_org_id'] = $org_id;
 
     echo json_encode([
-        'error'    => false,
-        'msg'      => 'Context switched to: ' . $org['name'],
-        'org_id'   => $org_id,
+        'error' => false,
+        'msg' => 'Context switched to: ' . $org['name'],
+        'org_id' => $org_id,
         'org_name' => $org['name'],
     ]);
 }

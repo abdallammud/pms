@@ -6,9 +6,9 @@ $username = 'root';
 $password = '';
 
 
-// $db_name = 'aayacsqa_pms'; // Extract from DSN or define directly
+// $db_name = 'kaadpms_db'; 
 // $charset = 'utf8mb4'; // Extract from DSN or define directly
-// $username = 'aayacsqa_pms';
+// $username = 'kaadpms_user';
 // $password = 'Z(wfv2srWUaG';
 
 // $username = 'u562838275_pms';

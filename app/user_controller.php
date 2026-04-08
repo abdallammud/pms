@@ -60,12 +60,14 @@ function save_user()
             exit;
         }
 
-        // Check if username already exists
-        $check = $conn->prepare("SELECT id FROM users WHERE username = ? AND org_id = ?");
-        $check->bind_param("si", $username, $org_id);
+        // Check if username or email already exists
+        $check = $conn->prepare("SELECT id FROM users WHERE (username = ? OR email = ?) AND org_id = ?");
+        $check->bind_param("ssi", $username, $email, $org_id);
         $check->execute();
-        if ($check->get_result()->num_rows > 0) {
-            echo json_encode(['error' => true, 'msg' => 'Username already exists.']);
+        $res = $check->get_result();
+        if ($res->num_rows > 0) {
+            $existing = $res->fetch_assoc();
+            echo json_encode(['error' => true, 'msg' => 'Username or Email already exists.']);
             exit;
         }
 
@@ -87,12 +89,12 @@ function save_user()
         }
     } else {
         // Update
-        // Check if username already exists for other users
-        $check = $conn->prepare("SELECT id FROM users WHERE username = ? AND id != ? AND org_id = ?");
-        $check->bind_param("sii", $username, $id, $org_id);
+        // Check if username or email already exists for other users
+        $check = $conn->prepare("SELECT id FROM users WHERE (username = ? OR email = ?) AND id != ? AND org_id = ?");
+        $check->bind_param("ssii", $username, $email, $id, $org_id);
         $check->execute();
         if ($check->get_result()->num_rows > 0) {
-            echo json_encode(['error' => true, 'msg' => 'Username already exists.']);
+            echo json_encode(['error' => true, 'msg' => 'Username or Email already exists.']);
             exit;
         }
 
@@ -166,7 +168,7 @@ function get_users()
     $data = [];
 
     while ($row = $result->fetch_assoc()) {
-        $actionBtn = '<button class="btn btn-sm btn-primary me-1" onclick="editUserModal(' . $row['id'] . ')"><i class="bi bi-pencil"></i></button>';
+        $actionBtn = '<button class="btn btn-sm btn-outline-primary me-1" onclick="editUserModal(' . $row['id'] . ')"><i class="bi bi-pencil"></i></button>';
         $actionBtn .= '<button class="btn btn-sm btn-danger" onclick="deleteUser(' . $row['id'] . ')"><i class="bi bi-trash"></i></button>';
 
         $data[] = [
@@ -250,8 +252,9 @@ function save_role()
             exit;
         }
 
-        $stmt = $conn->prepare("INSERT INTO roles (org_id, role_name, description) VALUES (?, ?, ?)");
-        $stmt->bind_param("iss", $org_id, $role_name, $description);
+        $creator_id = (int) ($_SESSION['user_id'] ?? 0);
+        $stmt = $conn->prepare("INSERT INTO roles (org_id, role_name, description, created_by) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("issi", $org_id, $role_name, $description, $creator_id);
 
         if ($stmt->execute()) {
             $new_role_id = $stmt->insert_id;
@@ -287,8 +290,9 @@ function save_role()
             exit;
         }
 
-        $stmt = $conn->prepare("UPDATE roles SET role_name=?, description=? WHERE id=? AND org_id=?");
-        $stmt->bind_param("ssii", $role_name, $description, $id, $org_id);
+        $updater_id = (int) ($_SESSION['user_id'] ?? 0);
+        $stmt = $conn->prepare("UPDATE roles SET role_name=?, description=?, updated_by=?, updated_at=CURRENT_TIMESTAMP WHERE id=? AND org_id=?");
+        $stmt->bind_param("ssiii", $role_name, $description, $updater_id, $id, $org_id);
 
         if ($stmt->execute()) {
             $conn->query("DELETE FROM role_permissions WHERE role_id = $id");
@@ -313,8 +317,8 @@ function get_roles()
     header('Content-Type: application/json');
     global $conn;
 
-    $draw   = $_POST['draw'] ?? 1;
-    $start  = $_POST['start'] ?? 0;
+    $draw = $_POST['draw'] ?? 1;
+    $start = $_POST['start'] ?? 0;
     $length = $_POST['length'] ?? 10;
     $search_value = $_POST['search']['value'] ?? '';
 
@@ -336,22 +340,22 @@ function get_roles()
     $data = [];
 
     while ($row = $result->fetch_assoc()) {
-        $actionBtn  = '<button class="btn btn-sm btn-info me-1" onclick="viewPermissions(' . $row['id'] . ')" title="View Permissions"><i class="bi bi-eye"></i></button>';
-        $actionBtn .= '<button class="btn btn-sm btn-primary me-1" onclick="editRole(' . $row['id'] . ')"><i class="bi bi-pencil"></i></button>';
+        $actionBtn = '<button class="btn btn-sm btn-outline-info me-1" onclick="viewPermissions(' . $row['id'] . ')" title="View Permissions"><i class="bi bi-eye"></i></button>';
+        $actionBtn .= '<button class="btn btn-sm btn-outline-primary me-1" onclick="editRole(' . $row['id'] . ')"><i class="bi bi-pencil"></i></button>';
         $actionBtn .= '<button class="btn btn-sm btn-danger" onclick="deleteRole(' . $row['id'] . ')"><i class="bi bi-trash"></i></button>';
 
         $data[] = [
-            'role_name'   => $row['role_name'],
+            'role_name' => $row['role_name'],
             'description' => $row['description'],
-            'actions'     => $actionBtn,
+            'actions' => $actionBtn,
         ];
     }
 
     echo json_encode([
-        'draw'            => intval($draw),
-        'recordsTotal'    => intval($total_records),
+        'draw' => intval($draw),
+        'recordsTotal' => intval($total_records),
         'recordsFiltered' => intval($filtered_records),
-        'data'            => $data,
+        'data' => $data,
     ]);
 }
 
@@ -359,7 +363,7 @@ function get_role()
 {
     header('Content-Type: application/json');
     global $conn;
-    $id     = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+    $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
     $org_id = resolve_request_org_id();
 
     // Get Role Details — must belong to current org
@@ -392,7 +396,7 @@ function delete_role()
 {
     header('Content-Type: application/json');
     global $conn;
-    $id     = isset($_POST['id']) ? (int) $_POST['id'] : 0;
+    $id = isset($_POST['id']) ? (int) $_POST['id'] : 0;
     $org_id = resolve_request_org_id();
 
     // Verify ownership — role must belong to the current org
@@ -447,7 +451,7 @@ function get_role_permissions()
 {
     header('Content-Type: application/json');
     global $conn;
-    $id     = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+    $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
     $org_id = resolve_request_org_id();
 
     // Ensure the role belongs to this org

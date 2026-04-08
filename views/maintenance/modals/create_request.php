@@ -19,7 +19,7 @@ $properties = $conn->query("SELECT id, name FROM properties p WHERE $org_clause 
             <form id="saveRequestForm">
                 <input type="hidden" name="request_id" id="request_id">
 
-                <div class="modal-body">
+                <div class="modal-body modal-scroll-force">
                     <div class="row g-4">
 
                         <!-- Left column: Location -->

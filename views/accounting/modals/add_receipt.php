@@ -27,7 +27,7 @@ $invoices = $conn->query("
       <form id="saveReceiptForm">
         <input type="hidden" name="receipt_id" id="receipt_id">
 
-        <div class="modal-body">
+        <div class="modal-body modal-scroll-force">
           <div class="row g-3">
 
             <!-- Left: Invoice Selection + Payment Info -->

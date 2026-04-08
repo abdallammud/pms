@@ -12,6 +12,8 @@ if (isset($_GET['action'])) {
         delete_expense();
     } elseif ($action == 'get_expense') {
         get_expense();
+    } elseif ($action == 'get_expense_stats') {
+        get_expense_stats();
     }
 }
 
@@ -62,13 +64,14 @@ function get_expenses()
     $data = [];
 
     while ($row = $result->fetch_assoc()) {
-        $actionBtn = '<button class="btn btn-sm btn-primary me-1" onclick="editExpense(' . $row['id'] . ')" title="Edit"><i class="bi bi-pencil"></i></button>';
+        $actionBtn = '<button class="btn btn-sm btn-outline-primary me-1" onclick="editExpense(' . $row['id'] . ')" title="Edit"><i class="bi bi-pencil"></i></button>';
+        $actionBtn .= '<a href="' . baseUri() . '/pdf.php?print=expense&id=' . $row['id'] . '" class="btn btn-sm btn-outline-info me-1" target="_blank" title="Print"><i class="bi bi-printer"></i></a>';
         $actionBtn .= '<button class="btn btn-sm btn-danger" onclick="deleteExpense(' . $row['id'] . ')" title="Delete"><i class="bi bi-trash"></i></button>';
 
         $data[] = [
             'id' => $row['id'],
             'reference_number' => $row['reference_number'] ?? 'EXP-' . $row['id'],
-            'property_name' => $row['expense_type'] == 'Property' ? ($row['property_name'] ?? 'N/A') : 'Aayatiin',
+            'property_name' => $row['expense_type'] == 'Property' ? ($row['property_name'] ?? 'N/A') : 'Kaad PMS',
             'expense_type' => $row['expense_type'],
             'category' => $row['category'],
             'amount' => number_format($row['amount'], 2),
@@ -121,8 +124,9 @@ function save_expense()
         // Generate reference number (simple logic for now, or use same pattern as invoices)
         $reference_number = 'EXP-' . date('Ymd') . '-' . rand(100, 999);
 
-        $sql = "INSERT INTO expenses (org_id, property_id, expense_type, category, amount, description, expense_date, reference_number) 
-                VALUES ($org_id, $property_id_val, '$expense_type', '$category', $amount, '$description', '$expense_date', '$reference_number')";
+        $creator_id = (int) ($_SESSION['user_id'] ?? 0);
+        $sql = "INSERT INTO expenses (org_id, property_id, expense_type, category, amount, description, expense_date, reference_number, created_by) 
+                VALUES ($org_id, $property_id_val, '$expense_type', '$category', $amount, '$description', '$expense_date', '$reference_number', $creator_id)";
 
         if ($conn->query($sql)) {
             echo json_encode(['error' => false, 'msg' => 'Expense added successfully.']);
@@ -132,13 +136,16 @@ function save_expense()
     } else {
         // UPDATE
         $id = intval($id);
+        $updater_id = (int) ($_SESSION['user_id'] ?? 0);
         $sql = "UPDATE expenses SET 
                     property_id = $property_id_val, 
                     expense_type = '$expense_type', 
                     category = '$category', 
                     amount = $amount, 
                     description = '$description', 
-                    expense_date = '$expense_date' 
+                    expense_date = '$expense_date',
+                    updated_by = $updater_id,
+                    updated_at = CURRENT_TIMESTAMP
                 WHERE id = $id AND " . tenant_where_clause();
 
         if ($conn->query($sql)) {
@@ -193,5 +200,30 @@ function get_expense()
     } else {
         echo json_encode(['error' => true, 'msg' => 'Expense not found.']);
     }
+}
+
+function get_expense_stats()
+{
+    ob_clean();
+    header('Content-Type: application/json');
+    $conn = $GLOBALS['conn'];
+    $org_where = tenant_where_clause();
+
+    $total_res = $conn->query("SELECT SUM(amount) as total FROM expenses WHERE $org_where")->fetch_assoc();
+    $total_amount = $total_res['total'] ?? 0;
+
+    $this_month_res = $conn->query("SELECT SUM(amount) as total FROM expenses WHERE MONTH(expense_date) = MONTH(CURDATE()) AND YEAR(expense_date) = YEAR(CURDATE()) AND $org_where")->fetch_assoc();
+    $month_total = $this_month_res['total'] ?? 0;
+
+    $count = $conn->query("SELECT COUNT(*) as count FROM expenses WHERE $org_where")->fetch_assoc()['count'] ?? 0;
+
+    echo json_encode([
+        'error' => false,
+        'stats' => [
+            '$' . number_format($total_amount, 2),
+            '$' . number_format($month_total, 2),
+            number_format($count)
+        ]
+    ]);
 }
 ?>

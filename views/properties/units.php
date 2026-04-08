@@ -9,6 +9,15 @@
     </div>
     <!-- Page Content -->
     <div class="page-content fade-in">
+        <?php
+        $summary_cards = [
+            ['label' => 'Total Units', 'value' => '...', 'icon' => 'bi-building', 'color' => 'primary'],
+            ['label' => 'Occupied', 'value' => '...', 'icon' => 'bi-person-check', 'color' => 'success'],
+            ['label' => 'Vacant', 'value' => '...', 'icon' => 'bi-door-open', 'color' => 'info'],
+            ['label' => 'Maintenance', 'value' => '...', 'icon' => 'bi-tools', 'color' => 'warning'],
+        ];
+        include 'views/partials/summary_cards.php';
+        ?>
         <div class="card">
             <div class="card-body table">
                 <div class="table-responsive">
@@ -31,3 +40,9 @@
         </div>
     </div>
 </main>
+<script src="public/js/summary_cards.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        loadSummaryStats('app/property_controller.php?action=get_unit_stats', '.card-stats-row');
+    });
+</script>

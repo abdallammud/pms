@@ -1,0 +1,15 @@
+id
+org_id
+invoice_number
+reference_number
+invoice_type
+charge_type_id
+lease_id
+invoice_date
+due_date
+billing_month
+billing_year
+amount
+status
+notes
+created_at

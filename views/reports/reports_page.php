@@ -6,39 +6,62 @@
 
     <div class="page-content fade-in">
 
-        <!-- Quick Date Range Strip -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body py-3">
-                <form id="quick-report-form" class="row g-3 align-items-end" action="report_display" method="GET">
-                    <input type="hidden" name="report_type" id="report_type_hidden">
-
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold small">Start Date</label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
-                            <input type="text" name="startDate" id="startDate" class="form-control datepicker"
-                                value="<?= date('Y-m-01') ?>" required>
+        <!-- Filter Section -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 15px; border-left: 5px solid var(--primary-accent) !important;">
+            <div class="card-body p-4">
+                <div class="row align-items-center">
+                    <div class="col-lg-2">
+                        <div class="d-flex align-items-center gap-2 mb-lg-0 mb-3">
+                            <div class="bg-primary bg-opacity-10 p-2 rounded-3 text-primary">
+                                <i class="bi bi-funnel fs-5"></i>
+                            </div>
+                            <div>
+                                <span class="d-block text-uppercase fw-bold ls-1 small text-muted" style="font-size: 10px;">Filter By</span>
+                                <h6 class="mb-0 fw-bold">Date Range</h6>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold small">End Date</label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text"><i class="bi bi-calendar-check"></i></span>
-                            <input type="text" name="endDate" id="endDate" class="form-control datepicker"
-                                value="<?= date('Y-m-d') ?>" required>
-                        </div>
+                    <div class="col-lg-10">
+                        <form id="quick-report-form" class="row g-3 align-items-end" action="report_display" method="GET">
+                            <input type="hidden" name="report_type" id="report_type_hidden">
+                            
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold small text-muted">Start Date</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-calendar-event text-primary"></i></span>
+                                    <input type="text" name="startDate" id="startDate" class="form-control border-start-0 ps-0 datepicker"
+                                        value="<?= date('Y-m-01') ?>" required>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold small text-muted">End Date</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-calendar-check text-primary"></i></span>
+                                    <input type="text" name="endDate" id="endDate" class="form-control border-start-0 ps-0 datepicker"
+                                        value="<?= date('Y-m-d') ?>" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold small text-muted">Quick Presets</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-lightning-charge text-warning"></i></span>
+                                    <select class="form-select border-start-0 ps-0" id="quick_range">
+                                        <option value="">Custom Range</option>
+                                        <option value="this_month" selected>This Month</option>
+                                        <option value="last_month">Last Month</option>
+                                        <option value="this_quarter">This Quarter</option>
+                                        <option value="this_year">This Year</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-primary w-100 py-2 d-none d-lg-block" onclick="runDefaultReport()">
+                                    <i class="bi bi-search me-1"></i>Apply
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold small">Quick Range</label>
-                        <select class="form-select form-select-sm" id="quick_range">
-                            <option value="">Custom</option>
-                            <option value="this_month" selected>This Month</option>
-                            <option value="last_month">Last Month</option>
-                            <option value="this_quarter">This Quarter</option>
-                            <option value="this_year">This Year</option>
-                        </select>
-                    </div>
-                </form>
+                </div>
             </div>
         </div>
 
@@ -137,6 +160,10 @@
         var form = document.getElementById('quick-report-form');
         document.getElementById('report_type_hidden').value = type;
         form.submit();
+    }
+
+    function runDefaultReport() {
+        runReport('rent_collection'); // Default report if Apply clicked without card
     }
 
     // Quick date range

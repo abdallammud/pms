@@ -30,7 +30,7 @@
 
 <!-- Unit Type Modal -->
 <div class="modal fade" id="unitTypeModal" tabindex="-1" aria-labelledby="unitTypeModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="unitTypeModalLabel">Add Unit Type</h5>

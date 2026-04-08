@@ -39,6 +39,9 @@ if (isset($_GET['action'])) {
         case 'get_invoice_items':
             get_invoice_items();
             break;
+        case 'get_invoice_stats':
+            get_invoice_stats();
+            break;
     }
 }
 
@@ -300,11 +303,11 @@ function save_invoice()
             $sql = "INSERT INTO invoices (
                         org_id, invoice_type, charge_type_id, lease_id, reference_number,
                         amount, invoice_date, due_date, billing_month, billing_year, 
-                        notes, status
+                        notes, status, created_by
                     ) VALUES (
-                        $org_id, '$invoice_type', " . ($charge_type_id ? $charge_type_id : 'NULL') . ", 
-                        $lease_id, '$reference_number', $amount, '$invoice_date', 
-                        '$due_date', $billing_month, $billing_year, '$notes', '$status'
+                        $org_id, '$invoice_type', " . ($charge_type_id === null ? 'NULL' : $charge_type_id) . ", $lease_id, '$reference_number',
+                        $amount, '$invoice_date', '$due_date', $billing_month, $billing_year,
+                        '$notes', '$status', " . (int) ($_SESSION['user_id'] ?? 0) . "
                     )";
 
             if ($conn->query($sql)) {
@@ -403,8 +406,9 @@ function save_invoice_items($conn, $invoice_id, $org_id, $items_desc, $items_qty
         if ($exists && $exists->num_rows === 0) {
             $desc = $conn->real_escape_string('Invoice Amount');
             $ltot = floatval($fallback_amount);
-            $conn->query("INSERT INTO invoice_items (org_id, invoice_id, description, qty, unit_price, tax_rate, tax_amount, line_total, amount_paid, balance, sort_order)
-                          VALUES ($org_id, $invoice_id, '$desc', 1, $ltot, 0, 0, $ltot, 0, $ltot, 1)");
+            $creator_id = (int) ($_SESSION['user_id'] ?? 0);
+            $conn->query("INSERT INTO invoice_items (org_id, invoice_id, description, qty, unit_price, tax_rate, tax_amount, line_total, amount_paid, balance, sort_order, created_by)
+                          VALUES ($org_id, $invoice_id, '$desc', 1, $ltot, 0, 0, $ltot, 0, $ltot, 1, $creator_id)");
         }
         return;
     }
@@ -425,8 +429,9 @@ function save_invoice_items($conn, $invoice_id, $org_id, $items_desc, $items_qty
         $ltot = round($qty * $uprc + $ltax, 2);
 
         $desc_esc = $conn->real_escape_string($desc);
-        $conn->query("INSERT INTO invoice_items (org_id, invoice_id, description, qty, unit_price, tax_rate, tax_amount, line_total, amount_paid, balance, sort_order)
-                      VALUES ($org_id, $invoice_id, '$desc_esc', $qty, $uprc, $taxr, $ltax, $ltot, 0, $ltot, $sort)");
+        $creator_id = (int) ($_SESSION['user_id'] ?? 0);
+        $conn->query("INSERT INTO invoice_items (org_id, invoice_id, description, qty, unit_price, tax_rate, tax_amount, line_total, amount_paid, balance, sort_order, created_by)
+                      VALUES ($org_id, $invoice_id, '$desc_esc', $qty, $uprc, $taxr, $ltax, $ltot, 0, $ltot, $sort, $creator_id)");
         $sort++;
     }
 }
@@ -955,5 +960,26 @@ function check_duplicate_rent()
         'error' => false,
         'is_duplicate' => $is_duplicate,
         'msg' => $is_duplicate ? 'A rent invoice already exists for this lease and billing period.' : ''
+    ]);
+}
+
+function get_invoice_stats()
+{
+    ob_clean();
+    header('Content-Type: application/json');
+    $conn = $GLOBALS['conn'];
+    $org_where = tenant_where_clause();
+
+    $total = $conn->query("SELECT COUNT(*) as count FROM invoices WHERE $org_where")->fetch_assoc()['count'] ?? 0;
+    $unpaid = $conn->query("SELECT COUNT(*) as count FROM invoices WHERE status = 'unpaid' AND $org_where")->fetch_assoc()['count'] ?? 0;
+    $overdue = $conn->query("SELECT COUNT(*) as count FROM invoices WHERE status = 'unpaid' AND due_date < CURDATE() AND $org_where")->fetch_assoc()['count'] ?? 0;
+
+    echo json_encode([
+        'error' => false,
+        'stats' => [
+            number_format($total),
+            number_format($unpaid),
+            number_format($overdue)
+        ]
     ]);
 }

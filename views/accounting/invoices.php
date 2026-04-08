@@ -9,6 +9,14 @@
     </div>
     <!-- Page Content -->
     <div class="page-content fade-in">
+        <?php
+        $summary_cards = [
+            ['label' => 'Total Invoices', 'value' => '...', 'icon' => 'bi-receipt', 'color' => 'primary'],
+            ['label' => 'Unpaid', 'value' => '...', 'icon' => 'bi-exclamation-square', 'color' => 'danger'],
+            ['label' => 'Overdue', 'value' => '...', 'icon' => 'bi-clock-history', 'color' => 'warning'],
+        ];
+        include 'views/partials/summary_cards.php';
+        ?>
         <div class="card">
             <div class="card-body table">
                 <div class="table-responsive">
@@ -34,3 +42,9 @@
         </div>
     </div>
 </main>
+<script src="public/js/summary_cards.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        loadSummaryStats('app/invoice_controller.php?action=get_invoice_stats', '.card-stats-row');
+    });
+</script>

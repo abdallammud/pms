@@ -4,7 +4,7 @@ require_once 'init.php';
 if (isset($_GET['action'])) {
     $action = $_GET['action'];
 
-        if ($action == 'get_receipts') {
+    if ($action == 'get_receipts') {
         get_receipts();
     } elseif ($action == 'save_receipt') {
         save_receipt();
@@ -18,6 +18,8 @@ if (isset($_GET['action'])) {
         get_payment_show();
     } elseif ($action == 'get_invoice_balance') {
         get_invoice_balance();
+    } elseif ($action == 'get_payment_stats') {
+        get_payment_stats();
     }
 }
 
@@ -68,7 +70,8 @@ function get_receipts()
 
     while ($row = $result->fetch_assoc()) {
         $actionBtn = '<button class="btn btn-sm btn-outline-primary me-1" onclick="viewPayment(' . $row['id'] . ')" title="View"><i class="bi bi-eye"></i></button>'
-                   . '<button class="btn btn-sm btn-danger" onclick="deleteReceipt(' . $row['id'] . ')"><i class="bi bi-trash"></i></button>';
+            . '<a href="' . baseUri() . '/pdf.php?print=receipt&id=' . $row['id'] . '" class="btn btn-sm btn-outline-info me-1" target="_blank" title="Print"><i class="bi bi-printer"></i></a>'
+            . '<button class="btn btn-sm btn-danger" onclick="deleteReceipt(' . $row['id'] . ')"><i class="bi bi-trash"></i></button>';
 
         $paymentMethodBadge = '';
         if ($row['payment_method'] == 'cash') {
@@ -107,13 +110,13 @@ function save_receipt()
     header('Content-Type: application/json');
     $conn = $GLOBALS['conn'];
 
-    $id            = $_POST['receipt_id']    ?? '';
-    $invoice_id    = intval($_POST['invoice_id']    ?? 0);
-    $amount_paid   = floatval($_POST['amount_paid'] ?? 0);
+    $id = $_POST['receipt_id'] ?? '';
+    $invoice_id = intval($_POST['invoice_id'] ?? 0);
+    $amount_paid = floatval($_POST['amount_paid'] ?? 0);
     $received_date = $_POST['received_date'] ?? '';
     $payment_method = $_POST['payment_method'] ?? 'cash';
-    $notes         = $conn->real_escape_string($_POST['notes'] ?? '');
-    $org_id        = resolve_request_org_id();
+    $notes = $conn->real_escape_string($_POST['notes'] ?? '');
+    $org_id = resolve_request_org_id();
 
     if ($invoice_id <= 0 || $amount_paid <= 0 || empty($received_date)) {
         echo json_encode(['error' => true, 'msg' => 'Please fill in all required fields.']);
@@ -137,8 +140,9 @@ function save_receipt()
     if (empty($id)) {
         // Insert payment
         $receipt_number = generate_reference_number('payment');
-        $stmt = $conn->prepare("INSERT INTO payments_received (org_id, receipt_number, invoice_id, amount_paid, received_date, payment_method, notes) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("isidsss", $org_id, $receipt_number, $invoice_id, $amount_paid, $received_date, $payment_method, $notes);
+        $creator_id = (int) ($_SESSION['user_id'] ?? 0);
+        $stmt = $conn->prepare("INSERT INTO payments_received (org_id, receipt_number, invoice_id, amount_paid, received_date, payment_method, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("isidsssi", $org_id, $receipt_number, $invoice_id, $amount_paid, $received_date, $payment_method, $notes, $creator_id);
 
         if ($stmt->execute()) {
             $payment_id = $conn->insert_id;
@@ -153,8 +157,9 @@ function save_receipt()
         // Revert previous allocations for this payment before re-allocating
         $conn->query("DELETE FROM payment_allocations WHERE payment_id = $id");
 
-        $stmt = $conn->prepare("UPDATE payments_received SET amount_paid=?, received_date=?, payment_method=?, notes=? WHERE id=? AND " . tenant_where_clause());
-        $stmt->bind_param("dsssi", $amount_paid, $received_date, $payment_method, $notes, $id);
+        $stmt = $conn->prepare("UPDATE payments_received SET amount_paid=?, received_date=?, payment_method=?, notes=?, updated_by=?, updated_at=CURRENT_TIMESTAMP WHERE id=? AND " . tenant_where_clause());
+        $updater_id = (int) ($_SESSION['user_id'] ?? 0);
+        $stmt->bind_param("dsssii", $amount_paid, $received_date, $payment_method, $notes, $updater_id, $id);
 
         if ($stmt->execute()) {
             allocate_payment_fifo($conn, $id, $invoice_id, $amount_paid, $org_id);
@@ -183,18 +188,21 @@ function allocate_payment_fifo($conn, $payment_id, $invoice_id, $amount, $org_id
     $remaining = $amount;
 
     while ($item = $items->fetch_assoc()) {
-        if ($remaining <= 0) break;
+        if ($remaining <= 0)
+            break;
 
         $item_balance = round(floatval($item['line_total']) - floatval($item['already_paid']), 2);
-        if ($item_balance <= 0) continue;
+        if ($item_balance <= 0)
+            continue;
 
         $alloc = min($remaining, $item_balance);
         $alloc = round($alloc, 2);
 
-        $conn->query("INSERT INTO payment_allocations (org_id, payment_id, invoice_item_id, amount) VALUES ($org_id, $payment_id, {$item['id']}, $alloc)");
+        $creator_id = (int) ($_SESSION['user_id'] ?? 0);
+        $conn->query("INSERT INTO payment_allocations (org_id, payment_id, invoice_item_id, amount, created_by) VALUES ($org_id, $payment_id, {$item['id']}, $alloc, $creator_id)");
 
         // Update item amount_paid and balance
-        $new_paid    = round(floatval($item['already_paid']) + $alloc, 2);
+        $new_paid = round(floatval($item['already_paid']) + $alloc, 2);
         $new_balance = round(floatval($item['line_total']) - $new_paid, 2);
         $conn->query("UPDATE invoice_items SET amount_paid = $new_paid, balance = $new_balance WHERE id = {$item['id']}");
 
@@ -212,9 +220,13 @@ function get_invoice_balance()
     $conn = $GLOBALS['conn'];
 
     $invoice_id = intval($_GET['invoice_id'] ?? 0);
-    if ($invoice_id <= 0) { echo json_encode(['error' => true]); exit; }
+    if ($invoice_id <= 0) {
+        echo json_encode(['error' => true]);
+        exit;
+    }
 
-    $inv = $conn->query("
+    $inv = $conn->query(
+        "
         SELECT i.reference_number, i.status,
                t.full_name AS tenant_name, u.unit_number
         FROM invoices i
@@ -224,7 +236,10 @@ function get_invoice_balance()
         WHERE i.id = $invoice_id AND " . tenant_where_clause('i')
     )->fetch_assoc();
 
-    if (!$inv) { echo json_encode(['error' => true, 'msg' => 'Invoice not found']); exit; }
+    if (!$inv) {
+        echo json_encode(['error' => true, 'msg' => 'Invoice not found']);
+        exit;
+    }
 
     $items_res = $conn->query("
         SELECT ii.*,
@@ -234,24 +249,24 @@ function get_invoice_balance()
         ORDER BY ii.sort_order, ii.id
     ");
 
-    $items     = [];
-    $total     = 0;
+    $items = [];
+    $total = 0;
     $total_paid = 0;
 
     while ($r = $items_res->fetch_assoc()) {
         $r['item_balance'] = round(floatval($r['line_total']) - floatval($r['allocated']), 2);
-        $items[]    = $r;
-        $total      += floatval($r['line_total']);
+        $items[] = $r;
+        $total += floatval($r['line_total']);
         $total_paid += floatval($r['allocated']);
     }
 
     echo json_encode([
-        'error'        => false,
-        'invoice'      => $inv,
-        'items'        => $items,
-        'total'        => round($total, 2),
-        'total_paid'   => round($total_paid, 2),
-        'balance'      => round($total - $total_paid, 2),
+        'error' => false,
+        'invoice' => $inv,
+        'items' => $items,
+        'total' => round($total, 2),
+        'total_paid' => round($total_paid, 2),
+        'balance' => round($total - $total_paid, 2),
     ]);
 }
 
@@ -265,9 +280,14 @@ function get_payment_show()
     $conn = $GLOBALS['conn'];
 
     $id = intval($_GET['id'] ?? 0);
-    if ($id <= 0) { http_response_code(404); echo json_encode(['error' => true]); exit; }
+    if ($id <= 0) {
+        http_response_code(404);
+        echo json_encode(['error' => true]);
+        exit;
+    }
 
-    $pmt = $conn->query("
+    $pmt = $conn->query(
+        "
         SELECT pr.*,
                i.reference_number AS invoice_ref, i.status AS invoice_status,
                t.full_name AS tenant_name, u.unit_number,
@@ -281,7 +301,11 @@ function get_payment_show()
         WHERE pr.id = $id AND " . tenant_where_clause('pr')
     )->fetch_assoc();
 
-    if (!$pmt) { http_response_code(404); echo json_encode(['error' => true, 'msg' => 'Payment not found']); exit; }
+    if (!$pmt) {
+        http_response_code(404);
+        echo json_encode(['error' => true, 'msg' => 'Payment not found']);
+        exit;
+    }
 
     $alloc_res = $conn->query("
         SELECT pa.amount, ii.description, ii.line_total, ii.sort_order
@@ -291,7 +315,8 @@ function get_payment_show()
         ORDER BY ii.sort_order, ii.id
     ");
     $allocations = [];
-    while ($a = $alloc_res->fetch_assoc()) $allocations[] = $a;
+    while ($a = $alloc_res->fetch_assoc())
+        $allocations[] = $a;
 
     $pmt['allocations'] = $allocations;
     echo json_encode($pmt);
@@ -321,7 +346,8 @@ function delete_receipt()
     $alloc_items = $conn->query("SELECT DISTINCT invoice_item_id FROM payment_allocations WHERE payment_id = $id");
     $affected_item_ids = [];
     if ($alloc_items) {
-        while ($ai = $alloc_items->fetch_assoc()) $affected_item_ids[] = intval($ai['invoice_item_id']);
+        while ($ai = $alloc_items->fetch_assoc())
+            $affected_item_ids[] = intval($ai['invoice_item_id']);
     }
     $conn->query("DELETE FROM payment_allocations WHERE payment_id = $id");
 
@@ -334,7 +360,7 @@ function delete_receipt()
             $r = $conn->query("SELECT line_total, COALESCE((SELECT SUM(pa.amount) FROM payment_allocations pa WHERE pa.invoice_item_id = $item_id),0) AS paid FROM invoice_items WHERE id = $item_id")->fetch_assoc();
             if ($r) {
                 $new_paid = round(floatval($r['paid']), 2);
-                $new_bal  = round(floatval($r['line_total']) - $new_paid, 2);
+                $new_bal = round(floatval($r['line_total']) - $new_paid, 2);
                 $conn->query("UPDATE invoice_items SET amount_paid=$new_paid, balance=$new_bal WHERE id=$item_id");
             }
         }
@@ -433,4 +459,30 @@ function bulk_action()
     } else {
         echo json_encode(['error' => true, 'msg' => 'Invalid action type.']);
     }
+}
+
+function get_payment_stats()
+{
+    ob_clean();
+    header('Content-Type: application/json');
+    $conn = $GLOBALS['conn'];
+    $org_where = tenant_where_clause();
+
+    $total_res = $conn->query("SELECT SUM(amount_paid) as total FROM payments_received WHERE $org_where")->fetch_assoc();
+    $total_amount = $total_res['total'] ?? 0;
+
+    $count = $conn->query("SELECT COUNT(*) as count FROM payments_received WHERE $org_where")->fetch_assoc()['count'] ?? 0;
+
+    // Payments today
+    $today_res = $conn->query("SELECT SUM(amount_paid) as total FROM payments_received WHERE received_date = CURDATE() AND $org_where")->fetch_assoc();
+    $today_total = $today_res['total'] ?? 0;
+
+    echo json_encode([
+        'error' => false,
+        'stats' => [
+            '$' . number_format($total_amount, 2),
+            number_format($count),
+            '$' . number_format($today_total, 2)
+        ]
+    ]);
 }

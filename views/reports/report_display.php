@@ -48,7 +48,7 @@ switch ($report_type) {
                 <?php echo $reportTitle; ?>
             </h6>
             <div class="d-flex align-items-center">
-                <span class="badge badge-info p-2 mr-2">
+                <span class=" p-2 mr-2">
                     <?php echo $displayStart; ?> -
                     <?php echo $displayEnd; ?>
                 </span>

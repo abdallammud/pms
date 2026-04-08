@@ -30,7 +30,7 @@
 
 <!-- Amenity Modal -->
 <div class="modal fade" id="amenityModal" tabindex="-1" aria-labelledby="amenityModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="amenityModalLabel">Add Amenity</h5>
@@ -80,8 +80,8 @@
 <script src="<?= baseUri(); ?>/public/js/modules/amenities.js"></script>
 
 <script>
-function previewAmenityIcon(cls) {
-    var el = document.getElementById('amenityIconPreview');
-    el.innerHTML = cls ? '<i class="bi ' + cls + '"></i>' : '<i class="bi bi-tag"></i>';
-}
+    function previewAmenityIcon(cls) {
+        var el = document.getElementById('amenityIconPreview');
+        el.innerHTML = cls ? '<i class="bi ' + cls + '"></i>' : '<i class="bi bi-tag"></i>';
+    }
 </script>

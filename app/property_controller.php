@@ -48,6 +48,8 @@ if (isset($_GET['action'])) {
                 delete_property_image();
         } elseif ($action == 'set_cover_image') {
                 set_cover_image();
+        } elseif ($action == 'get_unit_stats') {
+                get_unit_stats();
         }
 }
 
@@ -96,8 +98,9 @@ function save_unit()
         }
 
         if (empty($id)) {
-                $stmt = $conn->prepare("INSERT INTO units (org_id, property_id, unit_number, unit_type, unit_type_id, size_sqft, rent_amount, status, floor_number, room_count, is_listed, tenant_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("iissidssiiis", $org_id, $property_id, $unit_number, $unit_type, $unit_type_id, $size_sqft, $rent_amount, $status, $floor_number, $room_count, $is_listed, $tenant_id);
+                $stmt = $conn->prepare("INSERT INTO units (org_id, property_id, unit_number, unit_type, unit_type_id, size_sqft, rent_amount, status, floor_number, room_count, is_listed, tenant_id, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $creator_id = (int) ($_SESSION['user_id'] ?? 0);
+                $stmt->bind_param("iissidssiiiis", $org_id, $property_id, $unit_number, $unit_type, $unit_type_id, $size_sqft, $rent_amount, $status, $floor_number, $room_count, $is_listed, $tenant_id, $creator_id);
 
                 if ($stmt->execute()) {
                         $unit_id = $conn->insert_id;
@@ -107,8 +110,9 @@ function save_unit()
                         echo json_encode(['error' => true, 'msg' => 'Error adding unit: ' . $conn->error]);
                 }
         } else {
-                $stmt = $conn->prepare("UPDATE units SET property_id=?, unit_number=?, unit_type=?, unit_type_id=?, size_sqft=?, rent_amount=?, status=?, floor_number=?, room_count=?, is_listed=?, tenant_id=? WHERE id=? AND " . tenant_where_clause());
-                $stmt->bind_param("issidssiiisi", $property_id, $unit_number, $unit_type, $unit_type_id, $size_sqft, $rent_amount, $status, $floor_number, $room_count, $is_listed, $tenant_id, $id);
+                $stmt = $conn->prepare("UPDATE units SET property_id=?, unit_number=?, unit_type=?, unit_type_id=?, size_sqft=?, rent_amount=?, status=?, floor_number=?, room_count=?, is_listed=?, tenant_id=?, updated_by=?, updated_at=CURRENT_TIMESTAMP WHERE id=? AND " . tenant_where_clause());
+                $updater_id = (int) ($_SESSION['user_id'] ?? 0);
+                $stmt->bind_param("issidssiiiisi", $property_id, $unit_number, $unit_type, $unit_type_id, $size_sqft, $rent_amount, $status, $floor_number, $room_count, $is_listed, $tenant_id, $updater_id, $id);
 
                 if ($stmt->execute()) {
                         save_unit_amenities((int) $id, $amenity_ids);
@@ -132,7 +136,6 @@ function save_unit_amenities(int $unit_id, array $amenity_ids)
                 $stmt->execute();
         }
 }
-
 
 function get_properties()
 {
@@ -260,8 +263,9 @@ function save_property()
         $type_id = !empty($type_id) ? intval($type_id) : null;
 
         if (empty($id)) {
-                $stmt = $conn->prepare("INSERT INTO properties (org_id, name, type_id, address, city, region, district, manager_id, owner_name, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("isisssssss", $org_id, $name, $type_id, $address, $city, $region, $district, $manager_id, $owner_name, $description);
+                $stmt = $conn->prepare("INSERT INTO properties (org_id, name, type_id, address, city, region, district, manager_id, owner_name, description, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $creator_id = (int) ($_SESSION['user_id'] ?? 0);
+                $stmt->bind_param("isisssssssi", $org_id, $name, $type_id, $address, $city, $region, $district, $manager_id, $owner_name, $description, $creator_id);
 
                 if ($stmt->execute()) {
                         echo json_encode(['error' => false, 'msg' => 'Property added successfully.', 'id' => $conn->insert_id]);
@@ -269,8 +273,9 @@ function save_property()
                         echo json_encode(['error' => true, 'msg' => 'Error adding property: ' . $conn->error]);
                 }
         } else {
-                $stmt = $conn->prepare("UPDATE properties SET name=?, type_id=?, address=?, city=?, region=?, district=?, manager_id=?, owner_name=?, description=? WHERE id=? AND " . tenant_where_clause());
-                $stmt->bind_param("sisssssssi", $name, $type_id, $address, $city, $region, $district, $manager_id, $owner_name, $description, $id);
+                $stmt = $conn->prepare("UPDATE properties SET name=?, type_id=?, address=?, city=?, region=?, district=?, manager_id=?, owner_name=?, description=?, updated_by=?, updated_at=CURRENT_TIMESTAMP WHERE id=? AND " . tenant_where_clause());
+                $updater_id = (int) ($_SESSION['user_id'] ?? 0);
+                $stmt->bind_param("sisssssssii", $name, $type_id, $address, $city, $region, $district, $manager_id, $owner_name, $description, $updater_id, $id);
 
                 if ($stmt->execute()) {
                         echo json_encode(['error' => false, 'msg' => 'Property updated successfully.']);
@@ -355,7 +360,7 @@ WHERE " . tenant_where_clause('u');
         $data = [];
 
         while ($row = $result->fetch_assoc()) {
-                $actionBtn = '<button class="btn btn-sm btn-primary me-1" onclick="editUnit(' . $row['id'] . ')"><i
+                $actionBtn = '<button class="btn btn-sm btn-outline-primary me-1" onclick="editUnit(' . $row['id'] . ')"><i
                 class="bi bi-pencil"></i></button>';
                 $actionBtn .= '<button class="btn btn-sm btn-danger" onclick="deleteUnit(' . $row['id'] . ')"><i
                 class="bi bi-trash"></i></button>';
@@ -987,4 +992,26 @@ function get_property_show()
         ]);
 }
 
+function get_unit_stats()
+{
+        ob_clean();
+        header('Content-Type: application/json');
+        $conn = $GLOBALS['conn'];
+        $org_where = tenant_where_clause();
+
+        $total = $conn->query("SELECT COUNT(*) as count FROM units WHERE $org_where")->fetch_assoc()['count'] ?? 0;
+        $occupied = $conn->query("SELECT COUNT(*) as count FROM units WHERE status = 'occupied' AND $org_where")->fetch_assoc()['count'] ?? 0;
+        $vacant = $conn->query("SELECT COUNT(*) as count FROM units WHERE status = 'vacant' AND $org_where")->fetch_assoc()['count'] ?? 0;
+        $maintenance = $conn->query("SELECT COUNT(*) as count FROM units WHERE status = 'maintenance' AND $org_where")->fetch_assoc()['count'] ?? 0;
+
+        echo json_encode([
+                'error' => false,
+                'stats' => [
+                        number_format($total),
+                        number_format($occupied),
+                        number_format($vacant),
+                        number_format($maintenance)
+                ]
+        ]);
+}
 ?>

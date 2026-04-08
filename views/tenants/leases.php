@@ -9,6 +9,14 @@
     </div>
     <!-- Page Content -->
     <div class="page-content fade-in">
+        <?php
+        $summary_cards = [
+            ['label' => 'Total Leases', 'value' => '...', 'icon' => 'bi-file-earmark-text', 'color' => 'primary'],
+            ['label' => 'Active Leases', 'value' => '...', 'icon' => 'bi-check-circle', 'color' => 'success'],
+            ['label' => 'Expiring Soon', 'value' => '...', 'icon' => 'bi-clock-history', 'color' => 'warning'],
+        ];
+        include 'views/partials/summary_cards.php';
+        ?>
         <div class="card">
             <div class="card-body table">
                 <div class="table-responsive">
@@ -38,7 +46,7 @@
 <!-- Auto-Rent Progress Modal -->
 <div class="modal fade" id="autoRentProgressModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
     aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title fw-bold">Generating Rent Invoices</h5>
@@ -63,3 +71,9 @@
         </div>
     </div>
 </div>
+<script src="public/js/summary_cards.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        loadSummaryStats('app/lease_controller.php?action=get_lease_stats', '.card-stats-row');
+    });
+</script>

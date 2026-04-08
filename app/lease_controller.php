@@ -14,6 +14,8 @@ if (isset($_GET['action'])) {
                 get_lease();
         } elseif ($action == 'bulk_action') {
                 bulk_action();
+        } elseif ($action == 'get_lease_stats') {
+                get_lease_stats();
         }
 }
 
@@ -80,9 +82,9 @@ OR l.status LIKE '%$search_value%')";
 
         while ($row = $result->fetch_assoc()) {
                 // Action buttons
-                $actionBtn = '<button class="btn btn-sm btn-info me-1" onclick="viewLease(' . $row['id'] . ')" title="View"><i
+                $actionBtn = '<button class="btn btn-sm btn-outline-info me-1" onclick="viewLease(' . $row['id'] . ')" title="View"><i
                 class="bi bi-eye"></i></button>';
-                $actionBtn .= '<button class="btn btn-sm btn-primary me-1" onclick="editLease(' . $row['id'] . ')" title="Edit"><i
+                $actionBtn .= '<button class="btn btn-sm btn-outline-primary me-1" onclick="editLease(' . $row['id'] . ')" title="Edit"><i
                 class="bi bi-pencil"></i></button>';
                 $actionBtn .= '<button class="btn btn-sm btn-danger" onclick="deleteLease(' . $row['id'] . ')" title="Delete"><i
                 class="bi bi-trash"></i></button>';
@@ -191,14 +193,15 @@ function save_lease()
                 $reference_number = generate_reference_number('lease');
 
                 // Insert new lease
+                $creator_id = (int) ($_SESSION['user_id'] ?? 0);
                 $sql = "INSERT INTO leases (
         org_id, reference_number, tenant_id, guarantee_id, property_id, unit_id,
         start_date, end_date, monthly_rent, deposit, payment_cycle,
-        auto_invoice, status, lease_conditions, vehicle_info, legal_weapons, witnesses, created_at
+        auto_invoice, status, lease_conditions, vehicle_info, legal_weapons, witnesses, created_by, created_at
         ) VALUES (
         $org_id, '$reference_number', $tenant_id, $guarantee_id, $property_id, $unit_id,
         '$start_date', '$end_date', $monthly_rent, $deposit, '$rent_cycle',
-        $auto_invoice, '$status', '$lease_conditions', '$vehicle_info', '$legal_weapons', '$witnesses_json', NOW()
+        $auto_invoice, '$status', '$lease_conditions', '$vehicle_info', '$legal_weapons', '$witnesses_json', $creator_id, NOW()
         )";
 
                 if ($conn->query($sql)) {
@@ -214,6 +217,7 @@ function save_lease()
         } else {
                 // Update existing lease
                 $id = intval($id);
+                $updater_id = (int) ($_SESSION['user_id'] ?? 0);
                 $sql = "UPDATE leases SET
         tenant_id = $tenant_id,
         guarantee_id = $guarantee_id,
@@ -229,7 +233,9 @@ function save_lease()
         lease_conditions = '$lease_conditions',
         vehicle_info = '$vehicle_info',
         legal_weapons = '$legal_weapons',
-        witnesses = '$witnesses_json'
+        witnesses = '$witnesses_json',
+        updated_by = $updater_id,
+        updated_at = CURRENT_TIMESTAMP
         WHERE id = $id AND " . tenant_where_clause();
 
                 if ($conn->query($sql)) {
@@ -435,10 +441,10 @@ function bulk_action()
 
                         $sql = "INSERT INTO invoices (
                         org_id, invoice_type, lease_id, reference_number, amount,
-                        invoice_date, due_date, billing_month, billing_year, status
+                        invoice_date, due_date, billing_month, billing_year, status, created_by
                         ) VALUES (
                         $org_id, 'rent', $lease_id, '$reference_number', $amount,
-                        '$invoice_date', '$due_date', $billing_month, $billing_year, 'unpaid'
+                        '$invoice_date', '$due_date', $billing_month, $billing_year, 'unpaid', " . (int) ($_SESSION['user_id'] ?? 0) . "
                         )";
 
                         if ($conn->query($sql)) {
@@ -471,4 +477,26 @@ function bulk_action()
         } else {
                 echo json_encode(['error' => true, 'msg' => 'Invalid action type.']);
         }
+}
+
+function get_lease_stats()
+{
+        ob_clean();
+        header('Content-Type: application/json');
+        $conn = $GLOBALS['conn'];
+        $org_where = tenant_where_clause();
+
+        $total = $conn->query("SELECT COUNT(*) as count FROM leases WHERE $org_where")->fetch_assoc()['count'] ?? 0;
+        $active = $conn->query("SELECT COUNT(*) as count FROM leases WHERE status = 'active' AND $org_where")->fetch_assoc()['count'] ?? 0;
+        // Expiring soon: next 30 days
+        $expiring = $conn->query("SELECT COUNT(*) as count FROM leases WHERE status = 'active' AND end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY) AND $org_where")->fetch_assoc()['count'] ?? 0;
+
+        echo json_encode([
+                'error' => false,
+                'stats' => [
+                        number_format($total),
+                        number_format($active),
+                        number_format($expiring)
+                ]
+        ]);
 }

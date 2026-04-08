@@ -103,8 +103,9 @@ function save_vendor()
 
     if (empty($id)) {
         // Insert
-        $stmt = $conn->prepare("INSERT INTO vendors (org_id, vendor_name, service_type, phone, email) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("issss", $org_id, $vendor_name, $service_type, $phone, $email);
+        $creator_id = (int) ($_SESSION['user_id'] ?? 0);
+        $stmt = $conn->prepare("INSERT INTO vendors (org_id, vendor_name, service_type, phone, email, created_by) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("issssi", $org_id, $vendor_name, $service_type, $phone, $email, $creator_id);
 
         if ($stmt->execute()) {
             ob_clean();
@@ -117,8 +118,9 @@ function save_vendor()
         }
     } else {
         // Update
-        $stmt = $conn->prepare("UPDATE vendors SET vendor_name=?, service_type=?, phone=?, email=? WHERE id=? AND " . tenant_where_clause());
-        $stmt->bind_param("ssssi", $vendor_name, $service_type, $phone, $email, $id);
+        $updater_id = (int) ($_SESSION['user_id'] ?? 0);
+        $stmt = $conn->prepare("UPDATE vendors SET vendor_name=?, service_type=?, phone=?, email=?, updated_by=?, updated_at=CURRENT_TIMESTAMP WHERE id=? AND " . tenant_where_clause());
+        $stmt->bind_param("ssssii", $vendor_name, $service_type, $phone, $email, $updater_id, $id);
 
         if ($stmt->execute()) {
             ob_clean();

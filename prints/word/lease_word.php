@@ -90,14 +90,14 @@ if ($res) {
 
 // Fallbacks
 if (empty($orgName))
-    $orgName = "AAYATIIN PROPERTY LTD";
+    $orgName = "Kaad PMS";
 if (empty($orgAddress))
     $orgAddress = "Taleh Tower - Taleh Street - Mogadishu Somalia, Mogadishu";
 if (empty($orgPhone))
     $orgPhone = "+252 77 100038 | +252 77100039";
 
-// Custom Lighter Blue color and font
-$customBlue = '7B94FF'; // Lighter version of #2D51FF (matching #2d51ffad approximation)
+// Custom System Blue color and font
+$customBlue = '2E62A8'; // Matching --primary-accent: #2e62a8
 $labelColor = '5A5C69';
 $primaryGreen = '018725';
 

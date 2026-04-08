@@ -52,7 +52,7 @@ function get_guarantees()
     $data = [];
 
     while ($row = $result->fetch_assoc()) {
-        $actionBtn = '<button class="btn btn-sm btn-primary me-1" onclick="editGuarantee(' . $row['id'] . ')"><i class="bi bi-pencil"></i></button>';
+        $actionBtn = '<button class="btn btn-sm btn-outline-primary me-1" onclick="editGuarantee(' . $row['id'] . ')"><i class="bi bi-pencil"></i></button>';
         $actionBtn .= '<button class="btn btn-sm btn-danger" onclick="deleteGuarantee(' . $row['id'] . ')"><i class="bi bi-trash"></i></button>';
 
         $statusBadge = '';
@@ -184,8 +184,9 @@ function save_guarantee()
 
     if (empty($id)) {
         // Insert
-        $stmt = $conn->prepare("INSERT INTO guarantees (org_id, full_name, phone, email, id_number, id_photo, work_id_photo, work_info, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("issssssss", $org_id, $full_name, $phone, $email, $id_number, $id_photo, $work_id_photo, $work_info, $status);
+        $stmt = $conn->prepare("INSERT INTO guarantees (org_id, full_name, phone, email, id_number, id_photo, work_id_photo, work_info, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $creator_id = (int) ($_SESSION['user_id'] ?? 0);
+        $stmt->bind_param("issssssssi", $org_id, $full_name, $phone, $email, $id_number, $id_photo, $work_id_photo, $work_info, $status, $creator_id);
 
         if ($stmt->execute()) {
             echo json_encode(['error' => false, 'msg' => 'Guarantor added successfully.']);
@@ -194,8 +195,9 @@ function save_guarantee()
         }
     } else {
         // Update
-        $stmt = $conn->prepare("UPDATE guarantees SET full_name=?, phone=?, email=?, id_number=?, id_photo=?, work_id_photo=?, work_info=?, status=? WHERE id=? AND " . tenant_where_clause());
-        $stmt->bind_param("ssssssssi", $full_name, $phone, $email, $id_number, $id_photo, $work_id_photo, $work_info, $status, $id);
+        $stmt = $conn->prepare("UPDATE guarantees SET full_name=?, phone=?, email=?, id_number=?, id_photo=?, work_id_photo=?, work_info=?, status=?, updated_by=?, updated_at=CURRENT_TIMESTAMP WHERE id=? AND " . tenant_where_clause());
+        $updater_id = (int) ($_SESSION['user_id'] ?? 0);
+        $stmt->bind_param("ssssssssii", $full_name, $phone, $email, $id_number, $id_photo, $work_id_photo, $work_info, $status, $updater_id, $id);
 
         if ($stmt->execute()) {
             echo json_encode(['error' => false, 'msg' => 'Guarantor updated successfully.']);

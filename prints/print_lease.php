@@ -6,7 +6,8 @@
 
 // Get lease ID
 $lease_id = isset($_GET['lease_id']) ? intval($_GET['lease_id']) : 0;
-if ($lease_id <= 0) die('Invalid lease ID');
+if ($lease_id <= 0)
+    die('Invalid lease ID');
 
 $conn = $GLOBALS['conn'];
 
@@ -27,31 +28,43 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $lease_id);
 $stmt->execute();
 $lease = $stmt->get_result()->fetch_assoc();
-if (!$lease) die('Lease not found');
+if (!$lease)
+    die('Lease not found');
+if (!require_same_tenant_or_super($lease['org_id']))
+    die('Access denied');
 
 $witnesses = json_decode($lease['witnesses'] ?? '[]', true) ?: [];
 
 // Status colors
 $statusText = ucfirst($lease['status']);
 $statusColor = [108, 117, 125]; // Gray
-if ($lease['status'] == 'active') $statusColor = [40, 167, 69]; // Green
-elseif ($lease['status'] == 'pending') $statusColor = [255, 193, 7]; // Yellow
-elseif ($lease['status'] == 'expired') $statusColor = [220, 53, 69]; // Red
+if ($lease['status'] == 'active')
+    $statusColor = [40, 167, 69]; // Green
+elseif ($lease['status'] == 'pending')
+    $statusColor = [255, 193, 7]; // Yellow
+elseif ($lease['status'] == 'expired')
+    $statusColor = [220, 53, 69]; // Red
 
 // Dates
 $startDate = date('F d, Y', strtotime($lease['start_date']));
 $endDate = date('F d, Y', strtotime($lease['end_date']));
-$printedDate = date('F d, Y'); 
+$printedDate = date('F d, Y');
 
 // Org Info — scoped to the lease's org
-$orgName = ''; $orgAddress = ''; $orgPhone = '';
+$orgName = '';
+$orgAddress = '';
+$orgPhone = '';
 $logoPath = './public/images/logo.png'; // default fallback
 $result = $conn->query("SELECT setting_key, setting_value FROM system_settings WHERE org_id = " . intval($lease['org_id'] ?? 0));
 while ($row = $result->fetch_assoc()) {
-    if ($row['setting_key'] == 'org_name')    $orgName    = $row['setting_value'];
-    if ($row['setting_key'] == 'org_street1') $orgAddress  = $row['setting_value'];
-    if ($row['setting_key'] == 'org_city')    $orgAddress .= ', ' . $row['setting_value'];
-    if ($row['setting_key'] == 'org_phone')   $orgPhone    = $row['setting_value'];
+    if ($row['setting_key'] == 'org_name')
+        $orgName = $row['setting_value'];
+    if ($row['setting_key'] == 'org_street1')
+        $orgAddress = $row['setting_value'];
+    if ($row['setting_key'] == 'org_city')
+        $orgAddress .= ', ' . $row['setting_value'];
+    if ($row['setting_key'] == 'org_phone')
+        $orgPhone = $row['setting_value'];
     if ($row['setting_key'] == 'doc_logo_path' && !empty($row['setting_value']))
         $logoPath = './' . ltrim($row['setting_value'], './');
     // Fall back to system logo if no document logo set
@@ -60,7 +73,8 @@ while ($row = $result->fetch_assoc()) {
 }
 // Init PDF
 // Clean any existing output buffer to prevent "Some data has already been output" errors
-if (ob_get_length()) ob_end_clean();
+if (ob_get_length())
+    ob_end_clean();
 
 $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
 $pdf->SetCreator('PMS');
@@ -130,9 +144,10 @@ $pdf->Ln(5);
 // ============================================================
 // HELPER FUNCTIONS FOR CARDS
 // ============================================================
-function drawCardHeader($pdf, $x, $y, $w, $titleEng, $titleSom) {
+function drawCardHeader($pdf, $x, $y, $w, $titleEng, $titleSom)
+{
     $pdf->SetXY($x, $y);
-    $pdf->SetFillColor(234, 236, 244); 
+    $pdf->SetFillColor(234, 236, 244);
     $pdf->SetTextColor(51, 51, 51);
     $pdf->SetFont('helvetica', 'B', 9);
     // Draw background rect
@@ -146,31 +161,32 @@ function drawCardHeader($pdf, $x, $y, $w, $titleEng, $titleSom) {
     return $y + 10;
 }
 
-function drawRow($pdf, $x, $y, $w, $labelEng, $labelSom, $value, $isLast=false) {
+function drawRow($pdf, $x, $y, $w, $labelEng, $labelSom, $value, $isLast = false)
+{
     $h = 10; // Fixed row height
     // Border bottom line
     if (!$isLast) {
         $pdf->SetLineStyle(['width' => 0.1, 'color' => [240, 240, 240]]);
         $pdf->Line($x, $y + $h, $x + $w, $y + $h);
     }
-    
+
     // Label
     $pdf->SetXY($x + 2, $y + 1);
     $pdf->SetFont('helvetica', 'B', 8);
     $pdf->SetTextColor(90, 92, 105);
     $pdf->Cell($w * 0.4, 4, $labelEng, 0, 1);
-    
+
     $pdf->SetXY($x + 2, $y + 5);
     $pdf->SetFont('helvetica', '', 7);
     $pdf->SetTextColor(133, 135, 150);
     $pdf->Cell($w * 0.4, 4, $labelSom, 0, 1);
-    
+
     // Value
     $pdf->SetXY($x + ($w * 0.4), $y);
     $pdf->SetFont('helvetica', 'B', 9);
     $pdf->SetTextColor(0, 0, 0);
     $pdf->Cell($w * 0.6, $h, $value, 0, 1, 'L', 0, '', 1); // Vertically aligned
-    
+
     return $y + $h;
 }
 
@@ -245,7 +261,7 @@ $pdf->SetFont('helvetica', 'B', 11);
 $pdf->SetXY($curX + ($colWidth * 0.4), $curY - 10);
 // $pdf->Cell($colWidth * 0.6, 10, '$' . number_format($lease['monthly_rent'], 2), 0, 0, 'L');
 // Reset
-$pdf->SetTextColor(0,0,0);
+$pdf->SetTextColor(0, 0, 0);
 
 $curY = drawRow($pdf, $curX, $curY, $colWidth, 'Deposit', 'Debaaji', '$' . number_format($lease['deposit'], 2));
 $curY = drawRow($pdf, $curX, $curY, $colWidth, 'Cycle', 'Wareega', ucfirst($lease['payment_cycle']));
@@ -260,7 +276,7 @@ $pdf->SetY($startY + $cardH + 5);
 // ============================================================
 if (!empty($lease['lease_conditions'])) {
     $curY = $pdf->GetY();
-    
+
     // Header
     $pdf->SetFillColor(234, 236, 244);
     $pdf->SetFont('helvetica', 'B', 9);
@@ -272,25 +288,25 @@ if (!empty($lease['lease_conditions'])) {
     $pdf->SetFont('helvetica', '', 7);
     $pdf->SetTextColor(100, 100, 100);
     $pdf->Cell(190, 5, 'Shuruudaha Heshiiska', 0, 1, 'L');
-    
+
     $curY += 10;
-    
+
     // Content Box
     $pdf->SetFont('helvetica', '', 8);
     $pdf->SetTextColor(0, 0, 0);
-    
+
     // Clean text
     $condText = strip_tags(str_replace(['<br>', '<br/>', '<p>', '</p>'], ["\n", "\n", "\n", "\n"], $lease['lease_conditions']));
     $condText = trim(preg_replace('/\n+/', "\n", $condText));
-    
+
     // Calculate height
     $numLines = $pdf->getNumLines($condText, 190);
     $boxH = ($numLines * 4) + 4; // 4mm per line + padding
-    
+
     $pdf->Rect(10, $curY, 190, $boxH);
     $pdf->SetXY(10, $curY + 2);
     $pdf->MultiCell(190, 4, $condText, 0, 'L');
-    
+
     $pdf->SetY($curY + $boxH + 5);
 }
 
@@ -300,35 +316,38 @@ if (!empty($lease['lease_conditions'])) {
 if (!empty($witnesses)) {
     $pdf->SetFont('helvetica', 'B', 10);
     $pdf->Cell(0, 8, 'Witnesses / Marqaatiyaal', 0, 1);
-    
+
     $pdf->SetFont('helvetica', '', 8);
     foreach ($witnesses as $i => $w) {
         $y = $pdf->GetY();
-        if ($y > 260) { $pdf->AddPage(); $y = 10; } // Auto page break check manually if needed
-        
+        if ($y > 260) {
+            $pdf->AddPage();
+            $y = 10;
+        } // Auto page break check manually if needed
+
         $name = $w['name'] ?? '';
         $phone = $w['phone'] ?? '';
         $id = $w['id_card'] ?? '';
-        
+
         $pdf->SetFont('helvetica', 'B', 8);
         $pdf->Cell(25, 5, 'Name / Magaca:', 0, 0);
         $pdf->SetFont('helvetica', '', 8);
         $pdf->Cell(40, 5, $name, 0, 0);
-        
+
         $pdf->SetFont('helvetica', 'B', 8);
         $pdf->Cell(7, 5, 'Tel:', 0, 0);
         $pdf->SetFont('helvetica', '', 8);
         $pdf->Cell(20, 5, $phone, 0, 0);
-        
+
         // Signature Line
         $pdf->SetX(120);
         $pdf->Cell(60, 5, 'Signature: ___________________________________', 0, 1, 'R');
-        
+
         $pdf->Ln(2);
         // Divider
         $pdf->SetLineStyle(['width' => 0.1, 'color' => [200, 200, 200], 'dash' => '1,1']);
         $pdf->Line(10, $pdf->GetY(), 200, $pdf->GetY());
-        $pdf->SetLineStyle(['width' => 0.1, 'color' => [0,0,0], 'dash' => 0]); // Reset
+        $pdf->SetLineStyle(['width' => 0.1, 'color' => [0, 0, 0], 'dash' => 0]); // Reset
         $pdf->Ln(2);
     }
     $pdf->Ln(3);
@@ -340,7 +359,10 @@ if (!empty($witnesses)) {
 if (!empty($lease['vehicle_info']) || !empty($lease['legal_weapons'])) {
     $y = $pdf->GetY();
     // Check page break
-    if ($y > 250) { $pdf->AddPage(); $y = 10; }
+    if ($y > 250) {
+        $pdf->AddPage();
+        $y = 10;
+    }
 
     // Header
     $pdf->SetFillColor(234, 236, 244);
@@ -351,13 +373,13 @@ if (!empty($lease['vehicle_info']) || !empty($lease['legal_weapons'])) {
     $pdf->SetXY(10, $y + 4);
     $pdf->SetFont('helvetica', '', 7);
     $pdf->Cell(190, 5, 'Gaariga & Hubka', 0, 1, 'L');
-    
+
     $y += 10;
-    
+
     // Two columns
     $pdf->Rect(10, $y, 190, 20); // Border
     $pdf->Line(105, $y, 105, $y + 20); // Middle Line
-    
+
     // Col 1
     $pdf->SetXY(12, $y + 2);
     $pdf->SetFont('helvetica', 'B', 8);
@@ -391,7 +413,10 @@ if (!empty($lease['vehicle_info']) || !empty($lease['legal_weapons'])) {
 // SIGNATURES
 // ============================================================
 $y = $pdf->GetY();
-if ($y > 265) { $pdf->AddPage(); $y = 10; }
+if ($y > 265) {
+    $pdf->AddPage();
+    $y = 10;
+}
 
 $pdf->SetY($y + 5);
 $pdf->SetFont('helvetica', 'B', 9);

@@ -1,37 +1,46 @@
 :root {
 	--page-bg: #fff;
-	--primary-color: #1d3354;         /* Navy sidebar base */
-	--primary-dark:  #162844;         /* Darker navy for hover/active */
-	--primary-mid:   #243f68;         /* Mid-tone for submenu hover */
-	--primary-accent:#2e62a8;         /* Accent blue for active items, links, badges */
-	--topbar-bg:     #ffffff;         /* White topbar */
-	--topbar-border: rgba(0,0,0,.07); /* Subtle topbar bottom border */
-	--topbar-icon:   #1d3354;         /* Topbar icon / text colour */
+	--primary-color: #1d3354;
+	/* Navy sidebar base */
+	--primary-dark: #162844;
+	/* Darker navy for hover/active */
+	--primary-mid: #243f68;
+	/* Mid-tone for submenu hover */
+	--primary-accent: #2e62a8;
+	/* Accent blue for active items, links, badges */
+	--topbar-bg: #ffffff;
+	/* White topbar */
+	--topbar-border: rgba(0, 0, 0, .07);
+	/* Subtle topbar bottom border */
+	--topbar-icon: #1d3354;
+	/* Topbar icon / text colour */
 	--secondary-color: #b0b0b0;
-	--accent-color:  #2e62a8;
-	--text-color:    #ffffff;         /* Sidebar text */
-	--text-color-light: #c8d5e8;      /* Sidebar text muted */
-	--light-color:   #f4f6fb;
-	--dark-color:    #162844;
+	--accent-color: #2e62a8;
+	--text-color: #ffffff;
+	/* Sidebar text */
+	--text-color-light: #c8d5e8;
+	/* Sidebar text muted */
+	--light-color: #f4f6fb;
+	--dark-color: #162844;
 	--sidebar-width: 260px;
 	--sidebar-collapsed-width: 70px;
 	--transition-speed: 0.3s;
 	--border-radius: 12px;
-	--box-shadow:    0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06);
-	--box-shadow-lg: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.05);
+	--box-shadow: 0 4px 6px -1px rgba(0, 0, 0, .1), 0 2px 4px -1px rgba(0, 0, 0, .06);
+	--box-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, .1), 0 4px 6px -2px rgba(0, 0, 0, .05);
 
 	--menu-active-color: #2e62a8;
 
 	/* Blue palette light shades */
-	--primary-light-1:  #1e3a5f;
-	--primary-light-2:  #224575;
-	--primary-light-3:  #27528c;
-	--primary-light-4:  #2e62a8;
-	--primary-light-5:  #3a74c4;
-	--primary-light-6:  #5089d4;
-	--primary-light-7:  #7aabdf;
-	--primary-light-8:  #a9c9ec;
-	--primary-light-9:  #d0e3f5;
+	--primary-light-1: #1e3a5f;
+	--primary-light-2: #224575;
+	--primary-light-3: #27528c;
+	--primary-light-4: #2e62a8;
+	--primary-light-5: #3a74c4;
+	--primary-light-6: #5089d4;
+	--primary-light-7: #7aabdf;
+	--primary-light-8: #a9c9ec;
+	--primary-light-9: #d0e3f5;
 	--primary-light-10: #e3eff9;
 	--primary-light-11: #f0f6fc;
 	--primary-light-12: #f7fafd;
@@ -337,7 +346,12 @@ body {
 	font-family: 'Manrope', 'Inter', 'Noto Sans', sans-serif;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
 	font-family: 'Manrope', 'Inter', 'Noto Sans', sans-serif;
 	font-weight: 600;
 }
@@ -402,7 +416,7 @@ h1, h2, h3, h4, h5, h6 {
 /*Modal*/
 .modal-header {
 	padding: 16px 20px 12px;
-	border-bottom: 1px solid rgba(0,0,0,.08);
+	border-bottom: 1px solid rgba(0, 0, 0, .08);
 	background: transparent;
 }
 
@@ -415,11 +429,11 @@ h1, h2, h3, h4, h5, h6 {
 .modal-content {
 	border-radius: 12px;
 	border: none;
-	box-shadow: 0 8px 32px rgba(29,51,84,.15);
+	box-shadow: 0 8px 32px rgba(29, 51, 84, .15);
 }
 
 .modal-footer {
-	border-top: 1px solid rgba(0,0,0,.08);
+	border-top: 1px solid rgba(0, 0, 0, .08);
 	padding: 12px 20px;
 }
 
@@ -440,6 +454,12 @@ h1, h2, h3, h4, h5, h6 {
 
 .modal-body {
 	padding-top: 0px;
+}
+
+/* Targeted Modal Scrolling for busy modals (Finance/Maintenance) */
+.modal-scroll-force {
+	max-height: calc(100vh - 180px) !important;
+	overflow-y: auto !important;
 }
 
 
@@ -773,7 +793,7 @@ button.btn.dropdown-toggle:not(.actions) {
 
 .sidebar-wrapper .sidebar-nav .metismenu a:hover,
 .sidebar-wrapper .sidebar-nav .metismenu ul a:hover,
-.sidebar-wrapper .sidebar-nav .metismenu .mm-active > a,
+.sidebar-wrapper .sidebar-nav .metismenu .mm-active>a,
 .sidebar-wrapper .sidebar-nav .metismenu ul .active,
 .sidebar-wrapper .sidebar-nav .metismenu ul a.active {
 	background-color: var(--primary-accent);
@@ -787,7 +807,7 @@ button.btn.dropdown-toggle:not(.actions) {
 .top-header .navbar {
 	background-color: var(--topbar-bg);
 	border-bottom: 1px solid var(--topbar-border);
-	box-shadow: 0 1px 4px rgba(0,0,0,.07);
+	box-shadow: 0 1px 4px rgba(0, 0, 0, .07);
 }
 
 .top-header .nav-right-links .nav-link {

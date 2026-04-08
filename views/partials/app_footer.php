@@ -4,7 +4,7 @@
 
 <!--start footer-->
 <footer class="page-footer">
-	<p class="mb-0">Copyright © <?= date('Y') ?>. All right reserved.</p>
+    <p class="mb-0">Copyright © <?= date('Y') ?>. All right reserved.</p>
 </footer>
 <!--end footer-->
 
@@ -40,7 +40,7 @@
                 <div class="mb-1">
                     <label class="form-label fw-semibold">Message <span class="text-danger">*</span></label>
                     <textarea id="modal_sms_message" class="form-control" rows="4" maxlength="640"
-                              placeholder="Type your message…"></textarea>
+                        placeholder="Type your message…"></textarea>
                 </div>
                 <div class="d-flex justify-content-between">
                     <small class="text-muted"><span id="modal_sms_char_count">0</span> / 640</small>
@@ -66,6 +66,7 @@
 <!--start switcher-->
 <!-- Global Base URL for JavaScript -->
 <script>
+    var base_url = '<?= baseUri(); ?>';
 </script>
 <script src="<?= baseUri(); ?>/public/js/modules/properties.js"></script>
 <?php require('to_json.php'); ?>
@@ -89,7 +90,7 @@
 <script src="<?= baseUri(); ?>/public/plugins/select2/js/select2.min.js"></script>
 <script>
 
-	// $(".data-attributes span").peity("donut")
+    // $(".data-attributes span").peity("donut")
 </script>
 <script src="<?= baseUri(); ?>/public/plugins/tinymce/tinymce.min.js"></script>
 <script src="<?= baseUri(); ?>/public/js/modal_loader.js"></script>
@@ -107,7 +108,7 @@
 
 <!-- <script src="<?= baseUri(); ?>/public/js/dashboard1.js"></script> -->
 <script>
-	// new PerfectScrollbar(".user-list")
+    // new PerfectScrollbar(".user-list")
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta2/dist/js/bootstrap-select.min.js"></script>
@@ -117,48 +118,48 @@
 <script src="<?= baseUri(); ?>/public/js/dashboard.js"></script>
 
 <?php if (function_exists('is_super_admin') && is_super_admin()): ?>
-<script>
-(function () {
-    var BASE = '<?= baseUri(); ?>';
+    <script>
+        (function () {
+            var BASE = '<?= baseUri(); ?>';
 
-    // Populate the org switcher dropdown
-    function loadOrgDropdown() {
-        $.getJSON(BASE + '/app/org_controller.php?action=get_all_orgs_list', function (resp) {
-            if (resp.error) return;
-            var current = resp.current_org_id;
-            var items = '<li><h6 class="dropdown-header">Switch Organization</h6></li>';
-            items += '<li><a class="dropdown-item' + (current === 0 ? ' active fw-bold' : '') + '" href="javascript:;" onclick="switchOrg(0)">';
-            items += '<i class="bi bi-globe me-2"></i> All Organizations</a></li>';
-            items += '<li><hr class="dropdown-divider my-1"></li>';
-            resp.data.forEach(function (org) {
-                var isActive = (org.id == current);
-                items += '<li><a class="dropdown-item' + (isActive ? ' active fw-bold' : '') + '" href="javascript:;" onclick="switchOrg(' + org.id + ')">';
-                items += '<i class="bi bi-building me-2"></i>' + org.name + '</a></li>';
-            });
-            $('#orgSwitcherDropdown').html(items);
-            $('#activeOrgLabel').text(current === 0 ? 'All Orgs' : resp.data.find(function(o){ return o.id == current; })?.name || 'Org #'+current);
-        });
-    }
-
-    window.switchOrg = function (orgId) {
-        $.post(BASE + '/app/org_controller.php?action=switch_org', { org_id: orgId }, function (resp) {
-            if (resp.error) {
-                alert(resp.msg);
-                return;
+            // Populate the org switcher dropdown
+            function loadOrgDropdown() {
+                $.getJSON(BASE + '/app/org_controller.php?action=get_all_orgs_list', function (resp) {
+                    if (resp.error) return;
+                    var current = resp.current_org_id;
+                    var items = '<li><h6 class="dropdown-header">Switch Organization</h6></li>';
+                    items += '<li><a class="dropdown-item' + (current === 0 ? ' active fw-bold' : '') + '" href="javascript:;" onclick="switchOrg(0)">';
+                    items += '<i class="bi bi-globe me-2"></i> All Organizations</a></li>';
+                    items += '<li><hr class="dropdown-divider my-1"></li>';
+                    resp.data.forEach(function (org) {
+                        var isActive = (org.id == current);
+                        items += '<li><a class="dropdown-item' + (isActive ? ' active fw-bold' : '') + '" href="javascript:;" onclick="switchOrg(' + org.id + ')">';
+                        items += '<i class="bi bi-building me-2"></i>' + org.name + '</a></li>';
+                    });
+                    $('#orgSwitcherDropdown').html(items);
+                    $('#activeOrgLabel').text(current === 0 ? 'All Orgs' : resp.data.find(function (o) { return o.id == current; })?.name || 'Org #' + current);
+                });
             }
-            // Reload current page with new org context
-            window.location.reload();
-        }, 'json');
-    };
 
-    // Load on page ready
-    $(document).ready(function () {
-        loadOrgDropdown();
-        // Refresh dropdown list when it opens
-        $('#orgSwitcherNav').on('show.bs.dropdown', loadOrgDropdown);
-    });
-})();
-</script>
+            window.switchOrg = function (orgId) {
+                $.post(BASE + '/app/org_controller.php?action=switch_org', { org_id: orgId }, function (resp) {
+                    if (resp.error) {
+                        alert(resp.msg);
+                        return;
+                    }
+                    // Reload current page with new org context
+                    window.location.reload();
+                }, 'json');
+            };
+
+            // Load on page ready
+            $(document).ready(function () {
+                loadOrgDropdown();
+                // Refresh dropdown list when it opens
+                $('#orgSwitcherNav').on('show.bs.dropdown', loadOrgDropdown);
+            });
+        })();
+    </script>
 <?php endif; ?>
 
 </body>

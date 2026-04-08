@@ -22,6 +22,8 @@ if (isset($_GET['action'])) {
         get_assignment();
     } elseif ($action == 'get_unit_tenant') {
         get_unit_tenant();
+    } elseif ($action == 'get_maintenance_stats') {
+        get_maintenance_stats();
     }
 }
 
@@ -35,7 +37,10 @@ function get_unit_tenant()
     $conn = $GLOBALS['conn'];
 
     $unit_id = intval($_GET['unit_id'] ?? 0);
-    if ($unit_id <= 0) { echo json_encode(['error' => true]); exit; }
+    if ($unit_id <= 0) {
+        echo json_encode(['error' => true]);
+        exit;
+    }
 
     $res = $conn->query("
         SELECT t.full_name, t.phone
@@ -107,8 +112,8 @@ function get_requests()
     $data = [];
 
     while ($row = $result->fetch_assoc()) {
-        $actionBtn = '<button class="btn btn-sm btn-success me-1" onclick="assignRequest(' . $row['id'] . ')" title="Assign"><i class="bi bi-person-plus"></i></button>';
-        $actionBtn .= '<button class="btn btn-sm btn-primary me-1" onclick="editRequest(' . $row['id'] . ')" title="Edit"><i class="bi bi-pencil"></i></button>';
+        $actionBtn = '<button class="btn btn-sm btn-outline-success me-1" onclick="assignRequest(' . $row['id'] . ')" title="Assign"><i class="bi bi-person-plus"></i></button>';
+        $actionBtn .= '<button class="btn btn-sm btn-outline-primary me-1" onclick="editRequest(' . $row['id'] . ')" title="Edit"><i class="bi bi-pencil"></i></button>';
         $actionBtn .= '<button class="btn btn-sm btn-danger" onclick="deleteRequest(' . $row['id'] . ')" title="Delete"><i class="bi bi-trash"></i></button>';
 
         $statusBadge = '';
@@ -177,8 +182,9 @@ function save_request()
         // Generate reference number
         $reference_number = generate_reference_number('maintenance');
 
-        $stmt = $conn->prepare("INSERT INTO maintenance_requests (org_id, reference_number, property_id, unit_id, priority, requester, description, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("isiissss", $org_id, $reference_number, $property_id, $unit_id, $priority, $requester, $description, $status);
+        $creator_id = (int) ($_SESSION['user_id'] ?? 0);
+        $stmt = $conn->prepare("INSERT INTO maintenance_requests (org_id, reference_number, property_id, unit_id, priority, requester, description, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("isiissssi", $org_id, $reference_number, $property_id, $unit_id, $priority, $requester, $description, $status, $creator_id);
 
         if ($stmt->execute()) {
             ob_clean();
@@ -191,8 +197,9 @@ function save_request()
         }
     } else {
         // Update
-        $stmt = $conn->prepare("UPDATE maintenance_requests SET property_id=?, unit_id=?, priority=?, requester=?, description=?, status=? WHERE id=? AND " . tenant_where_clause());
-        $stmt->bind_param("iissssi", $property_id, $unit_id, $priority, $requester, $description, $status, $id);
+        $updater_id = (int) ($_SESSION['user_id'] ?? 0);
+        $stmt = $conn->prepare("UPDATE maintenance_requests SET property_id=?, unit_id=?, priority=?, requester=?, description=?, status=?, updated_by=?, updated_at=CURRENT_TIMESTAMP WHERE id=? AND " . tenant_where_clause());
+        $stmt->bind_param("iissssii", $property_id, $unit_id, $priority, $requester, $description, $status, $updater_id, $id);
 
         if ($stmt->execute()) {
             ob_clean();
@@ -336,8 +343,9 @@ function assign_request()
         }
 
         // Insert new assignment
-        $stmt = $conn->prepare("INSERT INTO maintenance_assignments (org_id, request_id, vendor_id, assigned_date, expected_completion, notes) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("iiisss", $org_id, $request_id, $vendor_id, $assigned_date, $expected_completion, $notes);
+        $creator_id = (int) ($_SESSION['user_id'] ?? 0);
+        $stmt = $conn->prepare("INSERT INTO maintenance_assignments (org_id, request_id, vendor_id, assigned_date, expected_completion, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("iiisssi", $org_id, $request_id, $vendor_id, $assigned_date, $expected_completion, $notes, $creator_id);
 
         if ($stmt->execute()) {
             // Update request status to in_progress
@@ -353,8 +361,9 @@ function assign_request()
         }
     } else {
         // Update existing assignment
-        $stmt = $conn->prepare("UPDATE maintenance_assignments SET vendor_id=?, assigned_date=?, expected_completion=?, notes=? WHERE id=? AND " . tenant_where_clause());
-        $stmt->bind_param("isssi", $vendor_id, $assigned_date, $expected_completion, $notes, $assignment_id);
+        $updater_id = (int) ($_SESSION['user_id'] ?? 0);
+        $stmt = $conn->prepare("UPDATE maintenance_assignments SET vendor_id=?, assigned_date=?, expected_completion=?, notes=?, updated_by=?, updated_at=CURRENT_TIMESTAMP WHERE id=? AND " . tenant_where_clause());
+        $stmt->bind_param("isssii", $vendor_id, $assigned_date, $expected_completion, $notes, $updater_id, $assignment_id);
 
         if ($stmt->execute()) {
             ob_clean();
@@ -394,4 +403,25 @@ function get_assignment()
     } else {
         echo json_encode(['error' => false, 'data' => null, 'msg' => 'No assignment found for this request.']);
     }
+}
+
+function get_maintenance_stats()
+{
+    ob_clean();
+    header('Content-Type: application/json');
+    $conn = $GLOBALS['conn'];
+    $org_where = tenant_where_clause();
+
+    $total = $conn->query("SELECT COUNT(*) as count FROM maintenance_requests WHERE $org_where")->fetch_assoc()['count'] ?? 0;
+    $pending = $conn->query("SELECT COUNT(*) as count FROM maintenance_requests WHERE status != 'completed' AND $org_where")->fetch_assoc()['count'] ?? 0;
+    $high = $conn->query("SELECT COUNT(*) as count FROM maintenance_requests WHERE priority = 'high' AND status != 'completed' AND $org_where")->fetch_assoc()['count'] ?? 0;
+
+    echo json_encode([
+        'error' => false,
+        'stats' => [
+            number_format($total),
+            number_format($pending),
+            number_format($high)
+        ]
+    ]);
 }
